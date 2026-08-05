@@ -33,7 +33,7 @@ test('formal specification and synthetic fixtures pass all structural gates', as
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.0');
+  assert.equal(book.project.version, '0.6.1');
   assert.deepEqual(result.counts, {
     verifiedSongs: 0,
     quarantinedEntries: 3,
@@ -73,13 +73,32 @@ test('Studio preview and playback do not require GitHub or Actions', async () =>
   assert.equal(book.rendering.playback.runs_in_browser, true);
 });
 
-test('layout order is numbered notation, staff, then lyrics', async () => {
+test('layout order uses a tighter notation gap and one shared lyric baseline', async () => {
   const { book } = await loadProject();
   assert.deepEqual(book.layout.vertical_order, ['numbered_notation', 'staff', 'lyrics']);
   assert.equal(book.notation.numbered_notation.position, 'above_staff');
   assert.equal(book.notation.staff.position, 'middle');
   assert.equal(book.notation.lyrics.position, 'below_staff');
   assert.equal(book.notation.lyrics.participates_in_horizontal_spacing, true);
+  assert.equal(book.notation.lyrics.renderer, 'html_overlay');
+  assert.equal(book.notation.lyrics.vertical_alignment, 'shared_baseline');
+  assert.deepEqual(book.layout.system_geometry, {
+    staff_width_px: 700,
+    staff_canvas_height_px: 170,
+    stave_top_line_y_px: 18,
+    numbered_row_height_px: 50,
+    numbered_to_staff_top_line_gap_px: 16,
+    lyric_row: {
+      staff_bottom_line_to_top_px: 12,
+      line_height_px: 22,
+      max_vertical_alignment_delta_px: 1,
+    },
+  });
+  assert.deepEqual(book.gates.visual.measurements, {
+    numbered_to_staff_top_line_gap_px: { min: 14, max: 18 },
+    staff_bottom_line_to_lyric_top_px: { min: 10, max: 14 },
+    lyric_vertical_alignment_delta_px: { max: 1 },
+  });
   assert.equal(book.layout.system_breaking.fixed_event_count_breaks, 'forbidden');
 });
 
@@ -171,8 +190,21 @@ test('embedded lyrics and lyrics attached to rests are rejected', async () => {
   assert.ok(result.errors.some((error) => error.code === 'lyric-event'));
 });
 
-test('build output contains no public legacy music and includes local renderer assets', async () => {
-  const [distBook, distFixtures, designCss, html, appSource, audioSource, rendererSource] = await Promise.all([
+test('invalid lyric baseline and visual geometry are rejected', async () => {
+  const { book, fixtures } = await loadProject();
+  const invalidBook = clone(book);
+  invalidBook.notation.lyrics.vertical_alignment = 'per_note';
+  invalidBook.layout.system_geometry.lyric_row.max_vertical_alignment_delta_px = -1;
+  invalidBook.gates.visual.measurements.numbered_to_staff_top_line_gap_px = { min: 20, max: 10 };
+  const result = validateProject(invalidBook, fixtures);
+  assert.equal(result.pass, false);
+  assert.ok(result.errors.some((error) => error.code === 'lyric-rendering'));
+  assert.ok(result.errors.some((error) => error.code === 'lyric-row-geometry'));
+  assert.ok(result.errors.some((error) => error.code === 'visual-gap-range'));
+});
+
+test('build output uses generated geometry and an HTML lyric row', async () => {
+  const [distBook, distFixtures, designCss, html, appSource, audioSource, rendererSource, styles] = await Promise.all([
     readFile('dist/scorebook.json', 'utf8'),
     readFile('dist/fixtures.json', 'utf8'),
     readFile('dist/design.css', 'utf8'),
@@ -180,28 +212,46 @@ test('build output contains no public legacy music and includes local renderer a
     readFile('dist/app.js', 'utf8'),
     readFile('dist/audio.js', 'utf8'),
     readFile('dist/staff-renderer.js', 'utf8'),
+    readFile('dist/styles.css', 'utf8'),
   ]);
   assert.equal(JSON.parse(distBook).library.songs.length, 0);
   assert.equal(JSON.parse(distFixtures).fixtures[0].synthetic, true);
+  assert.match(designCss, /--staff-width: 700px/);
+  assert.match(designCss, /--staff-canvas-height: 170px/);
+  assert.match(designCss, /--numbered-row-height: 50px/);
+  assert.match(designCss, /--numbered-staff-gap: 16px/);
+  assert.match(designCss, /--lyric-staff-gap: 12px/);
+  assert.match(designCss, /--lyric-line-height: 22px/);
+  assert.match(designCss, /--lyric-alignment-tolerance: 1px/);
   assert.match(designCss, /--note-number-size: 26px/);
   assert.match(designCss, /--lyric-size: 18px/);
   assert.match(html, /正式曲庫/);
   assert.match(html, /本機 Studio/);
   assert.match(html, /vendor\/vexflow\.js/);
   assert.match(appSource, /localStorage/);
-  assert.match(appSource, /GitHub/);
+  assert.match(appSource, /geometry: book\.layout\.system_geometry/);
   assert.match(audioSource, /AudioContext/);
-  assert.match(rendererSource, /new Annotation/);
+  assert.doesNotMatch(rendererSource, /new Annotation|lyricAnnotations/);
+  assert.match(rendererSource, /createLyric/);
+  assert.match(rendererSource, /lyricRow\.style\.top/);
   assert.match(rendererSource, /getNoteHeadBeginX/);
-  assert.match(rendererSource, /numberedRow, staff/);
+  assert.match(rendererSource, /system\.append\(numberedRow, staff, lyricRow\)/);
+  assert.match(styles, /\.lyric-row\s*\{/);
+  assert.match(styles, /\.score-lyric\s*\{/);
+  assert.match(styles, /height:\s*var\(--numbered-row-height, 50px\)/);
+  assert.match(styles, /line-height:\s*var\(--lyric-line-height, 22px\)/);
 });
 
 test('package versions and all required gates are pinned', async () => {
   const { book } = await loadProject();
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-  assert.equal(packageJson.version, '0.6.0');
+  assert.equal(packageJson.version, '0.6.1');
   assert.equal(packageJson.dependencies.vexflow, '5.0.0');
   assert.equal(packageJson.devDependencies['@playwright/test'], '1.55.0');
+  assert.ok(book.gates.html.checks.includes('lyrics_rendered_in_shared_html_row'));
+  assert.ok(book.gates.html.checks.includes('vexflow_annotations_not_used_for_lyrics'));
+  assert.ok(book.gates.visual.checks.includes('lyric_top_and_bottom_alignment_within_tolerance'));
+  assert.ok(book.gates.print.checks.includes('shared_lyric_baseline_survives_print'));
   for (const gate of ['content', 'fixture', 'html', 'visual', 'print', 'release']) {
     assert.equal(book.gates[gate].required, true, `${gate} gate must be required`);
   }
