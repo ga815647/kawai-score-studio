@@ -107,6 +107,7 @@ function renderSystem(container, score, palette, options) {
 
   const segmentNotes = [];
   const tickables = [];
+  const lyricAnnotations = [];
   for (const segment of model.segments) {
     const note = new StaveNote({
       clef: 'treble',
@@ -122,8 +123,8 @@ function renderSystem(container, score, palette, options) {
         .setVerticalJustification('bottom')
         .setJustification('center')
         .setFont('Arial, sans-serif', '18px', 600);
-      annotation.setAttribute('data-lyric-event-id', segment.eventId);
       note.addModifier(annotation, 0);
+      lyricAnnotations.push({ eventId: segment.eventId, annotation });
     }
     segmentNotes.push(note);
     tickables.push(note);
@@ -155,6 +156,14 @@ function renderSystem(container, score, palette, options) {
       lastIndexes: [0],
     }).setContext(context).drawWithStyle();
   });
+
+  for (const { eventId, annotation } of lyricAnnotations) {
+    const element = annotation.getSVGElement();
+    if (element) {
+      element.dataset.lyricEventId = eventId;
+      element.classList.add('score-lyric');
+    }
+  }
 
   for (const event of model.events) {
     if (event.kind !== 'note') continue;
