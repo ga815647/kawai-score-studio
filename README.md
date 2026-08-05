@@ -1,49 +1,94 @@
 # Kawai Score Studio
 
-以 `scorebook.yaml` 驅動的兒童木琴琴譜產生器。
+由 `scorebook.yaml` 驅動的 KAWAI 16 音木琴琴譜工作室。
 
-## 現在可以做什麼
+## 兩種模式，同一個網站
 
-- 驗證音符是否落在 KAWAI 16 音木琴的實際音域內
-- 驗證每個起音都有歌詞、節奏時值為正整數
-- 產生彩色數字簡譜
-- 將上點／下點固定在框內、數字正上方／正下方，並與數字同色
-- 從同一組 event 資料產生五線譜 SVG 對照
-- 顯示／隱藏歌詞與五線譜
-- 以 A4 直式列印，每首歌獨立分頁
-- 在 GitHub Actions 自動跑 Gate，通過後可部署 GitHub Pages
+### 正式曲庫
 
-第一版先收錄三首完整資料：
+正式曲庫只顯示 `status: verified` 的曲目。每首正式曲目必須具備：
 
-1. 生日快樂
-2. 小小蜘蛛（6/8 原曲）
-3. 老鼠時鐘（6/8 原曲）
+- 確切來源與指定旋律版本
+- 原調、拍號、弱起與權利狀態
+- 明確小節、休止符及連結線
+- 逐項旋律、節奏與歌詞核對紀錄
+- 使用者批准
+- branch、PR、exact head SHA CI 與所有必要 Gate
 
-其餘已知曲目列在 `scorebook.yaml` 的 `catalog`，後續逐首遷移成相同 event 格式。
+目前正式曲庫為空。舊有的〈生日快樂〉、Itsy Bitsy Spider 與 Hickory Dickory Dock 只保留隔離清單的名稱與原因，不保留或發佈未驗證旋律及歌詞。
 
-## 開發
+### 本機 Studio
+
+本機 Studio 可直接在瀏覽器：
+
+- 載入或貼上 JSON 草稿
+- 預覽彩色簡譜、五線譜與歌詞
+- 使用 Web Audio 播放同一組 melody event
+- 儲存在瀏覽器 localStorage
+- 列印 A4 草稿
+
+草稿預覽與播放不需要 GitHub、PR 或 GitHub Actions，也不會自動進入正式曲庫。
+
+## 正式資料模型
+
+- melody event 只包含音樂資料，不得內嵌歌詞。
+- 歌詞使用獨立 `lyric_tracks`，以 event id 對位。
+- 英文歌曲預設使用已驗證的原文歌詞；翻譯是可選 track。
+- note、rest、小節、弱起與 tie 都必須明確建模。
+- 彩色簡譜、VexFlow 五線譜與 Web Audio 播放共用同一組 melody event。
+- 每個譜行依小節、五線譜符號、簡譜與歌詞實際寬度決定換行，不使用固定 event 數量。
+
+頁面垂直順序固定為：
+
+1. 無框彩色簡譜
+2. 五線譜
+3. 歌詞
+
+## 引擎測試
+
+引擎 Gate 只使用 [`fixtures/engine-fixtures.yaml`](./fixtures/engine-fixtures.yaml) 的合成資料。fixture 涵蓋：
+
+- 弱起拍
+- 小節容量
+- note 與 rest
+- tie
+- 獨立英文 lyric track
+- 長英文音節排版
+- 瀏覽器播放資料
+
+fixture 不是真實歌曲，禁止當作正式曲目發佈。
+
+## 開發與驗證
 
 需要 Node.js 20 以上版本。
 
 ```bash
 npm install
-npm run check
+npx playwright install chromium
+npm run check:visual
 ```
 
-建置完成後，靜態網站位於 `dist/`：
+`npm run check:visual` 依序執行：
+
+1. 正式規格與出版政策 Gate
+2. 合成 fixture 音樂結構 Gate
+3. HTML 建置
+4. 單元測試
+5. Chromium 截圖與幾何 Gate
+
+建置輸出位於 `dist/`。本機可使用任一靜態伺服器開啟，例如：
 
 ```bash
 python -m http.server 8000 -d dist
 ```
 
-再開啟 `http://localhost:8000`。
-
 ## 專案規則
 
-- 正式規格只修改 `scorebook.yaml`
-- `dist/` 與 `reports/` 都是可重新產生的輸出
-- 不直接修改生成後的 HTML 來修正曲譜
-- 圖片不得承載音符、歌詞、上下點或五線譜
-- 必要 Gate 未通過時不得發佈
+- `scorebook.yaml` 是正式規格檔。
+- `dist/`、`reports/`、`test-results/` 與 `playwright-report/` 都是可重新產生的輸出。
+- 不直接修改生成後的 HTML、簡譜或五線譜來修正正式內容。
+- 圖片只能作無文字裝飾，不得承載音符、歌詞或五線譜。
+- 正式發佈使用 branch 與 PR，並核對 PR exact head SHA 的 CI run。
+- 必要 Gate 未通過或使用者尚未批准時，不得合併或發佈。
 
 詳細工作規範請見 [`AGENTS.md`](./AGENTS.md)。
