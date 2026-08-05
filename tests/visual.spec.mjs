@@ -170,8 +170,8 @@ test('fixture renders two systems and minimally adjusts colliding extreme-note l
   const defaultNumberedRowDelta = maximumDelta(measurements.map((metric) => metric.defaultNumberedRowTop));
   const defaultLyricRowDelta = maximumDelta(measurements.map((metric) => metric.defaultLyricRowTop));
   const allBoundingSourcesPass = measurements.every((metric) => (
-    metric.boundingSource === 'vexflow-stavenote-bounding-box'
-  )) && allLabels.every((label) => label.boundingSource === 'vexflow-stavenote-bounding-box');
+    metric.boundingSource === 'vexflow-stavenote-svg-getbbox'
+  )) && allLabels.every((label) => label.boundingSource === 'vexflow-stavenote-svg-getbbox');
   const allClearancesPass = allLabels.every((label) => (
     label.adjustedGlyphClearancePx >= clearanceMinimum
   ));
@@ -225,7 +225,7 @@ test('fixture renders two systems and minimally adjusts colliding extreme-note l
     headSha: process.env.GITHUB_SHA ?? null,
     fixture: 'layout-rhythm-language',
     systemCount,
-    boundingSource: 'vexflow-stavenote-bounding-box',
+    boundingSource: 'vexflow-stavenote-svg-getbbox',
     instrumentExtremes: {
       lowestNote: book.instrument.lowest_note,
       highestNote: book.instrument.highest_note,
@@ -279,7 +279,7 @@ test('fixture renders two systems and minimally adjusts colliding extreme-note l
   expect(defaultLyricRowDelta, '全曲預設歌詞列必須一致').toBeLessThanOrEqual(defaultRowMaximum);
   expect(highestNumber, `fixture 必須包含最高音 ${book.instrument.highest_note}`).toBeDefined();
   expect(lowestNumber, `fixture 必須包含最低音 ${book.instrument.lowest_note}`).toBeDefined();
-  expect(allBoundingSourcesPass, '碰撞必須使用每顆 StaveNote bounding box').toBe(true);
+  expect(allBoundingSourcesPass, '碰撞必須使用每顆 StaveNote SVG 群組的 getBBox()').toBe(true);
   expect(allClearancesPass, '位移後仍須保留音符外框安全距離').toBe(true);
   expect(directionsPass, '簡譜只能上移，歌詞只能下移').toBe(true);
   expect(shiftsAreMinimal, '每個標籤只能做解除碰撞所需的最小位移').toBe(true);
