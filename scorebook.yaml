@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.5
+  version: 0.6.6
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -143,6 +143,7 @@ layout:
     staff_canvas_height_px: 170
     stave_top_line_y_px: 18
     numbered_row_height_px: 50
+    numbered_note_height_px: 52
     numbered_to_staff_top_line_gap_px: 16
     lyric_row:
       staff_bottom_line_to_top_px: 12
@@ -152,6 +153,7 @@ layout:
     collision_adjustment:
       scope: per_event
       trigger: vexflow_stavenote_pointer_rect
+      standard_label_geometry_source: scorebook_system_geometry
       numbered_notation_direction: up_only
       lyric_direction: down_only
       glyph_clearance_px: 6
@@ -237,6 +239,8 @@ gates:
       - lyrics_rendered_in_shared_html_row
       - vexflow_annotations_not_used_for_lyrics
       - song_standard_rows_used_by_default
+      - standard_label_positions_are_derived_from_scorebook_geometry
+      - hidden_studio_rendering_does_not_depend_on_dom_rects
       - per_event_adjustment_uses_vexflow_stavenote_pointer_rect
       - one_event_source_for_numbered_notation_staff_and_playback
       - lyric_track_is_separate_from_events
