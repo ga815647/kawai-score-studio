@@ -13,11 +13,11 @@ function maximumDelta(values) {
   return values.length > 0 ? Math.max(...values) - Math.min(...values) : 0;
 }
 
-function maximumAbsolute(values) {
-  return values.length > 0 ? Math.max(...values.map(Math.abs)) : 0;
+function rectanglesOverlap(a, b) {
+  return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
 }
 
-test('fixture renders tighter numbered notation and a shared lyric baseline', async ({ page }) => {
+test('fixture renders two systems and adjusts only colliding extreme-note events', async ({ page }) => {
   await mkdir(reportDirectory, { recursive: true });
   await page.goto('/?fixture=1', { waitUntil: 'networkidle' });
   await expect(page.locator('.status--pass')).toBeVisible();
@@ -27,60 +27,89 @@ test('fixture renders tighter numbered notation and a shared lyric baseline', as
 
   const systems = page.locator('.score-system');
   const systemCount = await systems.count();
-  expect(systemCount).toBeGreaterThan(0);
+  expect(systemCount).toBeGreaterThanOrEqual(visualMeasurements.minimum_system_count);
 
   const measurements = [];
   for (let systemIndex = 0; systemIndex < systemCount; systemIndex += 1) {
     const system = systems.nth(systemIndex);
     const metric = await system.evaluate((element) => {
       const staff = element.querySelector('.staff-panel');
+      const numberedRow = element.querySelector('.numbered-row');
+      const lyricRow = element.querySelector('.lyric-row');
       const numbered = [...element.querySelectorAll('.numbered-note')];
       const lyrics = [...element.querySelectorAll('.score-lyric')];
-      if (!(staff instanceof HTMLElement) || numbered.length === 0 || lyrics.length === 0) {
-        throw new Error('system 缺少 staff、numbered notation 或 lyric');
+      if (
+        !(staff instanceof HTMLElement)
+        || !(numberedRow instanceof HTMLElement)
+        || !(lyricRow instanceof HTMLElement)
+        || numbered.length === 0
+        || lyrics.length === 0
+      ) {
+        throw new Error('system 缺少 staff、row、numbered notation 或 lyric');
       }
 
+      const systemRect = element.getBoundingClientRect();
       const staffRect = staff.getBoundingClientRect();
+      const numberedRowRect = numberedRow.getBoundingClientRect();
+      const lyricRowRect = lyricRow.getBoundingClientRect();
       const topLine = staffRect.top + Number(element.dataset.staffTopLineY);
       const bottomLine = staffRect.top + Number(element.dataset.staffBottomLineY);
       const numberedRects = numbered.map((item) => item.getBoundingClientRect());
       const lyricRects = lyrics.map((item) => item.getBoundingClientRect());
       const numberBottom = Math.max(...numberedRects.map((rect) => rect.bottom));
       const lyricTop = Math.min(...lyricRects.map((rect) => rect.top));
-      const lyricTops = lyricRects.map((rect) => rect.top);
-      const lyricBottoms = lyricRects.map((rect) => rect.bottom);
 
-      const numberExpectedCenters = numbered.map((item) => (
-        staffRect.left + Number(item.dataset.staffCenterX)
-      ));
-      const lyricExpectedCenters = lyrics.map((item) => (
-        staffRect.left + Number(item.dataset.staffCenterX)
-      ));
-      const numberCenterErrors = numberedRects.map((rect, index) => (
-        (rect.left + rect.right) / 2 - numberExpectedCenters[index]
-      ));
-      const lyricCenterErrors = lyricRects.map((rect, index) => (
-        (rect.left + rect.right) / 2 - lyricExpectedCenters[index]
-      ));
+      const numberedEvents = numbered.map((item, index) => ({
+        eventId: item.dataset.eventId,
+        pitch: item.dataset.pitch,
+        verticalShiftPx: Number(item.dataset.verticalShiftPx),
+        defaultGlyphClearancePx: Number(item.dataset.defaultGlyphClearancePx),
+        adjustedGlyphClearancePx: Number(item.dataset.adjustedGlyphClearancePx),
+        centerErrorPx: (numberedRects[index].left + numberedRects[index].right) / 2
+          - (staffRect.left + Number(item.dataset.staffCenterX)),
+        rect: {
+          top: numberedRects[index].top,
+          bottom: numberedRects[index].bottom,
+        },
+      }));
+      const lyricEvents = lyrics.map((item, index) => ({
+        eventId: item.dataset.lyricEventId,
+        verticalShiftPx: Number(item.dataset.verticalShiftPx),
+        defaultGlyphClearancePx: Number(item.dataset.defaultGlyphClearancePx),
+        adjustedGlyphClearancePx: Number(item.dataset.adjustedGlyphClearancePx),
+        centerErrorPx: (lyricRects[index].left + lyricRects[index].right) / 2
+          - (staffRect.left + Number(item.dataset.staffCenterX)),
+        rect: {
+          left: lyricRects[index].left,
+          right: lyricRects[index].right,
+          top: lyricRects[index].top,
+          bottom: lyricRects[index].bottom,
+        },
+      }));
 
-      const sortedLyrics = lyricRects.slice().sort((a, b) => a.left - b.left);
-      const lyricGaps = sortedLyrics.slice(1).map((rect, index) => rect.left - sortedLyrics[index].right);
+      const defaultLyrics = lyricEvents.filter((event) => event.verticalShiftPx === 0);
+      let lyricCollisionCount = 0;
+      for (let leftIndex = 0; leftIndex < lyricEvents.length; leftIndex += 1) {
+        for (let rightIndex = leftIndex + 1; rightIndex < lyricEvents.length; rightIndex += 1) {
+          if (rectanglesOverlap(lyricEvents[leftIndex].rect, lyricEvents[rightIndex].rect)) {
+            lyricCollisionCount += 1;
+          }
+        }
+      }
 
       return {
         system: Number(element.dataset.system ?? 0),
         numberedCount: numbered.length,
         lyricCount: lyrics.length,
-        topLine,
-        bottomLine,
-        numberBottom,
-        lyricTop,
+        defaultNumberedRowTop: numberedRowRect.top - systemRect.top,
+        defaultLyricRowTop: lyricRowRect.top - systemRect.top,
         numberToStaffGap: topLine - numberBottom,
         staffToLyricGap: lyricTop - bottomLine,
-        maximumNumberCenterError: Math.max(...numberCenterErrors.map(Math.abs)),
-        maximumLyricCenterError: Math.max(...lyricCenterErrors.map(Math.abs)),
-        lyricTopDelta: Math.max(...lyricTops) - Math.min(...lyricTops),
-        lyricBottomDelta: Math.max(...lyricBottoms) - Math.min(...lyricBottoms),
-        minimumLyricGap: lyricGaps.length > 0 ? Math.min(...lyricGaps) : null,
+        defaultLyricTopDelta: maximumDelta(defaultLyrics.map((event) => event.rect.top)),
+        defaultLyricBottomDelta: maximumDelta(defaultLyrics.map((event) => event.rect.bottom)),
+        lyricCollisionCount,
+        numberedEvents,
+        lyricEvents,
       };
     });
     measurements.push(metric);
@@ -96,57 +125,136 @@ test('fixture renders tighter numbered notation and a shared lyric baseline', as
     animations: 'disabled',
     caret: 'hide',
   });
-  await systems.first().screenshot({
+  await systems.nth(0).screenshot({
     path: `${reportDirectory}/synthetic-fixture-first-system.png`,
+    animations: 'disabled',
+    caret: 'hide',
+  });
+  await systems.nth(1).screenshot({
+    path: `${reportDirectory}/synthetic-fixture-second-system.png`,
     animations: 'disabled',
     caret: 'hide',
   });
 
   const numberGapRange = visualMeasurements.numbered_to_staff_top_line_gap_px;
   const lyricGapRange = visualMeasurements.staff_bottom_line_to_lyric_top_px;
-  const lyricAlignmentMaximum = visualMeasurements.lyric_vertical_alignment_delta_px.max;
+  const clearanceMinimum = visualMeasurements.adjusted_glyph_clearance_px.min;
+  const defaultRowMaximum = visualMeasurements.default_row_delta_across_systems_px.max;
+  const maximumShift = visualMeasurements.maximum_individual_shift_px.max;
+  const numberedEvents = measurements.flatMap((metric) => metric.numberedEvents);
+  const lyricEvents = measurements.flatMap((metric) => metric.lyricEvents);
+  const highestNumber = numberedEvents.find((event) => event.pitch === book.instrument.highest_note);
+  const lowestNumber = numberedEvents.find((event) => event.pitch === book.instrument.lowest_note);
+  const highestLyric = lyricEvents.find((event) => event.eventId === highestNumber?.eventId);
+  const lowestLyric = lyricEvents.find((event) => event.eventId === lowestNumber?.eventId);
+
+  const defaultNumberedRowDelta = maximumDelta(measurements.map((metric) => metric.defaultNumberedRowTop));
+  const defaultLyricRowDelta = maximumDelta(measurements.map((metric) => metric.defaultLyricRowTop));
+  const allElements = [...numberedEvents, ...lyricEvents];
+  const allClearancesPass = allElements.every((event) => (
+    event.adjustedGlyphClearancePx >= clearanceMinimum
+  ));
+  const uncollidedEventsStayStandard = allElements.every((event) => (
+    event.defaultGlyphClearancePx < clearanceMinimum || event.verticalShiftPx === 0
+  ));
+  const shiftedEventsNeededAdjustment = allElements.every((event) => (
+    event.verticalShiftPx === 0 || event.defaultGlyphClearancePx < clearanceMinimum
+  ));
+
   const pass = measurements.every((metric) => (
     metric.numberToStaffGap >= numberGapRange.min
     && metric.numberToStaffGap <= numberGapRange.max
     && metric.staffToLyricGap >= lyricGapRange.min
     && metric.staffToLyricGap <= lyricGapRange.max
-    && metric.maximumNumberCenterError <= 1
-    && metric.maximumLyricCenterError <= 1
-    && metric.lyricTopDelta <= lyricAlignmentMaximum
-    && metric.lyricBottomDelta <= lyricAlignmentMaximum
-    && (metric.minimumLyricGap === null || metric.minimumLyricGap >= 0)
-  )) && pageOverflow.scrollWidth <= pageOverflow.clientWidth + 1;
+    && metric.defaultLyricTopDelta <= defaultRowMaximum
+    && metric.defaultLyricBottomDelta <= defaultRowMaximum
+    && metric.lyricCollisionCount === 0
+    && metric.numberedEvents.every((event) => Math.abs(event.centerErrorPx) <= 1)
+    && metric.lyricEvents.every((event) => Math.abs(event.centerErrorPx) <= 1)
+  ))
+    && systemCount >= visualMeasurements.minimum_system_count
+    && defaultNumberedRowDelta <= defaultRowMaximum
+    && defaultLyricRowDelta <= defaultRowMaximum
+    && allClearancesPass
+    && uncollidedEventsStayStandard
+    && shiftedEventsNeededAdjustment
+    && allElements.every((event) => Math.abs(event.verticalShiftPx) <= maximumShift)
+    && highestNumber?.verticalShiftPx < 0
+    && highestLyric?.verticalShiftPx === 0
+    && lowestNumber?.verticalShiftPx === 0
+    && lowestLyric?.verticalShiftPx > 0
+    && pageOverflow.scrollWidth <= pageOverflow.clientWidth + 1;
 
   const report = {
     pass,
     headSha: process.env.GITHUB_SHA ?? null,
     fixture: 'layout-rhythm-language',
+    systemCount,
+    instrumentExtremes: {
+      lowestNote: book.instrument.lowest_note,
+      highestNote: book.instrument.highest_note,
+    },
     configuredMeasurements: visualMeasurements,
+    defaultRowDeltas: {
+      numberedRow: round(defaultNumberedRowDelta),
+      lyricRow: round(defaultLyricRowDelta),
+    },
+    extremeAdjustments: {
+      lowestNumber,
+      lowestLyric,
+      highestNumber,
+      highestLyric,
+    },
     screenshots: [
       'synthetic-fixture-a4.png',
       'synthetic-fixture-first-system.png',
+      'synthetic-fixture-second-system.png',
     ],
-    measurements: measurements.map((metric) => Object.fromEntries(
-      Object.entries(metric).map(([key, value]) => [key, typeof value === 'number' ? round(value) : value]),
-    )),
+    measurements: measurements.map((metric) => ({
+      ...metric,
+      defaultNumberedRowTop: round(metric.defaultNumberedRowTop),
+      defaultLyricRowTop: round(metric.defaultLyricRowTop),
+      numberToStaffGap: round(metric.numberToStaffGap),
+      staffToLyricGap: round(metric.staffToLyricGap),
+      defaultLyricTopDelta: round(metric.defaultLyricTopDelta),
+      defaultLyricBottomDelta: round(metric.defaultLyricBottomDelta),
+      numberedEvents: metric.numberedEvents.map((event) => ({
+        ...event,
+        defaultGlyphClearancePx: round(event.defaultGlyphClearancePx),
+        adjustedGlyphClearancePx: round(event.adjustedGlyphClearancePx),
+        centerErrorPx: round(event.centerErrorPx),
+      })),
+      lyricEvents: metric.lyricEvents.map((event) => ({
+        ...event,
+        defaultGlyphClearancePx: round(event.defaultGlyphClearancePx),
+        adjustedGlyphClearancePx: round(event.adjustedGlyphClearancePx),
+        centerErrorPx: round(event.centerErrorPx),
+      })),
+    })),
   };
   await writeFile(`${reportDirectory}/visual-gate-report.json`, `${JSON.stringify(report, null, 2)}\n`);
+
+  expect(systemCount, 'fixture 至少要有兩個譜行').toBeGreaterThanOrEqual(2);
+  expect(defaultNumberedRowDelta, '全曲預設簡譜列必須一致').toBeLessThanOrEqual(defaultRowMaximum);
+  expect(defaultLyricRowDelta, '全曲預設歌詞列必須一致').toBeLessThanOrEqual(defaultRowMaximum);
+  expect(highestNumber, `fixture 必須包含最高音 ${book.instrument.highest_note}`).toBeDefined();
+  expect(lowestNumber, `fixture 必須包含最低音 ${book.instrument.lowest_note}`).toBeDefined();
+  expect(highestNumber.verticalShiftPx, '最高音只應把對應簡譜上移').toBeLessThan(0);
+  expect(highestLyric.verticalShiftPx, '最高音歌詞應維持全曲標準').toBe(0);
+  expect(lowestNumber.verticalShiftPx, '最低音簡譜應維持全曲標準').toBe(0);
+  expect(lowestLyric.verticalShiftPx, '最低音只應把對應歌詞下移').toBeGreaterThan(0);
+  expect(allClearancesPass, '位移後仍須保留音符外框安全距離').toBe(true);
+  expect(uncollidedEventsStayStandard, '未碰撞 event 不可任意位移').toBe(true);
+  expect(shiftedEventsNeededAdjustment, '位移必須由實際外框碰撞觸發').toBe(true);
 
   for (const metric of measurements) {
     expect(metric.numberToStaffGap, '簡譜與五線譜距離太近').toBeGreaterThanOrEqual(numberGapRange.min);
     expect(metric.numberToStaffGap, '簡譜與五線譜距離太遠').toBeLessThanOrEqual(numberGapRange.max);
-    expect(metric.staffToLyricGap, '歌詞與五線譜距離太近').toBeGreaterThanOrEqual(lyricGapRange.min);
-    expect(metric.staffToLyricGap, '歌詞與五線譜距離太遠').toBeLessThanOrEqual(lyricGapRange.max);
-    expect(metric.maximumNumberCenterError, '簡譜中心必須對準音頭').toBeLessThanOrEqual(1);
-    expect(metric.maximumLyricCenterError, '歌詞中心必須對準音頭').toBeLessThanOrEqual(1);
-    expect(metric.lyricTopDelta, '同一譜行歌詞 top 必須整齊').toBeLessThanOrEqual(lyricAlignmentMaximum);
-    expect(metric.lyricBottomDelta, '同一譜行歌詞 bottom 必須整齊').toBeLessThanOrEqual(lyricAlignmentMaximum);
-    if (metric.minimumLyricGap !== null) {
-      expect(metric.minimumLyricGap, '英文歌詞不可互相重疊').toBeGreaterThanOrEqual(0);
-    }
+    expect(metric.staffToLyricGap, '標準歌詞列與五線譜距離太近').toBeGreaterThanOrEqual(lyricGapRange.min);
+    expect(metric.staffToLyricGap, '標準歌詞列與五線譜距離太遠').toBeLessThanOrEqual(lyricGapRange.max);
+    expect(metric.defaultLyricTopDelta, '未位移歌詞 top 必須整齊').toBeLessThanOrEqual(defaultRowMaximum);
+    expect(metric.defaultLyricBottomDelta, '未位移歌詞 bottom 必須整齊').toBeLessThanOrEqual(defaultRowMaximum);
+    expect(metric.lyricCollisionCount, '英文歌詞不可實際互撞').toBe(0);
   }
-
-  expect(maximumDelta(measurements.map((metric) => metric.lyricTopDelta))).toBeLessThanOrEqual(lyricAlignmentMaximum);
-  expect(maximumAbsolute(measurements.map((metric) => metric.maximumLyricCenterError))).toBeLessThanOrEqual(1);
   expect(pageOverflow.scrollWidth).toBeLessThanOrEqual(pageOverflow.clientWidth + 1);
 });
