@@ -33,7 +33,7 @@ test('formal specification and synthetic fixtures pass all structural gates', as
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.5');
+  assert.equal(book.project.version, '0.6.6');
   assert.deepEqual(result.counts, {
     verifiedSongs: 0,
     quarantinedEntries: 3,
@@ -87,6 +87,7 @@ test('layout keeps song-standard rows with per-label VexFlow pointer-rectangle e
     staff_canvas_height_px: 170,
     stave_top_line_y_px: 18,
     numbered_row_height_px: 50,
+    numbered_note_height_px: 52,
     numbered_to_staff_top_line_gap_px: 16,
     lyric_row: {
       staff_bottom_line_to_top_px: 12,
@@ -97,6 +98,7 @@ test('layout keeps song-standard rows with per-label VexFlow pointer-rectangle e
     collision_adjustment: {
       scope: 'per_event',
       trigger: 'vexflow_stavenote_pointer_rect',
+      standard_label_geometry_source: 'scorebook_system_geometry',
       numbered_notation_direction: 'up_only',
       lyric_direction: 'down_only',
       glyph_clearance_px: 6,
@@ -231,8 +233,8 @@ test('invalid baseline and visual geometry are rejected', async () => {
   assert.ok(result.errors.some((error) => error.code === 'visual-gap-range'));
 });
 
-test('build output uses VexFlow pointer rectangles and minimal label shifts', async () => {
-  const [distBook, distFixtures, designCss, html, appSource, audioSource, rendererSource, visualSource] = await Promise.all([
+test('build output uses pointer rectangles and scorebook-derived standard label positions', async () => {
+  const [distBook, distFixtures, designCss, html, appSource, audioSource, rendererSource, visualSource, styles] = await Promise.all([
     readFile('dist/scorebook.json', 'utf8'),
     readFile('dist/fixtures.json', 'utf8'),
     readFile('dist/design.css', 'utf8'),
@@ -241,11 +243,13 @@ test('build output uses VexFlow pointer rectangles and minimal label shifts', as
     readFile('dist/audio.js', 'utf8'),
     readFile('dist/staff-renderer.js', 'utf8'),
     readFile('tests/visual.spec.mjs', 'utf8'),
+    readFile('dist/styles.css', 'utf8'),
   ]);
   assert.equal(JSON.parse(distBook).library.songs.length, 0);
   assert.equal(JSON.parse(distFixtures).fixtures[0].synthetic, true);
   assert.match(designCss, /--staff-width: 700px/);
   assert.match(designCss, /--numbered-row-height: 50px/);
+  assert.match(designCss, /--numbered-note-height: 52px/);
   assert.match(designCss, /--lyric-alignment-tolerance: 1px/);
   assert.match(designCss, /--glyph-collision-clearance: 6px/);
   assert.match(designCss, /--maximum-event-vertical-shift: 32px/);
@@ -253,14 +257,15 @@ test('build output uses VexFlow pointer rectangles and minimal label shifts', as
   assert.match(html, /本機 Studio/);
   assert.match(appSource, /geometry: book\.layout\.system_geometry/);
   assert.match(audioSource, /AudioContext/);
-  assert.doesNotMatch(rendererSource, /new Annotation|lyricAnnotations|note\.getBoundingBox\(\)|element\.getBBox\(\)/);
+  assert.doesNotMatch(rendererSource, /new Annotation|lyricAnnotations|defaultNumberRect|defaultLyricRect|system\.getBoundingClientRect\(\)/);
   assert.match(rendererSource, /note\.getSVGElement\(\)/);
   assert.match(rendererSource, /querySelector\('rect\[opacity="0"\]\[pointer-events="auto"\]'\)/);
-  assert.match(rendererSource, /numericSvgAttribute/);
+  assert.match(rendererSource, /const defaultNumberBottom = numberedNoteHeight/);
+  assert.match(rendererSource, /const defaultLyricTop = lyricRowTop/);
+  assert.match(rendererSource, /scorebook-system-geometry/);
   assert.match(rendererSource, /vexflow-stavenote-pointer-rect/);
   assert.match(rendererSource, /verticalShiftPx/);
-  assert.match(rendererSource, /numbered\.style\.top/);
-  assert.match(rendererSource, /lyric\.style\.top/);
+  assert.match(styles, /height:\s*var\(--numbered-note-height, 52px\)/);
   assert.match(visualSource, /synthetic-fixture-second-system\.png/);
   assert.match(visualSource, /requiredMagnitude/);
   assert.match(visualSource, /extremeLabels/);
@@ -270,12 +275,14 @@ test('build output uses VexFlow pointer rectangles and minimal label shifts', as
 test('package versions and required extreme-note gates are pinned', async () => {
   const { book } = await loadProject();
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-  assert.equal(packageJson.version, '0.6.5');
+  assert.equal(packageJson.version, '0.6.6');
   assert.equal(packageJson.dependencies.vexflow, '5.0.0');
   assert.equal(packageJson.devDependencies['@playwright/test'], '1.55.0');
   assert.ok(book.gates.fixture.checks.includes('fixture_renders_at_least_two_systems'));
   assert.ok(book.gates.fixture.checks.includes('fixture_contains_instrument_lowest_note'));
   assert.ok(book.gates.fixture.checks.includes('fixture_contains_instrument_highest_note'));
+  assert.ok(book.gates.html.checks.includes('standard_label_positions_are_derived_from_scorebook_geometry'));
+  assert.ok(book.gates.html.checks.includes('hidden_studio_rendering_does_not_depend_on_dom_rects'));
   assert.ok(book.gates.html.checks.includes('per_event_adjustment_uses_vexflow_stavenote_pointer_rect'));
   assert.ok(book.gates.visual.checks.includes('uncollided_events_keep_zero_vertical_shift'));
   assert.ok(book.gates.visual.checks.includes('colliding_numbered_notation_moves_up_only'));
