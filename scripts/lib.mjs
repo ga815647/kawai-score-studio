@@ -107,66 +107,78 @@ export function validateScorebook(book) {
   if (!isPositiveNumber(title?.max_width_percent) || title.max_width_percent > 100) {
     fail('title-width', '標題寬度百分比必須介於 0 與 100', 'layout.title.max_width_percent');
   }
-  if (system?.colored_note_boxes_primary !== true || system?.staff_secondary !== true) {
-    fail('notation-priority', '彩色方框簡譜必須是主視覺，五線譜為輔助', 'layout.notation_system');
+  if (
+    system?.colored_note_numbers_primary !== true
+    || system?.note_boxes !== 'forbidden'
+    || system?.staff_secondary !== true
+  ) {
+    fail(
+      'notation-priority',
+      '無框彩色數字必須是主視覺，音符框必須禁止，五線譜為輔助',
+      'layout.notation_system',
+    );
   }
   if (!Number.isInteger(system?.max_events_per_system) || system.max_events_per_system <= 0) {
     fail('system-event-count', '每個譜行的最大 event 數必須是正整數', 'layout.notation_system.max_events_per_system');
   }
   if (system?.horizontal_overflow !== 'forbidden' || system?.note_row_border !== 'none') {
-    fail('system-overflow', '譜行不得橫向捲動，也不得使用原本的大外框', 'layout.notation_system');
+    fail('system-overflow', '譜行不得橫向捲動，也不得使用譜行大外框', 'layout.notation_system');
   }
   if (!isPositiveNumber(system?.system_gap_px)) {
     fail('system-gap', '譜行間距必須是正數', 'layout.notation_system.system_gap_px');
   }
+
   if (
-    numberedNotation?.duration_extension_marks !== 'forbidden'
+    numberedNotation?.number_style !== 'unboxed'
+    || numberedNotation?.duration_extension_marks !== 'forbidden'
     || !isPositiveNumber(numberedNotation?.note_row_height_px)
     || !isPositiveNumber(numberedNotation?.lyric_top_px)
     || !isNonNegativeNumber(numberedNotation?.staff_pull_up_px)
     || !isPositiveNumber(numberedNotation?.min_lyric_to_staff_content_gap_px)
+    || !isPositiveNumber(numberedNotation?.max_lyric_to_staff_content_gap_px)
   ) {
     fail(
       'numbered-notation-spacing',
-      '簡譜不得顯示延長底線，且必須定義簡譜列、歌詞位置與五線譜靠近量',
+      '簡譜必須無框、不得顯示延長底線，並定義簡譜列、歌詞位置及安全間距',
       'layout.notation_system.numbered_notation',
     );
+  }
+  if (
+    isPositiveNumber(numberedNotation?.min_lyric_to_staff_content_gap_px)
+    && isPositiveNumber(numberedNotation?.max_lyric_to_staff_content_gap_px)
+    && numberedNotation.min_lyric_to_staff_content_gap_px > numberedNotation.max_lyric_to_staff_content_gap_px
+  ) {
+    fail('lyric-staff-gap-order', '中文到五線譜的最小距離不可大於最大距離', 'layout.notation_system.numbered_notation');
   }
   if (
     isPositiveNumber(numberedNotation?.note_row_height_px)
     && isPositiveNumber(numberedNotation?.lyric_top_px)
     && numberedNotation.lyric_top_px >= numberedNotation.note_row_height_px
   ) {
-    fail(
-      'lyric-row-fit',
-      '歌詞頂端必須位於簡譜列高度內',
-      'layout.notation_system.numbered_notation.lyric_top_px',
-    );
+    fail('lyric-row-fit', '歌詞頂端必須位於簡譜列高度內', 'layout.notation_system.numbered_notation.lyric_top_px');
   }
   if (
     isNonNegativeNumber(numberedNotation?.staff_pull_up_px)
     && isPositiveNumber(numberedNotation?.note_row_height_px)
     && numberedNotation.staff_pull_up_px >= numberedNotation.note_row_height_px
   ) {
-    fail(
-      'staff-pull-up-fit',
-      '五線譜向上靠近量不可大於簡譜列高度',
-      'layout.notation_system.numbered_notation.staff_pull_up_px',
-    );
+    fail('staff-pull-up-fit', '五線譜向上靠近量不可大於簡譜列高度', 'layout.notation_system.numbered_notation.staff_pull_up_px');
   }
+
   if (
-    alignment?.source !== 'vexflow_first_notehead_absolute_x'
+    alignment?.source !== 'vexflow_notehead_bounds_center_x'
     || !Array.isArray(alignment?.targets)
-    || !alignment.targets.includes('colored_note_box')
+    || !alignment.targets.includes('colored_note_number')
     || !alignment.targets.includes('lyric')
     || !isNonNegativeNumber(alignment?.tolerance_px)
   ) {
     fail(
       'staff-alignment',
-      '彩色音符框與歌詞必須共用 VexFlow 第一音頭的 X 座標並定義容許誤差',
+      '彩色數字與歌詞必須共用 VexFlow 音頭左右邊界中心 X 並定義容許誤差',
       'layout.notation_system.alignment',
     );
   }
+
   if (
     !isPositiveNumber(staff?.width_px)
     || !isPositiveNumber(staff?.height_px)
@@ -206,16 +218,22 @@ export function validateScorebook(book) {
     );
   }
 
-  const noteBox = book?.notation?.note_box;
+  const numberedNote = book?.notation?.numbered_note;
   const octaveDot = book?.notation?.octave_dot;
   const typography = book?.notation?.typography;
   const upper = book?.notation?.upper_dot;
   const lower = book?.notation?.lower_dot;
 
-  for (const field of ['width_px', 'height_px', 'border_width_px', 'border_radius_px', 'vertical_padding_px']) {
-    if (!isPositiveNumber(noteBox?.[field])) {
-      fail('note-box-design', `notation.note_box.${field} 必須是正數`, `notation.note_box.${field}`);
-    }
+  if ('note_box' in (book?.notation ?? {})) {
+    fail('note-box-forbidden', 'notation.note_box 必須移除', 'notation.note_box');
+  }
+  if (
+    !isPositiveNumber(numberedNote?.width_px)
+    || !isPositiveNumber(numberedNote?.stack_height_px)
+    || numberedNote?.border !== 'none'
+    || numberedNote?.background !== 'none'
+  ) {
+    fail('numbered-note-design', '無框彩色數字必須定義寬高，且 border 與 background 必須為 none', 'notation.numbered_note');
   }
   for (const field of ['note_number_px', 'lyric_px']) {
     if (!isPositiveNumber(typography?.[field])) {
@@ -223,58 +241,83 @@ export function validateScorebook(book) {
     }
   }
   if ('extension_px' in (typography ?? {}) || 'extension_color' in (book?.notation ?? {})) {
-    fail(
-      'numbered-duration-extension-removed',
-      '簡譜延長線的字級與顏色規格必須移除',
-      'notation',
-    );
+    fail('numbered-duration-extension-removed', '簡譜延長線的字級與顏色規格必須移除', 'notation');
   }
   if (octaveDot?.shape !== 'circle') {
     fail('octave-dot-shape', '上下點必須使用圓形', 'notation.octave_dot.shape');
   }
-  for (const field of ['diameter_px', 'min_border_clearance_px', 'min_number_clearance_px']) {
+  for (const field of ['diameter_px', 'min_number_clearance_px']) {
     if (!isPositiveNumber(octaveDot?.[field])) {
       fail('octave-dot-design', `notation.octave_dot.${field} 必須是正數`, `notation.octave_dot.${field}`);
     }
   }
-
-  if (upper?.location !== 'inside_box' || upper?.alignment !== 'centered_above_number' || upper?.color !== 'inherit') {
-    fail('upper-dot-rule', '上點必須在框內、數字正上方、繼承數字顏色', 'notation.upper_dot');
+  if ('min_border_clearance_px' in (octaveDot ?? {})) {
+    fail('octave-dot-border-rule-removed', '無框簡譜不得保留框緣距離規格', 'notation.octave_dot.min_border_clearance_px');
   }
-  if (lower?.location !== 'inside_box' || lower?.alignment !== 'centered_below_number' || lower?.color !== 'inherit') {
-    fail('lower-dot-rule', '下點必須在框內、數字正下方、繼承數字顏色', 'notation.lower_dot');
+  if (upper?.location !== 'above_number' || upper?.alignment !== 'centered' || upper?.color !== 'inherit') {
+    fail('upper-dot-rule', '上點必須在數字正上方並繼承數字顏色', 'notation.upper_dot');
+  }
+  if (lower?.location !== 'below_number' || lower?.alignment !== 'centered' || lower?.color !== 'inherit') {
+    fail('lower-dot-rule', '下點必須在數字正下方並繼承數字顏色', 'notation.lower_dot');
   }
 
-  const layoutValues = [
-    noteBox?.height_px,
-    noteBox?.border_width_px,
-    noteBox?.vertical_padding_px,
+  const stackValues = [
+    numberedNote?.stack_height_px,
     octaveDot?.diameter_px,
-    octaveDot?.min_border_clearance_px,
     octaveDot?.min_number_clearance_px,
+    typography?.note_number_px,
   ];
-  if (layoutValues.every(isPositiveNumber)) {
-    const actualBorderClearance = noteBox.border_width_px + noteBox.vertical_padding_px;
-    if (actualBorderClearance < octaveDot.min_border_clearance_px) {
-      fail(
-        'octave-dot-border-clearance',
-        `上下點距框外緣僅 ${actualBorderClearance}px，小於規格 ${octaveDot.min_border_clearance_px}px`,
-        'notation',
-      );
-    }
-
-    const innerHeight = noteBox.height_px
-      - noteBox.border_width_px * 2
-      - noteBox.vertical_padding_px * 2;
-    const reservedHeight = octaveDot.diameter_px * 2
-      + octaveDot.min_number_clearance_px * 2;
-    if (innerHeight <= reservedHeight) {
+  if (stackValues.every(isPositiveNumber)) {
+    const requiredHeight = octaveDot.diameter_px * 2
+      + octaveDot.min_number_clearance_px * 2
+      + typography.note_number_px;
+    if (numberedNote.stack_height_px < requiredHeight) {
       fail(
         'octave-dot-number-space',
-        '音符框扣除上下點與安全距離後，沒有保留數字顯示空間',
+        `無框數字堆疊高度 ${numberedNote.stack_height_px}px 小於必要高度 ${requiredHeight}px`,
         'notation',
       );
     }
+  }
+
+  const visualGate = book?.gates?.visual;
+  const runner = visualGate?.runner;
+  const gapMeasurement = visualGate?.measurements?.lyric_to_staff_top_line_gap_px;
+  const centerMeasurement = visualGate?.measurements?.number_center_to_notehead_center_error_px;
+  if (
+    runner?.engine !== 'playwright'
+    || runner?.version !== '1.55.0'
+    || runner?.browser !== 'chromium'
+    || runner?.wait_for_selector !== '.status--pass'
+    || runner?.target_song_id !== 'itsy-bitsy-spider'
+    || runner?.viewport?.width_px !== 1440
+    || runner?.viewport?.height_px !== 1800
+    || runner?.viewport?.device_scale_factor !== 1
+  ) {
+    fail('visual-runner', '視覺 Gate 必須使用固定版本 Playwright 與 Chromium 設定', 'gates.visual.runner');
+  }
+  if (
+    !isPositiveNumber(gapMeasurement?.min)
+    || !isPositiveNumber(gapMeasurement?.max)
+    || gapMeasurement.min !== numberedNotation?.min_lyric_to_staff_content_gap_px
+    || gapMeasurement.max !== numberedNotation?.max_lyric_to_staff_content_gap_px
+  ) {
+    fail('visual-gap-measurement', '瀏覽器量測的中文到譜線距離必須與正式版型規格一致', 'gates.visual.measurements');
+  }
+  if (
+    !isNonNegativeNumber(centerMeasurement?.max)
+    || centerMeasurement.max !== alignment?.tolerance_px
+  ) {
+    fail('visual-center-measurement', '瀏覽器量測的數字中心誤差必須與 alignment tolerance 一致', 'gates.visual.measurements');
+  }
+  if (
+    !Array.isArray(visualGate?.screenshots)
+    || visualGate.screenshots.length < 2
+    || visualGate?.artifacts?.directory !== 'reports/visual'
+    || visualGate?.artifacts?.retention_days !== 14
+    || visualGate?.artifacts?.exact_head_sha_in_artifact_name !== true
+  ) {
+    fail('visual-artifacts', '視覺 Gate 必須保存 A4、局部截圖及 exact SHA artifact', 'gates.visual');
   }
 
   const songIds = new Set();
