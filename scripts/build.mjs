@@ -37,6 +37,7 @@ const designCss = `:root {
   --staff-canvas-height: ${geometry.staff_canvas_height_px}px;
   --stave-top-line-y: ${geometry.stave_top_line_y_px}px;
   --numbered-row-height: ${geometry.numbered_row_height_px}px;
+  --numbered-note-height: ${geometry.numbered_note_height_px}px;
   --numbered-staff-gap: ${geometry.numbered_to_staff_top_line_gap_px}px;
   --lyric-staff-gap: ${geometry.lyric_row.staff_bottom_line_to_top_px}px;
   --lyric-line-height: ${geometry.lyric_row.line_height_px}px;
