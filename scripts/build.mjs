@@ -9,6 +9,13 @@ if (!validation.pass) {
   process.exit(1);
 }
 
+const vexflowPackage = JSON.parse(await readFile('node_modules/vexflow/package.json', 'utf8'));
+if (vexflowPackage.version !== data.rendering.staff.version) {
+  throw new Error(
+    `VexFlow version mismatch: installed ${vexflowPackage.version}, expected ${data.rendering.staff.version}`,
+  );
+}
+
 const hash = createHash('sha256').update(source).digest('hex');
 const template = await readFile('src/index.template.html', 'utf8');
 const html = template
@@ -18,6 +25,8 @@ const html = template
 const page = data.layout.page;
 const title = data.layout.title;
 const system = data.layout.notation_system;
+const staff = system.staff;
+const alignment = system.alignment;
 const noteBox = data.notation.note_box;
 const octaveDot = data.notation.octave_dot;
 const typography = data.notation.typography;
@@ -28,6 +37,9 @@ const designCss = `:root {
   --title-max-width: ${title.max_width_percent}%;
   --system-gap: ${system.system_gap_px}px;
   --max-events-per-system: ${system.max_events_per_system};
+  --staff-width: ${staff.width_px}px;
+  --staff-height: ${staff.height_px}px;
+  --staff-alignment-tolerance: ${alignment.tolerance_px}px;
   --note-box-width: ${noteBox.width_px}px;
   --note-box-height: ${noteBox.height_px}px;
   --note-box-border-width: ${noteBox.border_width_px}px;
@@ -43,13 +55,18 @@ const designCss = `:root {
 `;
 
 await rm('dist', { recursive: true, force: true });
-await mkdir('dist', { recursive: true });
+await mkdir('dist/vendor', { recursive: true });
 await writeFile('dist/index.html', html);
 await writeFile('dist/design.css', designCss);
 await writeFile('dist/scorebook.json', `${JSON.stringify(data, null, 2)}\n`);
 await writeFile('dist/gate-report.json', `${JSON.stringify(validation, null, 2)}\n`);
 await cp('src/app.js', 'dist/app.js');
 await cp('src/layout.js', 'dist/layout.js');
+await cp('src/staff-model.js', 'dist/staff-model.js');
+await cp('src/staff-renderer.js', 'dist/staff-renderer.js');
 await cp('src/styles.css', 'dist/styles.css');
+await cp('node_modules/vexflow/build/cjs/vexflow.js', 'dist/vendor/vexflow.js');
 
-console.log(`Built dist/ from scorebook ${data.project.version} (${hash.slice(0, 12)})`);
+console.log(
+  `Built dist/ from scorebook ${data.project.version} (${hash.slice(0, 12)}) with VexFlow ${vexflowPackage.version}`,
+);
