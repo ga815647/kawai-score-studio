@@ -1,6 +1,6 @@
 {
   "name": "kawai-score-studio",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,8 @@
     "check": "npm run validate && npm run build && npm test"
   },
   "dependencies": {
-    "yaml": "^2.8.1"
+    "vexflow": "5.0.0",
+    "yaml": "2.8.1"
   },
   "engines": {
     "node": ">=20"
