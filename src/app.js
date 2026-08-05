@@ -18,6 +18,14 @@ function parsePitch(token) {
   };
 }
 
+function createOctaveDot(position, active) {
+  const dot = document.createElement('span');
+  dot.className = `octave-dot octave-dot--${position}`;
+  dot.setAttribute('aria-hidden', 'true');
+  if (active) dot.classList.add('octave-dot--active');
+  return dot;
+}
+
 function createNoteBox(event, palette) {
   const { degree, suffix } = parsePitch(event.pitch);
   const color = palette[String(degree)].hex;
@@ -27,17 +35,13 @@ function createNoteBox(event, palette) {
   box.style.setProperty('--note-color', color);
   box.setAttribute('aria-label', `${suffix === '^' ? '高音' : suffix === '_' ? '低音' : ''}${degree}`);
 
-  const upper = document.createElement('span');
-  upper.className = 'octave-dot octave-dot--upper';
-  upper.textContent = suffix === '^' ? '●' : '';
+  const upper = createOctaveDot('upper', suffix === '^');
 
   const number = document.createElement('span');
   number.className = 'note-number';
   number.textContent = String(degree);
 
-  const lower = document.createElement('span');
-  lower.className = 'octave-dot octave-dot--lower';
-  lower.textContent = suffix === '_' ? '●' : '';
+  const lower = createOctaveDot('lower', suffix === '_');
 
   box.append(upper, number, lower);
   return box;
