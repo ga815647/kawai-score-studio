@@ -85,14 +85,17 @@ function requiredShift(collisionAmount, maximumShift, eventId, target) {
 }
 
 function renderedGlyphBounds(note, numberedRowHeight, eventId) {
-  const boundingBox = note.getBoundingBox();
-  if (!boundingBox) throw new Error(`找不到 ${eventId} 的 VexFlow StaveNote bounding box`);
-  const top = numberedRowHeight + boundingBox.getY();
+  const element = note.getSVGElement();
+  if (!element || typeof element.getBBox !== 'function') {
+    throw new Error(`找不到 ${eventId} 的 VexFlow StaveNote SVG group`);
+  }
+  const boundingBox = element.getBBox();
+  const top = numberedRowHeight + boundingBox.y;
   return {
-    left: boundingBox.getX(),
+    left: boundingBox.x,
     top,
-    right: boundingBox.getX() + boundingBox.getW(),
-    bottom: top + boundingBox.getH(),
+    right: boundingBox.x + boundingBox.width,
+    bottom: top + boundingBox.height,
   };
 }
 
@@ -242,7 +245,7 @@ function renderSystem(container, score, palette, options) {
     numbered.dataset.adjustedGlyphClearancePx = (defaultNumberClearance + numberedShift).toFixed(3);
     numbered.dataset.glyphTopPx = glyph.top.toFixed(3);
     numbered.dataset.glyphBottomPx = glyph.bottom.toFixed(3);
-    numbered.dataset.boundingSource = 'vexflow-stavenote-bounding-box';
+    numbered.dataset.boundingSource = 'vexflow-stavenote-svg-getbbox';
     numbered.dataset.collisionAdjusted = String(numberedShift > 0);
 
     let lyricShift = 0;
@@ -265,7 +268,7 @@ function renderSystem(container, score, palette, options) {
       lyric.dataset.adjustedGlyphClearancePx = (defaultLyricClearance + lyricShift).toFixed(3);
       lyric.dataset.glyphTopPx = glyph.top.toFixed(3);
       lyric.dataset.glyphBottomPx = glyph.bottom.toFixed(3);
-      lyric.dataset.boundingSource = 'vexflow-stavenote-bounding-box';
+      lyric.dataset.boundingSource = 'vexflow-stavenote-svg-getbbox';
       lyric.dataset.collisionAdjusted = String(lyricShift > 0);
       maximumLyricShift = Math.max(maximumLyricShift, lyricShift);
     }
@@ -295,7 +298,7 @@ function renderSystem(container, score, palette, options) {
   system.dataset.lyricRowTop = lyricRowTop.toFixed(3);
   system.dataset.defaultLyricTop = lyricRowTop.toFixed(3);
   system.dataset.glyphClearance = glyphClearance.toFixed(3);
-  system.dataset.boundingSource = 'vexflow-stavenote-bounding-box';
+  system.dataset.boundingSource = 'vexflow-stavenote-svg-getbbox';
   system.dataset.eventCenters = JSON.stringify(Object.fromEntries(eventCenters));
   system.dataset.verticalAdjustments = JSON.stringify(adjustments);
   return { system, model, eventCenters, adjustments };
