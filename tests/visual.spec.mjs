@@ -1,13 +1,23 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 
 const reportDirectory = 'reports/visual';
+const book = JSON.parse(await readFile('dist/scorebook.json', 'utf8'));
+const visualMeasurements = book.gates.visual.measurements;
 
 function round(value) {
   return Math.round(value * 1000) / 1000;
 }
 
-test('fixture renders numbered notation above staff and English lyrics below', async ({ page }) => {
+function maximumDelta(values) {
+  return values.length > 0 ? Math.max(...values) - Math.min(...values) : 0;
+}
+
+function maximumAbsolute(values) {
+  return values.length > 0 ? Math.max(...values.map(Math.abs)) : 0;
+}
+
+test('fixture renders tighter numbered notation and a shared lyric baseline', async ({ page }) => {
   await mkdir(reportDirectory, { recursive: true });
   await page.goto('/?fixture=1', { waitUntil: 'networkidle' });
   await expect(page.locator('.status--pass')).toBeVisible();
@@ -37,10 +47,22 @@ test('fixture renders numbered notation above staff and English lyrics below', a
       const lyricRects = lyrics.map((item) => item.getBoundingClientRect());
       const numberBottom = Math.max(...numberedRects.map((rect) => rect.bottom));
       const lyricTop = Math.min(...lyricRects.map((rect) => rect.top));
-      const expectedCenters = numbered.map((item) => staffRect.left + Number(item.dataset.staffCenterX));
-      const numberCenterErrors = numberedRects.map((rect, index) => (
-        (rect.left + rect.right) / 2 - expectedCenters[index]
+      const lyricTops = lyricRects.map((rect) => rect.top);
+      const lyricBottoms = lyricRects.map((rect) => rect.bottom);
+
+      const numberExpectedCenters = numbered.map((item) => (
+        staffRect.left + Number(item.dataset.staffCenterX)
       ));
+      const lyricExpectedCenters = lyrics.map((item) => (
+        staffRect.left + Number(item.dataset.staffCenterX)
+      ));
+      const numberCenterErrors = numberedRects.map((rect, index) => (
+        (rect.left + rect.right) / 2 - numberExpectedCenters[index]
+      ));
+      const lyricCenterErrors = lyricRects.map((rect, index) => (
+        (rect.left + rect.right) / 2 - lyricExpectedCenters[index]
+      ));
+
       const sortedLyrics = lyricRects.slice().sort((a, b) => a.left - b.left);
       const lyricGaps = sortedLyrics.slice(1).map((rect, index) => rect.left - sortedLyrics[index].right);
 
@@ -55,24 +77,19 @@ test('fixture renders numbered notation above staff and English lyrics below', a
         numberToStaffGap: topLine - numberBottom,
         staffToLyricGap: lyricTop - bottomLine,
         maximumNumberCenterError: Math.max(...numberCenterErrors.map(Math.abs)),
+        maximumLyricCenterError: Math.max(...lyricCenterErrors.map(Math.abs)),
+        lyricTopDelta: Math.max(...lyricTops) - Math.min(...lyricTops),
+        lyricBottomDelta: Math.max(...lyricBottoms) - Math.min(...lyricBottoms),
         minimumLyricGap: lyricGaps.length > 0 ? Math.min(...lyricGaps) : null,
       };
     });
     measurements.push(metric);
-
-    expect(metric.numberToStaffGap, '簡譜不可碰到五線譜').toBeGreaterThanOrEqual(8);
-    expect(metric.staffToLyricGap, '歌詞必須位於五線譜下方').toBeGreaterThanOrEqual(2);
-    expect(metric.maximumNumberCenterError, '簡譜中心必須對準音頭').toBeLessThanOrEqual(1);
-    if (metric.minimumLyricGap !== null) {
-      expect(metric.minimumLyricGap, '英文歌詞不可互相重疊').toBeGreaterThanOrEqual(0);
-    }
   }
 
   const pageOverflow = await page.locator('#score-page').evaluate((element) => ({
     scrollWidth: element.scrollWidth,
     clientWidth: element.clientWidth,
   }));
-  expect(pageOverflow.scrollWidth).toBeLessThanOrEqual(pageOverflow.clientWidth + 1);
 
   await page.locator('#score-page').screenshot({
     path: `${reportDirectory}/synthetic-fixture-a4.png`,
@@ -85,10 +102,26 @@ test('fixture renders numbered notation above staff and English lyrics below', a
     caret: 'hide',
   });
 
+  const numberGapRange = visualMeasurements.numbered_to_staff_top_line_gap_px;
+  const lyricGapRange = visualMeasurements.staff_bottom_line_to_lyric_top_px;
+  const lyricAlignmentMaximum = visualMeasurements.lyric_vertical_alignment_delta_px.max;
+  const pass = measurements.every((metric) => (
+    metric.numberToStaffGap >= numberGapRange.min
+    && metric.numberToStaffGap <= numberGapRange.max
+    && metric.staffToLyricGap >= lyricGapRange.min
+    && metric.staffToLyricGap <= lyricGapRange.max
+    && metric.maximumNumberCenterError <= 1
+    && metric.maximumLyricCenterError <= 1
+    && metric.lyricTopDelta <= lyricAlignmentMaximum
+    && metric.lyricBottomDelta <= lyricAlignmentMaximum
+    && (metric.minimumLyricGap === null || metric.minimumLyricGap >= 0)
+  )) && pageOverflow.scrollWidth <= pageOverflow.clientWidth + 1;
+
   const report = {
-    pass: true,
+    pass,
     headSha: process.env.GITHUB_SHA ?? null,
     fixture: 'layout-rhythm-language',
+    configuredMeasurements: visualMeasurements,
     screenshots: [
       'synthetic-fixture-a4.png',
       'synthetic-fixture-first-system.png',
@@ -98,4 +131,22 @@ test('fixture renders numbered notation above staff and English lyrics below', a
     )),
   };
   await writeFile(`${reportDirectory}/visual-gate-report.json`, `${JSON.stringify(report, null, 2)}\n`);
+
+  for (const metric of measurements) {
+    expect(metric.numberToStaffGap, '簡譜與五線譜距離太近').toBeGreaterThanOrEqual(numberGapRange.min);
+    expect(metric.numberToStaffGap, '簡譜與五線譜距離太遠').toBeLessThanOrEqual(numberGapRange.max);
+    expect(metric.staffToLyricGap, '歌詞與五線譜距離太近').toBeGreaterThanOrEqual(lyricGapRange.min);
+    expect(metric.staffToLyricGap, '歌詞與五線譜距離太遠').toBeLessThanOrEqual(lyricGapRange.max);
+    expect(metric.maximumNumberCenterError, '簡譜中心必須對準音頭').toBeLessThanOrEqual(1);
+    expect(metric.maximumLyricCenterError, '歌詞中心必須對準音頭').toBeLessThanOrEqual(1);
+    expect(metric.lyricTopDelta, '同一譜行歌詞 top 必須整齊').toBeLessThanOrEqual(lyricAlignmentMaximum);
+    expect(metric.lyricBottomDelta, '同一譜行歌詞 bottom 必須整齊').toBeLessThanOrEqual(lyricAlignmentMaximum);
+    if (metric.minimumLyricGap !== null) {
+      expect(metric.minimumLyricGap, '英文歌詞不可互相重疊').toBeGreaterThanOrEqual(0);
+    }
+  }
+
+  expect(maximumDelta(measurements.map((metric) => metric.lyricTopDelta))).toBeLessThanOrEqual(lyricAlignmentMaximum);
+  expect(maximumAbsolute(measurements.map((metric) => metric.maximumLyricCenterError))).toBeLessThanOrEqual(1);
+  expect(pageOverflow.scrollWidth).toBeLessThanOrEqual(pageOverflow.clientWidth + 1);
 });
