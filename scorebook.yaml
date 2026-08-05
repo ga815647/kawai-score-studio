@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.3.0
+  version: 0.3.1
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -67,6 +67,12 @@ layout:
     horizontal_overflow: forbidden
     note_row_border: none
     system_gap_px: 12
+    numbered_notation:
+      duration_extension_marks: forbidden
+      note_row_height_px: 92
+      lyric_top_px: 70
+      staff_pull_up_px: 8
+      min_lyric_to_staff_content_gap_px: 8
     alignment:
       source: vexflow_first_notehead_absolute_x
       targets:
@@ -118,7 +124,6 @@ notation:
   typography:
     note_number_px: 27
     lyric_px: 15
-    extension_px: 10
   upper_dot:
     location: inside_box
     alignment: centered_above_number
@@ -128,7 +133,6 @@ notation:
     alignment: centered_below_number
     color: inherit
   barline_color: "#222222"
-  extension_color: "#222222"
 
 workflow:
   - read_scorebook
@@ -165,6 +169,8 @@ gates:
       - staff_pitch_is_derived_from_song_key
       - composite_duration_is_split_and_tied
       - shared_vexflow_anchor_used_by_note_box_and_lyric
+      - no_numbered_duration_extension_marks
+      - numbered_notation_spacing_generated_from_scorebook
       - octave_dot_inside_box
       - octave_dot_centered
       - octave_dot_inherits_note_color
@@ -181,6 +187,8 @@ gates:
       - staff_is_secondary
       - note_box_center_matches_staff_notehead_within_tolerance
       - lyric_center_matches_staff_notehead_within_tolerance
+      - numbered_notation_group_is_close_to_staff
+      - lyric_does_not_touch_staff_content
       - vexflow_renders_clef_key_and_time_signature
       - vexflow_renders_dots_beams_and_ties
       - no_horizontal_scroll
@@ -197,7 +205,9 @@ gates:
       - exact_page_dimensions
       - song_page_not_split
       - no_horizontal_overflow
+      - no_numbered_duration_underline
       - staff_and_numbered_notation_alignment_survives_print
+      - compact_notation_staff_spacing_survives_print
       - octave_dot_clearance_survives_print
       - yellow_and_lime_remain_legible
   release:
