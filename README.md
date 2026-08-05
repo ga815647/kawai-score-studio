@@ -1,49 +1,31 @@
 # Kawai Score Studio
 
-以 `scorebook.yaml` 驅動的兒童木琴琴譜產生器。
+由 `scorebook.yaml` 的結構化 event 資料產生彩色簡譜、歌詞、五線譜與 Gate 報告。
 
-## 現在可以做什麼
+## 正式規格
 
-- 驗證音符是否落在 KAWAI 16 音木琴的實際音域內
-- 驗證每個起音都有歌詞、節奏時值為正整數
-- 產生彩色數字簡譜
-- 將上點／下點固定在框內、數字正上方／正下方，並與數字同色
-- 從同一組 event 資料產生五線譜 SVG 對照
-- 顯示／隱藏歌詞與五線譜
-- 以 A4 直式列印，每首歌獨立分頁
-- 在 GitHub Actions 自動跑 Gate，通過後可部署 GitHub Pages
+- `scorebook.yaml` 是唯一正式規格檔。
+- `dist/` 與 `reports/` 都是生成結果，不可手工修改來修正正式內容。
+- 彩色簡譜、歌詞與五線譜由同一組 event 資料產生。
+- 琴譜只能使用 KAWAI 16 音木琴實際存在的音。
 
-第一版先收錄三首完整資料：
+## 目前版型
 
-1. 生日快樂
-2. 小小蜘蛛（6/8 原曲）
-3. 老鼠時鐘（6/8 原曲）
+- 固定 A4 直式書頁，四周 12mm 邊界。
+- 日式兒童教材風格的靠左圓角標題區。
+- 彩色方框簡譜為主，五線譜為輔。
+- 每個譜行最多 13 個 event；過長 phrase 由產生器分行，不遺失資料。
+- 網頁窄螢幕以整張 A4 等比例縮小，不提供譜行橫向捲動。
+- 插圖暫不放置；未來只能加入不承載文字或琴譜的裝飾圖。
+- 不產生鋼琴鍵盤對照區。
 
-其餘已知曲目列在 `scorebook.yaml` 的 `catalog`，後續逐首遷移成相同 event 格式。
-
-## 開發
-
-需要 Node.js 20 以上版本。
+## 開發與驗證
 
 ```bash
 npm install
 npm run check
 ```
 
-建置完成後，靜態網站位於 `dist/`：
+`npm run check` 依序執行正式規格驗證、HTML 建置與測試。必要 Gate 未通過時不得發佈。
 
-```bash
-python -m http.server 8000 -d dist
-```
-
-再開啟 `http://localhost:8000`。
-
-## 專案規則
-
-- 正式規格只修改 `scorebook.yaml`
-- `dist/` 與 `reports/` 都是可重新產生的輸出
-- 不直接修改生成後的 HTML 來修正曲譜
-- 圖片不得承載音符、歌詞、上下點或五線譜
-- 必要 Gate 未通過時不得發佈
-
-詳細工作規範請見 [`AGENTS.md`](./AGENTS.md)。
+正常變更使用 branch 與 PR。驗證時必須核對 PR exact head SHA 所對應的 GitHub Actions CI run；PR 或 commit 存在不代表驗證成功。
