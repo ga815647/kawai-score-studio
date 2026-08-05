@@ -127,10 +127,13 @@ function renderSystem(container, score, palette, options) {
   const geometry = options.geometry ?? {};
   const width = geometry.staff_width_px ?? 700;
   const height = geometry.staff_canvas_height_px ?? 170;
-  const staveY = geometry.stave_top_line_y_px ?? 18;
+  const staveY = geometry.stave_top_line_y_px ?? 14;
   const numberedRowHeight = geometry.numbered_row_height_px ?? 50;
   const numberedNoteHeight = geometry.numbered_note_height_px ?? 52;
-  const lyricGap = geometry.lyric_row?.staff_bottom_line_to_top_px ?? 12;
+  const lockedRows = geometry.locked_standard_rows ?? {};
+  const lockedNumberedRowTop = lockedRows.numbered_row_top_px ?? 0;
+  const lockedLyricRowTop = lockedRows.lyric_row_top_px;
+  const lyricGap = geometry.lyric_row?.staff_bottom_line_to_top_px ?? 16;
   const lyricLineHeight = geometry.lyric_row?.line_height_px ?? 22;
   const collision = geometry.collision_adjustment ?? {};
   const glyphClearance = collision.glyph_clearance_px ?? 6;
@@ -214,7 +217,8 @@ function renderSystem(container, score, palette, options) {
 
   const staffTopLineY = stave.getYForLine(0);
   const staffBottomLineY = stave.getYForLine(4);
-  const lyricRowTop = numberedRowHeight + staffBottomLineY + lyricGap;
+  const computedLyricRowTop = numberedRowHeight + staffBottomLineY + lyricGap;
+  const lyricRowTop = Number.isFinite(lockedLyricRowTop) ? lockedLyricRowTop : computedLyricRowTop;
   lyricRow.style.top = `${lyricRowTop}px`;
 
   const eventGlyphBounds = new Map();
@@ -241,7 +245,7 @@ function renderSystem(container, score, palette, options) {
     numbered.dataset.staffCenterX = center.toFixed(3);
     numberedRow.append(numbered);
 
-    const defaultNumberBottom = numberedNoteHeight;
+    const defaultNumberBottom = lockedNumberedRowTop + numberedNoteHeight;
     const defaultNumberClearance = glyph.top - defaultNumberBottom;
     const numberedShift = requiredShift(
       glyphClearance - defaultNumberClearance,
@@ -249,10 +253,10 @@ function renderSystem(container, score, palette, options) {
       event.id,
       '簡譜',
     );
-    numbered.style.top = `${-numberedShift}px`;
+    numbered.style.top = `${lockedNumberedRowTop - numberedShift}px`;
     numbered.dataset.verticalShiftPx = String(-numberedShift);
-    numbered.dataset.standardTopPx = '0';
-    numbered.dataset.standardBottomPx = numberedNoteHeight.toFixed(3);
+    numbered.dataset.standardTopPx = lockedNumberedRowTop.toFixed(3);
+    numbered.dataset.standardBottomPx = defaultNumberBottom.toFixed(3);
     numbered.dataset.standardGeometrySource = 'scorebook-system-geometry';
     numbered.dataset.defaultGlyphClearancePx = defaultNumberClearance.toFixed(3);
     numbered.dataset.adjustedGlyphClearancePx = (defaultNumberClearance + numberedShift).toFixed(3);
@@ -310,7 +314,7 @@ function renderSystem(container, score, palette, options) {
   system.dataset.staffBottomLineY = staffBottomLineY.toFixed(3);
   system.dataset.numberedRowHeight = numberedRowHeight.toFixed(3);
   system.dataset.numberedNoteHeight = numberedNoteHeight.toFixed(3);
-  system.dataset.defaultNumberedTop = '0';
+  system.dataset.defaultNumberedTop = lockedNumberedRowTop.toFixed(3);
   system.dataset.lyricRowTop = lyricRowTop.toFixed(3);
   system.dataset.defaultLyricTop = lyricRowTop.toFixed(3);
   system.dataset.standardGeometrySource = 'scorebook-system-geometry';
