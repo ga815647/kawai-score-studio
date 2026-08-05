@@ -127,13 +127,13 @@ function renderSystem(container, score, palette, options) {
   const geometry = options.geometry ?? {};
   const width = geometry.staff_width_px ?? 700;
   const height = geometry.staff_canvas_height_px ?? 170;
-  const staveY = geometry.stave_top_line_y_px ?? 14;
+  const staveY = geometry.stave_top_line_y_px ?? 12;
   const numberedRowHeight = geometry.numbered_row_height_px ?? 50;
   const numberedNoteHeight = geometry.numbered_note_height_px ?? 52;
   const lockedRows = geometry.locked_standard_rows ?? {};
   const lockedNumberedRowTop = lockedRows.numbered_row_top_px ?? 0;
   const lockedLyricRowTop = lockedRows.lyric_row_top_px;
-  const lyricGap = geometry.lyric_row?.staff_bottom_line_to_top_px ?? 16;
+  const lyricGap = geometry.lyric_row?.staff_bottom_line_to_top_px ?? 18;
   const lyricLineHeight = geometry.lyric_row?.line_height_px ?? 22;
   const collision = geometry.collision_adjustment ?? {};
   const glyphClearance = collision.glyph_clearance_px ?? 6;
