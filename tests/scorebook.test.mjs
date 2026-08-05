@@ -15,7 +15,7 @@ test('scorebook passes content and design gate', async () => {
   const { data } = await loadScorebook();
   const result = validateScorebook(data);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(data.project.version, '0.5.0');
+  assert.equal(data.project.version, '0.5.1');
 });
 
 test('instrument has the expected 16-note range', async () => {
@@ -50,13 +50,13 @@ test('staff renderer and browser visual runner are version pinned', async () => 
   });
 
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-  assert.equal(packageJson.version, '0.5.0');
+  assert.equal(packageJson.version, '0.5.1');
   assert.equal(packageJson.dependencies.vexflow, '5.0.0');
   assert.match(packageJson.scripts.visual, /@playwright\/test@1\.55\.0/);
   assert.equal(packageJson.scripts['check:visual'], 'npm run check && npm run visual');
 });
 
-test('layout uses unboxed colored numbers and safe staff spacing', async () => {
+test('layout uses smaller numbers, larger lyrics, and a wider staff gap', async () => {
   const { data } = await loadScorebook();
   const system = data.layout.notation_system;
   assert.equal(data.layout.profile, 'a4_japanese_textbook');
@@ -76,9 +76,9 @@ test('layout uses unboxed colored numbers and safe staff spacing', async () => {
     duration_extension_marks: 'forbidden',
     note_row_height_px: 82,
     lyric_top_px: 58,
-    staff_pull_up_px: 12,
-    min_lyric_to_staff_content_gap_px: 8,
-    max_lyric_to_staff_content_gap_px: 12,
+    staff_pull_up_px: 8,
+    min_lyric_to_staff_content_gap_px: 12,
+    max_lyric_to_staff_content_gap_px: 16,
   });
   assert.deepEqual(system.alignment, {
     source: 'vexflow_notehead_bounds_center_x',
@@ -87,12 +87,14 @@ test('layout uses unboxed colored numbers and safe staff spacing', async () => {
   });
   assert.deepEqual(data.gates.visual.measurements, {
     lyric_to_staff_top_line_gap_px: {
-      min: 8,
-      max: 12,
+      min: 12,
+      max: 16,
     },
     number_center_to_notehead_center_error_px: {
       max: 1,
     },
+    lyric_font_size_px: 18,
+    note_number_font_size_px: 26,
   });
 });
 
@@ -124,8 +126,8 @@ test('unboxed numbered notes retain approved octave dot clearances', async () =>
   const { data } = await loadScorebook();
   assert.equal('note_box' in data.notation, false);
   assert.deepEqual(data.notation.numbered_note, {
-    width_px: 30,
-    stack_height_px: 56,
+    width_px: 28,
+    stack_height_px: 52,
     border: 'none',
     background: 'none',
   });
@@ -135,8 +137,8 @@ test('unboxed numbered notes retain approved octave dot clearances', async () =>
     min_number_clearance_px: 3,
   });
   assert.deepEqual(data.notation.typography, {
-    note_number_px: 30,
-    lyric_px: 15,
+    note_number_px: 26,
+    lyric_px: 18,
   });
   assert.deepEqual(data.notation.upper_dot, {
     location: 'above_number',
@@ -204,7 +206,7 @@ test('every real system preserves events and produces one staff anchor per event
   }
 });
 
-test('generated CSS and source enforce unboxed notehead-centered geometry', async () => {
+test('generated CSS and source enforce typography and notehead-centered geometry', async () => {
   const [
     designCss,
     styles,
@@ -223,17 +225,21 @@ test('generated CSS and source enforce unboxed notehead-centered geometry', asyn
 
   assert.match(designCss, /--numbered-note-row-height: 82px;/);
   assert.match(designCss, /--numbered-lyric-top: 58px;/);
-  assert.match(designCss, /--staff-pull-up: 12px;/);
-  assert.match(designCss, /--min-lyric-staff-gap: 8px;/);
-  assert.match(designCss, /--max-lyric-staff-gap: 12px;/);
-  assert.match(designCss, /--numbered-note-width: 30px;/);
-  assert.match(designCss, /--numbered-note-stack-height: 56px;/);
+  assert.match(designCss, /--staff-pull-up: 8px;/);
+  assert.match(designCss, /--min-lyric-staff-gap: 12px;/);
+  assert.match(designCss, /--max-lyric-staff-gap: 16px;/);
+  assert.match(designCss, /--numbered-note-width: 28px;/);
+  assert.match(designCss, /--numbered-note-stack-height: 52px;/);
+  assert.match(designCss, /--note-number-size: 26px;/);
+  assert.match(designCss, /--lyric-size: 18px;/);
   assert.doesNotMatch(designCss, /note-box|border-clearance|extension/i);
 
   assert.match(styles, /\.numbered-note\s*\{/);
+  assert.match(styles, /font-size:\s*var\(--note-number-size, 26px\)/);
+  assert.match(styles, /font-size:\s*var\(--lyric-size, 18px\)/);
   assert.match(styles, /border:\s*0;/);
   assert.match(styles, /background:\s*transparent;/);
-  assert.match(styles, /margin:\s*calc\(-1 \* var\(--staff-pull-up, 12px\)\) 0 0/);
+  assert.match(styles, /margin:\s*calc\(-1 \* var\(--staff-pull-up, 8px\)\) 0 0/);
   assert.doesNotMatch(styles, /\.note-box|--note-box|\.extensions|overflow-x:\s*auto/);
 
   assert.match(appSource, /createNumberedNote/);
@@ -246,10 +252,13 @@ test('generated CSS and source enforce unboxed notehead-centered geometry', asyn
   assert.match(staffRendererSource, /vexflow-notehead-bounds-center/);
   assert.doesNotMatch(staffRendererSource, /model\.anchorSegmentIndexes\.map\([^]*getAbsoluteX\(\)/);
 
+  assert.match(visualSpecSource, /lyricFontSize/);
+  assert.match(visualSpecSource, /noteNumberFontSize/);
+  assert.match(visualSpecSource, /expectedLyricFontSize/);
+  assert.match(visualSpecSource, /expectedNoteNumberFontSize/);
   assert.match(visualSpecSource, /numberCenterErrors/);
   assert.match(visualSpecSource, /lyricCenterErrors/);
   assert.match(visualSpecSource, /noteBoxCount/);
-  assert.match(visualSpecSource, /number_center_to_notehead_center_error_px/);
   assert.match(visualSpecSource, /visual-gate-report\.json/);
   assert.match(agentsSource, /無框彩色數字/);
   assert.doesNotMatch(agentsSource, /彩色框內/);
@@ -268,7 +277,7 @@ test('CI and Pages require Chromium screenshots and upload exact-SHA artifacts',
   }
 });
 
-test('all required gates include unboxed and measured-alignment checks', async () => {
+test('all required gates include typography and measured-alignment checks', async () => {
   const { data } = await loadScorebook();
   for (const gate of ['content', 'html', 'visual', 'print', 'release']) {
     assert.equal(data.gates[gate].required, true, `${gate} gate must be required`);
@@ -276,10 +285,14 @@ test('all required gates include unboxed and measured-alignment checks', async (
   assert.ok(data.gates.html.checks.includes('no_note_box_markup'));
   assert.ok(data.gates.html.checks.includes('no_note_box_border_or_background'));
   assert.ok(data.gates.html.checks.includes('shared_vexflow_notehead_center_used_by_number_and_lyric'));
+  assert.ok(data.gates.html.checks.includes('typography_generated_from_scorebook'));
   assert.ok(data.gates.visual.checks.includes('note_boxes_are_absent'));
   assert.ok(data.gates.visual.checks.includes('actual_number_to_notehead_center_error_within_spec'));
   assert.ok(data.gates.visual.checks.includes('actual_lyric_to_staff_top_line_gap_within_spec'));
+  assert.ok(data.gates.visual.checks.includes('actual_lyric_font_size_matches_spec'));
+  assert.ok(data.gates.visual.checks.includes('actual_note_number_font_size_matches_spec'));
   assert.ok(data.gates.print.checks.includes('no_note_box_in_print'));
+  assert.ok(data.gates.print.checks.includes('typography_size_survives_print'));
 });
 
 test('every event pitch remains parseable and playable', async () => {
