@@ -44,12 +44,15 @@
 2. 五線譜
 3. 歌詞
 
-簡譜底部到五線譜第一條線的目標距離為 16px。歌詞由獨立 HTML 歌詞列產生，不使用 VexFlow Annotation；同一譜行所有音節共用相同 top、height 與 line-height，只讓 X 座標對準各自音頭。Chromium Gate 要求歌詞 top 與 bottom 的最大高低差都不超過 1px。
+全曲預設使用相同的簡譜列與歌詞 baseline。只有實際 VexFlow 音符外框會碰撞時，才針對該 event 做最小位移：高音只上移對應簡譜，低音只下移對應歌詞；其他 event 仍維持全曲標準位置。
 
 ## 引擎測試
 
 引擎 Gate 只使用 [`fixtures/engine-fixtures.yaml`](./fixtures/engine-fixtures.yaml) 的合成資料。fixture 涵蓋：
 
+- 至少兩個譜行
+- KAWAI 16 音木琴最低音 `4_`
+- KAWAI 16 音木琴最高音 `5^`
 - 弱起拍
 - 小節容量
 - note 與 rest
@@ -57,6 +60,8 @@
 - 獨立英文 lyric track
 - 長英文音節排版
 - 瀏覽器播放資料
+
+Chromium Gate 會量測全曲預設列是否一致、未碰撞 event 是否保持零位移、最高音簡譜是否只向上調整、最低音歌詞是否只向下調整，以及位移後是否仍保留規定的音符外框安全距離。
 
 fixture 不是真實歌曲，禁止當作正式曲目發佈。
 
