@@ -11,7 +11,11 @@ function round(value) {
   return Math.round(value * 1000) / 1000;
 }
 
-test('browser visual gate captures A4 screenshots and enforces compact spacing', async ({ page }) => {
+function maxAbsolute(values) {
+  return Math.max(0, ...values.map((value) => Math.abs(value)));
+}
+
+test('browser visual gate captures A4 screenshots and validates unboxed number geometry', async ({ page }) => {
   await mkdir(artifactDirectory, { recursive: true });
   await page.goto('/', { waitUntil: 'networkidle' });
   await expect(page.locator(visualGate.runner.wait_for_selector)).toBeVisible();
@@ -19,6 +23,7 @@ test('browser visual gate captures A4 screenshots and enforces compact spacing',
   const song = page.locator(`.song-page[data-song-id="${visualGate.runner.target_song_id}"]`);
   await expect(song).toBeVisible();
   await expect(song.locator('.phrase-system')).not.toHaveCount(0);
+  await expect(song.locator('.note-box')).toHaveCount(0);
 
   const pageScale = await song.evaluate((article) => Number(article.parentElement?.dataset.scale ?? '1'));
   expect(pageScale).toBeGreaterThan(0);
@@ -27,32 +32,68 @@ test('browser visual gate captures A4 screenshots and enforces compact spacing',
     const scale = Number(article.parentElement?.dataset.scale ?? '1');
     const systems = [...article.querySelectorAll('.phrase-system')];
     return systems.map((system, index) => {
+      const row = system.querySelector('.note-row');
       const staff = system.querySelector('.staff-panel');
+      const events = [...system.querySelectorAll('.event')];
+      const numbers = [...system.querySelectorAll('.numbered-note')];
       const lyrics = [...system.querySelectorAll('.lyric')];
-      if (!(staff instanceof HTMLElement) || lyrics.length === 0) {
-        throw new Error(`第 ${index + 1} 譜行缺少 staff 或 lyric`);
+      if (
+        !(row instanceof HTMLElement)
+        || !(staff instanceof HTMLElement)
+        || events.length === 0
+        || numbers.length !== events.length
+        || lyrics.length !== events.length
+      ) {
+        throw new Error(`第 ${index + 1} 譜行缺少 row、staff、number 或 lyric`);
       }
 
+      const rowRect = row.getBoundingClientRect();
       const staffRect = staff.getBoundingClientRect();
       const topLineY = Number(staff.dataset.staffTopLineY);
       if (!Number.isFinite(topLineY)) {
         throw new Error(`第 ${index + 1} 譜行缺少 VexFlow top-line 幾何資料`);
       }
 
+      const expectedCenters = events.map((event) => {
+        const anchor = Number(event.dataset.staffAnchorX);
+        if (!Number.isFinite(anchor)) throw new Error('event 缺少 staff anchor');
+        return rowRect.left + anchor * scale;
+      });
+      const numberRects = numbers.map((number) => number.getBoundingClientRect());
       const lyricRects = lyrics.map((lyric) => lyric.getBoundingClientRect());
+      const numberCenterErrors = numberRects.map((rect, eventIndex) => (
+        (rect.left + rect.right) / 2 - expectedCenters[eventIndex]
+      ));
+      const lyricCenterErrors = lyricRects.map((rect, eventIndex) => (
+        (rect.left + rect.right) / 2 - expectedCenters[eventIndex]
+      ));
+
       const lyricBottom = Math.max(...lyricRects.map((rect) => rect.bottom));
       const staffTopLine = staffRect.top + topLineY * scale;
       const gap = staffTopLine - lyricBottom;
+      const numberStyle = getComputedStyle(numbers[0]);
 
       return {
         system: index + 1,
-        eventCount: system.querySelectorAll('.event').length,
+        eventCount: events.length,
         scale,
         lyricBottom,
         staffTopLine,
         gap,
-        minimum: gateConfig.measurements.lyric_to_staff_top_line_gap_px.min,
-        maximum: gateConfig.measurements.lyric_to_staff_top_line_gap_px.max,
+        gapMinimum: gateConfig.measurements.lyric_to_staff_top_line_gap_px.min,
+        gapMaximum: gateConfig.measurements.lyric_to_staff_top_line_gap_px.max,
+        numberCenterErrors,
+        lyricCenterErrors,
+        centerErrorMaximum: gateConfig.measurements.number_center_to_notehead_center_error_px.max,
+        noteBoxCount: system.querySelectorAll('.note-box').length,
+        numberBorderWidths: [
+          numberStyle.borderTopWidth,
+          numberStyle.borderRightWidth,
+          numberStyle.borderBottomWidth,
+          numberStyle.borderLeftWidth,
+        ],
+        numberBackgroundColor: numberStyle.backgroundColor,
+        numberBoxShadow: numberStyle.boxShadow,
       };
     });
   }, visualGate);
@@ -68,7 +109,14 @@ test('browser visual gate captures A4 screenshots and enforces compact spacing',
   }
 
   const pass = metrics.length > 0 && metrics.every((metric) => (
-    metric.gap >= metric.minimum && metric.gap <= metric.maximum
+    metric.gap >= metric.gapMinimum
+    && metric.gap <= metric.gapMaximum
+    && maxAbsolute(metric.numberCenterErrors) <= metric.centerErrorMaximum
+    && maxAbsolute(metric.lyricCenterErrors) <= metric.centerErrorMaximum
+    && metric.noteBoxCount === 0
+    && metric.numberBorderWidths.every((width) => width === '0px')
+    && metric.numberBackgroundColor === 'rgba(0, 0, 0, 0)'
+    && metric.numberBoxShadow === 'none'
   ));
   const report = {
     pass,
@@ -84,6 +132,10 @@ test('browser visual gate captures A4 screenshots and enforces compact spacing',
       lyricBottom: round(metric.lyricBottom),
       staffTopLine: round(metric.staffTopLine),
       gap: round(metric.gap),
+      numberCenterErrors: metric.numberCenterErrors.map(round),
+      lyricCenterErrors: metric.lyricCenterErrors.map(round),
+      maximumNumberCenterError: round(maxAbsolute(metric.numberCenterErrors)),
+      maximumLyricCenterError: round(maxAbsolute(metric.lyricCenterErrors)),
     })),
     screenshots: visualGate.screenshots.map((item) => item.filename),
   };
@@ -94,13 +146,25 @@ test('browser visual gate captures A4 screenshots and enforces compact spacing',
 
   expect(metrics.length).toBeGreaterThan(0);
   for (const metric of metrics) {
+    expect(metric.noteBoxCount, `第 ${metric.system} 譜行仍存在音符框`).toBe(0);
+    expect(metric.numberBorderWidths.every((width) => width === '0px')).toBe(true);
+    expect(metric.numberBackgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(metric.numberBoxShadow).toBe('none');
     expect(
       metric.gap,
       `第 ${metric.system} 譜行中文到五線譜第一線距離 ${round(metric.gap)}px 小於規格`,
-    ).toBeGreaterThanOrEqual(metric.minimum);
+    ).toBeGreaterThanOrEqual(metric.gapMinimum);
     expect(
       metric.gap,
       `第 ${metric.system} 譜行中文到五線譜第一線距離 ${round(metric.gap)}px 大於規格`,
-    ).toBeLessThanOrEqual(metric.maximum);
+    ).toBeLessThanOrEqual(metric.gapMaximum);
+    expect(
+      maxAbsolute(metric.numberCenterErrors),
+      `第 ${metric.system} 譜行彩色數字中心誤差過大`,
+    ).toBeLessThanOrEqual(metric.centerErrorMaximum);
+    expect(
+      maxAbsolute(metric.lyricCenterErrors),
+      `第 ${metric.system} 譜行中文中心誤差過大`,
+    ).toBeLessThanOrEqual(metric.centerErrorMaximum);
   }
 });
