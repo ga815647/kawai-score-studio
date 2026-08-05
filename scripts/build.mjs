@@ -49,6 +49,7 @@ await writeFile('dist/design.css', designCss);
 await writeFile('dist/scorebook.json', `${JSON.stringify(data, null, 2)}\n`);
 await writeFile('dist/gate-report.json', `${JSON.stringify(validation, null, 2)}\n`);
 await cp('src/app.js', 'dist/app.js');
+await cp('src/layout.js', 'dist/layout.js');
 await cp('src/styles.css', 'dist/styles.css');
 
 console.log(`Built dist/ from scorebook ${data.project.version} (${hash.slice(0, 12)})`);
