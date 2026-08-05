@@ -76,6 +76,24 @@ function createLyric(eventId, text, center) {
   return lyric;
 }
 
+function requiredShift(collisionAmount, maximumShift, eventId, target) {
+  const shift = Math.max(0, Math.ceil(collisionAmount));
+  if (shift > maximumShift) {
+    throw new Error(`${eventId} 的 ${target} 需要位移 ${shift}px，超過規格上限 ${maximumShift}px`);
+  }
+  return shift;
+}
+
+function renderedGlyphBounds(note, systemRect, eventId) {
+  const element = note.getSVGElement();
+  if (!element) throw new Error(`找不到 ${eventId} 的 VexFlow SVG 元素`);
+  const rect = element.getBoundingClientRect();
+  return {
+    top: rect.top - systemRect.top,
+    bottom: rect.bottom - systemRect.top,
+  };
+}
+
 function renderSystem(container, score, palette, options) {
   const VexFlow = getVexFlow();
   const {
@@ -97,6 +115,9 @@ function renderSystem(container, score, palette, options) {
   const numberedRowHeight = geometry.numbered_row_height_px ?? 50;
   const lyricGap = geometry.lyric_row?.staff_bottom_line_to_top_px ?? 12;
   const lyricLineHeight = geometry.lyric_row?.line_height_px ?? 22;
+  const collision = geometry.collision_adjustment ?? {};
+  const glyphClearance = collision.glyph_clearance_px ?? 6;
+  const maximumShift = collision.maximum_shift_px ?? 32;
 
   const system = document.createElement('section');
   system.className = 'score-system';
@@ -174,34 +195,103 @@ function renderSystem(container, score, palette, options) {
     }).setContext(context).drawWithStyle();
   });
 
+  const staffTopLineY = stave.getYForLine(0);
+  const staffBottomLineY = stave.getYForLine(4);
+  const lyricRowTop = numberedRowHeight + staffBottomLineY + lyricGap;
+  lyricRow.style.top = `${lyricRowTop}px`;
+
+  const systemRect = system.getBoundingClientRect();
+  const eventGlyphBounds = new Map();
+  model.segments.forEach((segment, index) => {
+    if (!segment.eventAnchor || segment.eventKind !== 'note') return;
+    eventGlyphBounds.set(
+      segment.eventId,
+      renderedGlyphBounds(segmentNotes[index], systemRect, segment.eventId),
+    );
+  });
+
   const lyricMap = new Map(model.track.syllables.map((syllable) => [syllable.event, syllable.text]));
+  const adjustments = [];
+  let maximumLyricShift = 0;
+
   for (const event of model.events) {
     if (event.kind !== 'note') continue;
     const center = eventCenters.get(event.id);
-    if (!Number.isFinite(center)) throw new Error(`找不到 ${event.id} 的音頭中心`);
+    const glyph = eventGlyphBounds.get(event.id);
+    if (!Number.isFinite(center) || !glyph) throw new Error(`找不到 ${event.id} 的音頭幾何資料`);
 
     const numbered = createNumberedNote(event, palette);
     numbered.style.left = `${center}px`;
     numbered.dataset.staffCenterX = center.toFixed(3);
     numberedRow.append(numbered);
 
+    const defaultNumberRect = numbered.getBoundingClientRect();
+    const defaultNumberBottom = defaultNumberRect.bottom - systemRect.top;
+    const defaultNumberClearance = glyph.top - defaultNumberBottom;
+    const numberedShift = requiredShift(
+      glyphClearance - defaultNumberClearance,
+      maximumShift,
+      event.id,
+      '簡譜',
+    );
+    numbered.style.top = `${-numberedShift}px`;
+    numbered.dataset.verticalShiftPx = String(-numberedShift);
+    numbered.dataset.defaultGlyphClearancePx = defaultNumberClearance.toFixed(3);
+    numbered.dataset.adjustedGlyphClearancePx = (defaultNumberClearance + numberedShift).toFixed(3);
+    numbered.dataset.glyphTopPx = glyph.top.toFixed(3);
+    numbered.dataset.glyphBottomPx = glyph.bottom.toFixed(3);
+    numbered.dataset.collisionAdjusted = String(numberedShift > 0);
+
+    let lyricShift = 0;
     const lyricText = lyricMap.get(event.id);
-    if (lyricText) lyricRow.append(createLyric(event.id, lyricText, center));
+    if (lyricText) {
+      const lyric = createLyric(event.id, lyricText, center);
+      lyricRow.append(lyric);
+      const defaultLyricRect = lyric.getBoundingClientRect();
+      const defaultLyricTop = defaultLyricRect.top - systemRect.top;
+      const defaultLyricClearance = defaultLyricTop - glyph.bottom;
+      lyricShift = requiredShift(
+        glyphClearance - defaultLyricClearance,
+        maximumShift,
+        event.id,
+        '歌詞',
+      );
+      lyric.style.top = `${lyricShift}px`;
+      lyric.dataset.verticalShiftPx = String(lyricShift);
+      lyric.dataset.defaultGlyphClearancePx = defaultLyricClearance.toFixed(3);
+      lyric.dataset.adjustedGlyphClearancePx = (defaultLyricClearance + lyricShift).toFixed(3);
+      lyric.dataset.glyphTopPx = glyph.top.toFixed(3);
+      lyric.dataset.glyphBottomPx = glyph.bottom.toFixed(3);
+      lyric.dataset.collisionAdjusted = String(lyricShift > 0);
+      maximumLyricShift = Math.max(maximumLyricShift, lyricShift);
+    }
+
+    adjustments.push({
+      eventId: event.id,
+      pitch: event.pitch,
+      numberedShiftPx: -numberedShift,
+      lyricShiftPx: lyricShift,
+      glyphTopPx: glyph.top,
+      glyphBottomPx: glyph.bottom,
+    });
   }
 
-  const staffTopLineY = stave.getYForLine(0);
-  const staffBottomLineY = stave.getYForLine(4);
-  const lyricRowTop = numberedRowHeight + staffBottomLineY + lyricGap;
-  lyricRow.style.top = `${lyricRowTop}px`;
+  const baseSystemHeight = numberedRowHeight + height;
+  const adjustedLyricBottom = lyricRowTop + lyricLineHeight + maximumLyricShift;
+  system.style.minHeight = `${Math.max(baseSystemHeight, adjustedLyricBottom)}px`;
 
   const svg = staff.querySelector('svg');
   svg?.setAttribute('aria-label', `${score.title} 五線譜`);
   system.dataset.staffTopLineY = staffTopLineY.toFixed(3);
   system.dataset.staffBottomLineY = staffBottomLineY.toFixed(3);
   system.dataset.numberedRowHeight = numberedRowHeight.toFixed(3);
+  system.dataset.defaultNumberedTop = '0';
   system.dataset.lyricRowTop = lyricRowTop.toFixed(3);
+  system.dataset.defaultLyricTop = lyricRowTop.toFixed(3);
+  system.dataset.glyphClearance = glyphClearance.toFixed(3);
   system.dataset.eventCenters = JSON.stringify(Object.fromEntries(eventCenters));
-  return { system, model, eventCenters };
+  system.dataset.verticalAdjustments = JSON.stringify(adjustments);
+  return { system, model, eventCenters, adjustments };
 }
 
 export function renderScore(container, score, palette, options = {}) {
