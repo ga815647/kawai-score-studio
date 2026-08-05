@@ -52,6 +52,7 @@ export function renderStaffSystem(container, events, song, layout, options = {})
   if (config.key_signature === 'from_song_key') stave.addKeySignature(model.keySignature);
   if (options.showTimeSignature) stave.addTimeSignature(song.meter);
   stave.setContext(context).draw();
+  container.dataset.staffTopLineY = stave.getYForLine(0).toFixed(3);
 
   const segmentNotes = [];
   const tickables = [];
@@ -107,5 +108,6 @@ export function renderStaffSystem(container, events, song, layout, options = {})
   return {
     anchors,
     model,
+    staffTopLineY: stave.getYForLine(0),
   };
 }
