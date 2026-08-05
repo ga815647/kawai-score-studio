@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.1.1
+  version: 0.2.0
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -38,20 +38,51 @@ palette:
   "6": { name: 黃綠色, hex: "#7E9F00" }
   "7": { name: 橘色, hex: "#E96B0C" }
 
+layout:
+  profile: a4_japanese_textbook
+  page:
+    size: A4
+    orientation: portrait
+    width_mm: 210
+    height_mm: 297
+    margin_mm: 12
+    fixed_aspect_ratio: true
+  title:
+    style: rounded_textbook_label
+    alignment: left
+    max_width_percent: 72
+  notation_system:
+    colored_note_boxes_primary: true
+    staff_secondary: true
+    max_events_per_system: 13
+    horizontal_overflow: forbidden
+    note_row_border: none
+    system_gap_px: 12
+  illustration:
+    mode: optional_later
+    carries_text: false
+    carries_notation: false
+    reserved_area: none
+    piano_keyboard: forbidden
+
 notation:
   token_pattern: "^[1-7](?:\\^|_)?$"
   duration_unit: eighth_note
   note_box:
-    width_px: 58
-    height_px: 80
+    width_px: 44
+    height_px: 68
     border_width_px: 3
-    border_radius_px: 15
+    border_radius_px: 12
     vertical_padding_px: 5
   octave_dot:
     shape: circle
     diameter_px: 10
     min_border_clearance_px: 8
     min_number_clearance_px: 4
+  typography:
+    note_number_px: 27
+    lyric_px: 15
+    extension_px: 10
   upper_dot:
     location: inside_box
     alignment: centered_above_number
@@ -88,15 +119,24 @@ gates:
     checks:
       - rendered_pitch_matches_scorebook
       - rendered_lyrics_match_scorebook
+      - phrase_events_split_without_loss
+      - system_event_count_not_above_spec
       - octave_dot_inside_box
       - octave_dot_centered
       - octave_dot_inherits_note_color
       - octave_dot_uses_circle_shape
-      - octave_dot_dimensions_generated_from_scorebook
+      - design_dimensions_generated_from_scorebook
       - no_generated_text_from_images
   visual:
     required: true
     checks:
+      - a4_aspect_ratio_preserved
+      - fixed_page_scaled_as_one_unit_on_narrow_screens
+      - rounded_textbook_title_label
+      - colored_note_boxes_are_primary
+      - staff_is_secondary
+      - no_horizontal_scroll
+      - no_piano_keyboard
       - octave_dot_diameter_matches_spec
       - octave_dot_border_clearance_at_least_spec
       - octave_dot_number_clearance_at_least_spec
@@ -106,6 +146,7 @@ gates:
     required: true
     checks:
       - a4_portrait
+      - exact_page_dimensions
       - song_page_not_split
       - no_horizontal_overflow
       - octave_dot_clearance_survives_print
