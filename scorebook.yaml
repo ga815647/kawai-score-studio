@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.1
+  version: 0.6.2
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -118,7 +118,7 @@ notation:
     default_track: original_language
     participates_in_horizontal_spacing: true
     renderer: html_overlay
-    vertical_alignment: shared_baseline
+    vertical_alignment: song_standard_with_per_event_collision_adjustment
   octave_dot:
     diameter_px: 10
     color: inherit
@@ -146,7 +146,15 @@ layout:
     lyric_row:
       staff_bottom_line_to_top_px: 12
       line_height_px: 22
-      max_vertical_alignment_delta_px: 1
+      default_baseline_shared_across_song: true
+    collision_adjustment:
+      scope: per_event
+      trigger: actual_vexflow_glyph_bounds
+      numbered_notation_direction: up_only
+      lyric_direction: down_only
+      glyph_clearance_px: 6
+      maximum_shift_px: 32
+      uncollided_event_shift_px: 0
   system_breaking:
     strategy: measure_and_required_width
     fixed_event_count_breaks: forbidden
@@ -164,6 +172,9 @@ fixtures:
   synthetic_only: true
   may_be_used_for_engine_gates: true
   may_be_published_as_songs: false
+  minimum_rendered_systems: 2
+  must_cover_instrument_lowest_note: true
+  must_cover_instrument_highest_note: true
 
 library:
   songs: []
@@ -213,6 +224,9 @@ gates:
       - tie_references_are_valid
       - lyric_event_references_are_valid
       - long_english_syllables_participate_in_spacing
+      - fixture_renders_at_least_two_systems
+      - fixture_contains_instrument_lowest_note
+      - fixture_contains_instrument_highest_note
   html:
     required: true
     checks:
@@ -220,6 +234,8 @@ gates:
       - lyrics_below_staff
       - lyrics_rendered_in_shared_html_row
       - vexflow_annotations_not_used_for_lyrics
+      - song_standard_rows_used_by_default
+      - per_event_adjustment_uses_actual_vexflow_glyph_bounds
       - one_event_source_for_numbered_notation_staff_and_playback
       - lyric_track_is_separate_from_events
       - local_studio_does_not_require_github
@@ -227,20 +243,32 @@ gates:
   visual:
     required: true
     measurements:
+      minimum_system_count: 2
       numbered_to_staff_top_line_gap_px:
         min: 14
         max: 18
       staff_bottom_line_to_lyric_top_px:
         min: 10
         max: 14
-      lyric_vertical_alignment_delta_px:
+      adjusted_glyph_clearance_px:
+        min: 6
+      default_row_delta_across_systems_px:
         max: 1
+      maximum_individual_shift_px:
+        max: 32
     checks:
       - chromium_screenshot_created
+      - at_least_two_systems_are_screenshot_tested
       - numbered_notation_staff_and_lyrics_do_not_overlap
       - numbered_notation_to_staff_gap_within_spec
       - lyrics_are_below_staff
-      - lyric_top_and_bottom_alignment_within_tolerance
+      - default_rows_match_across_entire_score
+      - uncollided_events_keep_zero_vertical_shift
+      - high_collision_moves_only_its_numbered_notation_up
+      - low_collision_moves_only_its_lyric_down
+      - instrument_highest_note_is_exercised
+      - instrument_lowest_note_is_exercised
+      - adjusted_elements_keep_required_glyph_clearance
       - lyric_centers_match_notehead_centers
       - long_english_syllables_do_not_collide
       - no_horizontal_scroll
@@ -251,7 +279,8 @@ gates:
       - song_page_not_split
       - no_horizontal_overflow
       - numbered_notation_staff_and_lyrics_remain_readable
-      - shared_lyric_baseline_survives_print
+      - song_standard_rows_survive_print
+      - per_event_extreme_note_adjustments_survive_print
   release:
     required: true
     pass_when:
