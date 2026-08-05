@@ -29,14 +29,15 @@ function createOctaveDot(position, active) {
   return dot;
 }
 
-function createNoteBox(event, palette) {
+function createNumberedNote(event, palette, anchorX) {
   const { degree, suffix } = parsePitch(event.pitch);
   const color = palette[String(degree)].hex;
-  const box = document.createElement('span');
-  box.className = 'note-box';
-  box.dataset.pitch = event.pitch;
-  box.style.setProperty('--note-color', color);
-  box.setAttribute('aria-label', `${suffix === '^' ? '高音' : suffix === '_' ? '低音' : ''}${degree}`);
+  const note = document.createElement('span');
+  note.className = 'numbered-note';
+  note.dataset.pitch = event.pitch;
+  note.dataset.staffAnchorX = anchorX.toFixed(3);
+  note.style.setProperty('--note-color', color);
+  note.setAttribute('aria-label', `${suffix === '^' ? '高音' : suffix === '_' ? '低音' : ''}${degree}`);
 
   const upper = createOctaveDot('upper', suffix === '^');
   const number = document.createElement('span');
@@ -44,8 +45,8 @@ function createNoteBox(event, palette) {
   number.textContent = String(degree);
   const lower = createOctaveDot('lower', suffix === '_');
 
-  box.append(upper, number, lower);
-  return box;
+  note.append(upper, number, lower);
+  return note;
 }
 
 function createEvent(event, palette, anchorX, nextAnchorX, notation) {
@@ -60,7 +61,7 @@ function createEvent(event, palette, anchorX, nextAnchorX, notation) {
   const notationGroup = document.createElement('div');
   notationGroup.className = 'event__notation';
   notationGroup.dataset.staffAnchorX = anchorX.toFixed(3);
-  notationGroup.append(createNoteBox(event, palette));
+  notationGroup.append(createNumberedNote(event, palette, anchorX));
 
   const lyric = document.createElement('span');
   lyric.className = 'lyric';
@@ -70,11 +71,12 @@ function createEvent(event, palette, anchorX, nextAnchorX, notation) {
 
   cell.append(notationGroup);
   if (event.bar_after) {
-    const nextX = nextAnchorX ?? (anchorX + notation.note_box.width_px * 1.5);
+    const noteWidth = notation.numbered_note.width_px;
+    const nextX = nextAnchorX ?? (anchorX + noteWidth * 1.5);
     const anchorDelta = Math.max(0, nextX - anchorX);
     const bar = document.createElement('span');
     bar.className = 'barline';
-    bar.style.left = `${notation.note_box.width_px / 2 + anchorDelta / 2}px`;
+    bar.style.left = `${noteWidth / 2 + anchorDelta / 2}px`;
     bar.setAttribute('aria-hidden', 'true');
     cell.append(bar);
   }
@@ -90,9 +92,14 @@ function assertSharedAnchors(row, anchors, tolerance) {
   events.forEach((eventElement, index) => {
     const expected = anchors[index];
     const eventX = Number.parseFloat(eventElement.style.left);
+    const numberX = Number(eventElement.querySelector('.numbered-note').dataset.staffAnchorX);
     const lyricX = Number(eventElement.querySelector('.lyric').dataset.staffAnchorX);
-    if (Math.abs(eventX - expected) > tolerance || Math.abs(lyricX - expected) > tolerance) {
-      throw new Error(`第 ${index + 1} 顆音未與五線譜對齊`);
+    if (
+      Math.abs(eventX - expected) > tolerance
+      || Math.abs(numberX - expected) > tolerance
+      || Math.abs(lyricX - expected) > tolerance
+    ) {
+      throw new Error(`第 ${index + 1} 顆音未與五線譜音頭中心對齊`);
     }
   });
 }
