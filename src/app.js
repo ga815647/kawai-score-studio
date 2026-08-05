@@ -80,7 +80,9 @@ function renderDraft(score) {
   scoreBadge.textContent = activeDraft.synthetic === true ? 'SYNTHETIC FIXTURE' : 'LOCAL DRAFT';
   scorePage.dataset.scoreId = activeDraft.id;
   scorePage.dataset.synthetic = String(activeDraft.synthetic === true);
-  renderScore(scoreRender, activeDraft, book.palette, { width: 700, height: 170 });
+  renderScore(scoreRender, activeDraft, book.palette, {
+    geometry: book.layout.system_geometry,
+  });
   status.textContent = `Studio READY · 本機預覽與播放不需要 GitHub · ${activeDraft.title}`;
   status.className = 'status status--pass';
 }
@@ -108,7 +110,9 @@ function renderLibrary() {
       const score = document.createElement('div');
       score.className = 'score-render';
       card.append(heading, meta, score);
-      renderScore(score, song, book.palette, { width: 700, height: 170 });
+      renderScore(score, song, book.palette, {
+        geometry: book.layout.system_geometry,
+      });
       libraryContent.append(card);
     }
   }
