@@ -77,21 +77,33 @@ main { width: min(1200px, calc(100% - 2rem)); margin: 1.5rem auto 4rem; }
 .note-box {
   --note-color: #222;
   display: grid;
-  grid-template-rows: 0.42em 1fr 0.42em;
+  grid-template-rows:
+    var(--octave-dot-diameter, 10px)
+    minmax(0, 1fr)
+    var(--octave-dot-diameter, 10px);
   place-items: center;
-  width: 58px;
-  height: 72px;
+  row-gap: var(--octave-dot-number-clearance, 4px);
+  width: var(--note-box-width, 58px);
+  height: var(--note-box-height, 80px);
+  padding-block: var(--note-box-vertical-padding, 5px);
   flex: 0 0 auto;
-  border: 3px solid var(--note-color);
-  border-radius: 15px;
+  border: var(--note-box-border-width, 3px) solid var(--note-color);
+  border-radius: var(--note-box-border-radius, 15px);
   background: #fff;
   color: var(--note-color);
   line-height: 1;
 }
-.note-number { grid-row: 2; font-size: 2.15rem; font-weight: 900; }
-.octave-dot { min-height: 0.42em; font-size: 0.48rem; line-height: 1; color: var(--note-color); }
-.octave-dot--upper { grid-row: 1; align-self: end; }
-.octave-dot--lower { grid-row: 3; align-self: start; }
+.note-number { grid-row: 2; align-self: center; font-size: 2.15rem; font-weight: 900; }
+.octave-dot {
+  width: var(--octave-dot-diameter, 10px);
+  height: var(--octave-dot-diameter, 10px);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--note-color);
+}
+.octave-dot--active { background: currentColor; }
+.octave-dot--upper { grid-row: 1; }
+.octave-dot--lower { grid-row: 3; }
 .extensions { min-height: 1.2rem; color: #24292f; font-weight: 800; letter-spacing: 0.08em; white-space: nowrap; }
 .lyric { min-height: 1.6em; font-size: 1.05rem; font-weight: 700; color: #24292f; }
 .barline { width: 3px; margin: 0.1rem 0 2rem 0.25rem; background: #24292f; border-radius: 2px; }
@@ -134,5 +146,5 @@ main { width: min(1200px, calc(100% - 2rem)); margin: 1.5rem auto 4rem; }
     break-inside: avoid;
   }
   .note-row, .staff-panel { overflow: visible; }
-  .note-box { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .note-box, .octave-dot { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }
