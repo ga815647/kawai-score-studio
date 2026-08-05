@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.5.0
+  version: 0.5.1
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -73,9 +73,9 @@ layout:
       duration_extension_marks: forbidden
       note_row_height_px: 82
       lyric_top_px: 58
-      staff_pull_up_px: 12
-      min_lyric_to_staff_content_gap_px: 8
-      max_lyric_to_staff_content_gap_px: 12
+      staff_pull_up_px: 8
+      min_lyric_to_staff_content_gap_px: 12
+      max_lyric_to_staff_content_gap_px: 16
     alignment:
       source: vexflow_notehead_bounds_center_x
       targets:
@@ -114,8 +114,8 @@ notation:
       - 6
     tie_composite_values: true
   numbered_note:
-    width_px: 30
-    stack_height_px: 56
+    width_px: 28
+    stack_height_px: 52
     border: none
     background: none
   octave_dot:
@@ -123,8 +123,8 @@ notation:
     diameter_px: 10
     min_number_clearance_px: 3
   typography:
-    note_number_px: 30
-    lyric_px: 15
+    note_number_px: 26
+    lyric_px: 18
   upper_dot:
     location: above_number
     alignment: centered
@@ -176,6 +176,7 @@ gates:
       - no_note_box_border_or_background
       - no_numbered_duration_extension_marks
       - numbered_notation_spacing_generated_from_scorebook
+      - typography_generated_from_scorebook
       - octave_dot_above_or_below_number
       - octave_dot_centered
       - octave_dot_inherits_note_color
@@ -196,10 +197,12 @@ gates:
       target_song_id: itsy-bitsy-spider
     measurements:
       lyric_to_staff_top_line_gap_px:
-        min: 8
-        max: 12
+        min: 12
+        max: 16
       number_center_to_notehead_center_error_px:
         max: 1
+      lyric_font_size_px: 18
+      note_number_font_size_px: 26
     screenshots:
       - id: itsy-bitsy-spider-a4
         selector: ".song-page[data-song-id='itsy-bitsy-spider']"
@@ -223,6 +226,8 @@ gates:
       - browser_page_reaches_gate_pass_state
       - actual_lyric_to_staff_top_line_gap_within_spec
       - actual_number_to_notehead_center_error_within_spec
+      - actual_lyric_font_size_matches_spec
+      - actual_note_number_font_size_matches_spec
       - required_a4_and_closeup_screenshots_created
       - screenshot_metrics_report_created
       - numbered_notation_group_has_safe_staff_gap
@@ -245,6 +250,7 @@ gates:
       - no_numbered_duration_underline
       - staff_and_numbered_notation_alignment_survives_print
       - safe_notation_staff_spacing_survives_print
+      - typography_size_survives_print
       - octave_dot_clearance_survives_print
       - yellow_and_lime_remain_legible
   release:
