@@ -118,7 +118,8 @@ notation:
     default_track: original_language
     participates_in_horizontal_spacing: true
     renderer: html_overlay
-    vertical_alignment: song_standard_with_per_event_collision_adjustment
+    vertical_alignment: shared_baseline
+    collision_exception: per_event_actual_vexflow_glyph_bounds
   octave_dot:
     diameter_px: 10
     color: inherit
@@ -146,6 +147,7 @@ layout:
     lyric_row:
       staff_bottom_line_to_top_px: 12
       line_height_px: 22
+      max_vertical_alignment_delta_px: 1
       default_baseline_shared_across_song: true
     collision_adjustment:
       scope: per_event
@@ -250,6 +252,8 @@ gates:
       staff_bottom_line_to_lyric_top_px:
         min: 10
         max: 14
+      lyric_vertical_alignment_delta_px:
+        max: 1
       adjusted_glyph_clearance_px:
         min: 6
       default_row_delta_across_systems_px:
