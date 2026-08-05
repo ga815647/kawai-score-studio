@@ -15,7 +15,7 @@ function maxAbsolute(values) {
   return Math.max(0, ...values.map((value) => Math.abs(value)));
 }
 
-test('browser visual gate captures A4 screenshots and validates unboxed number geometry', async ({ page }) => {
+test('browser visual gate captures A4 screenshots and validates typography geometry', async ({ page }) => {
   await mkdir(artifactDirectory, { recursive: true });
   await page.goto('/', { waitUntil: 'networkidle' });
   await expect(page.locator(visualGate.runner.wait_for_selector)).toBeVisible();
@@ -36,12 +36,14 @@ test('browser visual gate captures A4 screenshots and validates unboxed number g
       const staff = system.querySelector('.staff-panel');
       const events = [...system.querySelectorAll('.event')];
       const numbers = [...system.querySelectorAll('.numbered-note')];
+      const noteNumbers = [...system.querySelectorAll('.note-number')];
       const lyrics = [...system.querySelectorAll('.lyric')];
       if (
         !(row instanceof HTMLElement)
         || !(staff instanceof HTMLElement)
         || events.length === 0
         || numbers.length !== events.length
+        || noteNumbers.length !== events.length
         || lyrics.length !== events.length
       ) {
         throw new Error(`第 ${index + 1} 譜行缺少 row、staff、number 或 lyric`);
@@ -72,6 +74,8 @@ test('browser visual gate captures A4 screenshots and validates unboxed number g
       const staffTopLine = staffRect.top + topLineY * scale;
       const gap = staffTopLine - lyricBottom;
       const numberStyle = getComputedStyle(numbers[0]);
+      const noteNumberStyle = getComputedStyle(noteNumbers[0]);
+      const lyricStyle = getComputedStyle(lyrics[0]);
 
       return {
         system: index + 1,
@@ -82,6 +86,10 @@ test('browser visual gate captures A4 screenshots and validates unboxed number g
         gap,
         gapMinimum: gateConfig.measurements.lyric_to_staff_top_line_gap_px.min,
         gapMaximum: gateConfig.measurements.lyric_to_staff_top_line_gap_px.max,
+        lyricFontSize: Number.parseFloat(lyricStyle.fontSize),
+        expectedLyricFontSize: gateConfig.measurements.lyric_font_size_px,
+        noteNumberFontSize: Number.parseFloat(noteNumberStyle.fontSize),
+        expectedNoteNumberFontSize: gateConfig.measurements.note_number_font_size_px,
         numberCenterErrors,
         lyricCenterErrors,
         centerErrorMaximum: gateConfig.measurements.number_center_to_notehead_center_error_px.max,
@@ -111,6 +119,8 @@ test('browser visual gate captures A4 screenshots and validates unboxed number g
   const pass = metrics.length > 0 && metrics.every((metric) => (
     metric.gap >= metric.gapMinimum
     && metric.gap <= metric.gapMaximum
+    && metric.lyricFontSize === metric.expectedLyricFontSize
+    && metric.noteNumberFontSize === metric.expectedNoteNumberFontSize
     && maxAbsolute(metric.numberCenterErrors) <= metric.centerErrorMaximum
     && maxAbsolute(metric.lyricCenterErrors) <= metric.centerErrorMaximum
     && metric.noteBoxCount === 0
@@ -127,11 +137,14 @@ test('browser visual gate captures A4 screenshots and validates unboxed number g
     viewport: visualGate.runner.viewport,
     targetSongId: visualGate.runner.target_song_id,
     configuredSpacing: numberedNotation,
+    configuredTypography: book.notation.typography,
     measurements: metrics.map((metric) => ({
       ...metric,
       lyricBottom: round(metric.lyricBottom),
       staffTopLine: round(metric.staffTopLine),
       gap: round(metric.gap),
+      lyricFontSize: round(metric.lyricFontSize),
+      noteNumberFontSize: round(metric.noteNumberFontSize),
       numberCenterErrors: metric.numberCenterErrors.map(round),
       lyricCenterErrors: metric.lyricCenterErrors.map(round),
       maximumNumberCenterError: round(maxAbsolute(metric.numberCenterErrors)),
@@ -150,6 +163,14 @@ test('browser visual gate captures A4 screenshots and validates unboxed number g
     expect(metric.numberBorderWidths.every((width) => width === '0px')).toBe(true);
     expect(metric.numberBackgroundColor).toBe('rgba(0, 0, 0, 0)');
     expect(metric.numberBoxShadow).toBe('none');
+    expect(
+      metric.lyricFontSize,
+      `第 ${metric.system} 譜行中文字級不符合規格`,
+    ).toBe(metric.expectedLyricFontSize);
+    expect(
+      metric.noteNumberFontSize,
+      `第 ${metric.system} 譜行簡譜字級不符合規格`,
+    ).toBe(metric.expectedNoteNumberFontSize);
     expect(
       metric.gap,
       `第 ${metric.system} 譜行中文到五線譜第一線距離 ${round(metric.gap)}px 小於規格`,
