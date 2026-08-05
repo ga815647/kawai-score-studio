@@ -43,7 +43,7 @@
 - Gate 直接讀取 computed style，驗證中文為 18px、彩色數字為 26px。
 - Gate 逐顆量測彩色數字中心與中文中心到 VexFlow 音頭中心的水平誤差。
 - Gate 驗證音符框數量為零，且彩色數字沒有 border、background 或 box-shadow。
-- 《小小蜘蛛》固定產生完整 A4 與第一譜行局部 PNG。
+- 《小小蜘蛛》固定產生完整 A4 與第一譜行局部 PNG，人工檢查重點為中文字重、簡譜視覺份量及與五線譜的留白。
 - PNG、量測 JSON、失敗截圖與 trace 都放在 GitHub Actions artifact；artifact 名稱包含 exact head SHA，保留 14 天。
 - 使用者確認版型後，才適合把確認過的圖片升格為固定視覺回歸 baseline。
 
@@ -57,4 +57,4 @@ npm run check:visual
 
 `npm run check:visual` 依序執行正式規格驗證、HTML 建置、單元測試與 Chromium 視覺 Gate。必要 Gate 未通過時不得發佈。
 
-正常變更使用 branch 與 PR。驗證時必須核對 PR exact head SHA 所對應的 GitHub Actions CI run；PR 或 commit 存在不代表驗證成功。
+正常變更使用 branch 與 PR。驗證時必須核對 PR exact head SHA 所對應的新 CI run；PR 或 commit 存在不代表驗證成功。
