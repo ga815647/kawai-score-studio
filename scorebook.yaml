@@ -1,10 +1,21 @@
 project:
   name: Kawai Score Studio
-  version: 0.1.0
+  version: 0.6.0
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
-  goal: 由結構化曲譜資料產生可閱讀、可列印、可驗證的兒童木琴琴譜。
+  goal: 由結構化音樂資料產生可閱讀、可播放、可列印、可驗證的兒童木琴琴譜。
+
+schema:
+  version: 2
+  duration_unit: eighth_note
+  event_kinds:
+    - note
+    - rest
+  melody_and_lyrics_are_separate: true
+  measures_are_explicit: true
+  pickup_is_explicit: true
+  ties_are_explicit: true
 
 instrument:
   id: kawai-xylophone-16
@@ -38,210 +49,183 @@ palette:
   "6": { name: 黃綠色, hex: "#7E9F00" }
   "7": { name: 橘色, hex: "#E96B0C" }
 
+rendering:
+  staff:
+    engine: vexflow
+    version: "5.0.0"
+    delivery: local_build_artifact
+    output: SVG
+  playback:
+    engine: web_audio
+    runs_in_browser: true
+    github_actions_required: false
+
+modes:
+  library:
+    purpose: 顯示已驗證並核准發佈的正式曲目。
+    accepts_status:
+      - verified
+    publication_requires:
+      - exact_source
+      - complete_music_verification
+      - user_approval
+      - pull_request
+      - exact_head_sha_ci
+      - required_gates_pass
+  studio:
+    purpose: 在瀏覽器本機載入、預覽與播放草稿，不寫入正式曲庫。
+    github_required: false
+    github_actions_required: false
+    local_draft_input: JSON
+    local_storage: true
+    browser_playback: true
+
+content_policy:
+  original_language_lyrics_are_default: true
+  translation_is_optional: true
+  unverified_translation_is_forbidden_in_public_library: true
+  traditional_title_may_have_local_alias: true
+  source_requirements:
+    - title
+    - url
+    - publisher
+    - accessed_at
+    - selected_variant
+    - original_key
+    - original_meter
+    - pickup
+    - rights_status
+  verification_requirements:
+    - melody_checked
+    - rhythm_checked
+    - rests_checked
+    - pickup_checked
+    - measures_checked
+    - ties_checked
+    - lyrics_checked
+    - user_approved
+
 notation:
   token_pattern: "^[1-7](?:\\^|_)?$"
-  duration_unit: eighth_note
-  upper_dot:
-    location: inside_box
-    alignment: centered_above_number
+  numbered_notation:
+    style: unboxed_colored_number
+    position: above_staff
+    duration_extension_marks: forbidden
+  staff:
+    position: middle
+  lyrics:
+    position: below_staff
+    default_track: original_language
+    participates_in_horizontal_spacing: true
+  octave_dot:
+    diameter_px: 10
     color: inherit
-  lower_dot:
-    location: inside_box
-    alignment: centered_below_number
-    color: inherit
-  barline_color: "#222222"
-  extension_color: "#222222"
+    upper_location: above_number
+    lower_location: below_number
+
+layout:
+  profile: a4_textbook
+  page:
+    size: A4
+    orientation: portrait
+    width_mm: 210
+    height_mm: 297
+    margin_mm: 12
+  vertical_order:
+    - numbered_notation
+    - staff
+    - lyrics
+  system_breaking:
+    strategy: measure_and_required_width
+    fixed_event_count_breaks: forbidden
+    width_inputs:
+      - staff_glyphs
+      - numbered_notation
+      - lyric_text
+      - measure_boundaries
+  typography:
+    note_number_px: 26
+    lyric_px: 18
+
+fixtures:
+  file: fixtures/engine-fixtures.yaml
+  synthetic_only: true
+  may_be_used_for_engine_gates: true
+  may_be_published_as_songs: false
+
+library:
+  songs: []
+  quarantine:
+    - id: happy-birthday
+      title: 生日快樂
+      reason: legacy_content_not_verified_against_an_exact_source
+    - id: itsy-bitsy-spider
+      title: Itsy Bitsy Spider
+      reason: legacy_melody_and_chinese_lyrics_not_verified_against_an_exact_source
+    - id: hickory-dickory-dock
+      title: Hickory Dickory Dock
+      alias: 老鼠時鐘
+      reason: legacy_melody_differs_from_the_user_selected_source
 
 workflow:
   - read_scorebook
   - classify_requirement_change
   - update_scorebook
-  - run_content_gate
+  - validate_schema_and_publication_policy
+  - validate_engine_fixtures
   - generate_html
   - run_html_gate
-  - run_visual_gate
+  - run_browser_visual_gate
+  - capture_visual_gate_screenshots
+  - run_print_gate
   - publish_only_after_required_gates_pass
 
 gates:
   content:
     required: true
     checks:
-      - valid_note_token
+      - public_library_contains_only_verified_songs
+      - exact_source_metadata_present
+      - complete_music_verification_present
+      - original_language_track_is_default
+      - melody_events_do_not_embed_lyrics
+      - explicit_measures_rests_pickup_and_ties
       - instrument_range
-      - positive_duration
-      - lyric_attack_alignment
-      - source_present
+  fixture:
+    required: true
+    checks:
+      - fixtures_are_synthetic
+      - note_and_rest_events_supported
+      - measure_duration_is_valid
+      - pickup_measure_is_valid
+      - tie_references_are_valid
+      - lyric_event_references_are_valid
+      - long_english_syllables_participate_in_spacing
   html:
     required: true
     checks:
-      - rendered_pitch_matches_scorebook
-      - rendered_lyrics_match_scorebook
-      - octave_dot_inside_box
-      - octave_dot_centered
-      - octave_dot_inherits_note_color
+      - numbered_notation_above_staff
+      - lyrics_below_staff
+      - one_event_source_for_numbered_notation_staff_and_playback
+      - lyric_track_is_separate_from_events
+      - local_studio_does_not_require_github
       - no_generated_text_from_images
+  visual:
+    required: true
+    checks:
+      - chromium_screenshot_created
+      - numbered_notation_staff_and_lyrics_do_not_overlap
+      - lyrics_are_below_staff
+      - long_english_syllables_do_not_collide
+      - no_horizontal_scroll
   print:
     required: true
     checks:
       - a4_portrait
       - song_page_not_split
       - no_horizontal_overflow
-      - yellow_and_lime_remain_legible
+      - numbered_notation_staff_and_lyrics_remain_readable
   release:
     required: true
     pass_when:
       - all_required_gates_pass
-
-songs:
-  - id: happy-birthday
-    title: 生日快樂
-    status: ready
-    meter: 3/4
-    key: C major
-    source:
-      type: traditional
-      note: 標準生日快樂旋律；依木琴音域使用 C 大調簡譜。
-    phrases:
-      - events:
-          - { pitch: "5", duration: 1, lyric: 祝 }
-          - { pitch: "5", duration: 1, lyric: 你 }
-          - { pitch: "6", duration: 2, lyric: 生 }
-          - { pitch: "5", duration: 2, lyric: 日 }
-          - { pitch: "1^", duration: 2, lyric: 快 }
-          - { pitch: "7", duration: 4, lyric: 樂, bar_after: true }
-          - { pitch: "5", duration: 1, lyric: 祝 }
-          - { pitch: "5", duration: 1, lyric: 你 }
-          - { pitch: "6", duration: 2, lyric: 生 }
-          - { pitch: "5", duration: 2, lyric: 日 }
-          - { pitch: "2^", duration: 2, lyric: 快 }
-          - { pitch: "1^", duration: 4, lyric: 樂 }
-      - events:
-          - { pitch: "5", duration: 1, lyric: 祝 }
-          - { pitch: "5", duration: 1, lyric: 你 }
-          - { pitch: "5^", duration: 2, lyric: 生 }
-          - { pitch: "3^", duration: 2, lyric: 日 }
-          - { pitch: "1^", duration: 2, lyric: 快 }
-          - { pitch: "7", duration: 2, lyric: 樂 }
-          - { pitch: "6", duration: 4, lyric: 呀 }
-      - events:
-          - { pitch: "4^", duration: 1, lyric: 祝 }
-          - { pitch: "4^", duration: 1, lyric: 你 }
-          - { pitch: "3^", duration: 2, lyric: 生 }
-          - { pitch: "1^", duration: 2, lyric: 日 }
-          - { pitch: "2^", duration: 2, lyric: 快 }
-          - { pitch: "1^", duration: 4, lyric: 樂 }
-
-  - id: itsy-bitsy-spider
-    title: 小小蜘蛛
-    status: ready
-    meter: 6/8
-    key: G major
-    source:
-      type: traditional
-      note: 忠於常見 6/8 原曲；中文詞逐起音對位。
-    phrases:
-      - events:
-          - { pitch: "5", duration: 1, lyric: 小 }
-          - { pitch: "1", duration: 2, lyric: 小 }
-          - { pitch: "1", duration: 1, lyric: 蜘 }
-          - { pitch: "1", duration: 2, lyric: 蛛 }
-          - { pitch: "2", duration: 1, lyric: 慢 }
-          - { pitch: "3", duration: 3, lyric: 慢 }
-          - { pitch: "3", duration: 2, lyric: 爬 }
-          - { pitch: "3", duration: 1, lyric: 呀 }
-          - { pitch: "2", duration: 2, lyric: 爬 }
-          - { pitch: "1", duration: 1, lyric: 上 }
-          - { pitch: "2", duration: 2, lyric: 大 }
-          - { pitch: "3", duration: 1, lyric: 水 }
-          - { pitch: "1", duration: 6, lyric: 管 }
-      - events:
-          - { pitch: "3", duration: 3, lyric: 大 }
-          - { pitch: "3", duration: 2, lyric: 雨 }
-          - { pitch: "4", duration: 1, lyric: 下 }
-          - { pitch: "5", duration: 3, lyric: 來 }
-          - { pitch: "5", duration: 3, lyric: 把 }
-          - { pitch: "4", duration: 2, lyric: 小 }
-          - { pitch: "3", duration: 1, lyric: 蜘 }
-          - { pitch: "4", duration: 2, lyric: 蛛 }
-          - { pitch: "5", duration: 1, lyric: 沖 }
-          - { pitch: "3", duration: 6, lyric: 走 }
-      - events:
-          - { pitch: "1", duration: 3, lyric: 太 }
-          - { pitch: "1", duration: 2, lyric: 陽 }
-          - { pitch: "2", duration: 1, lyric: 出 }
-          - { pitch: "3", duration: 3, lyric: 來 }
-          - { pitch: "3", duration: 3, lyric: 曬 }
-          - { pitch: "2", duration: 2, lyric: 乾 }
-          - { pitch: "1", duration: 1, lyric: 地 }
-          - { pitch: "2", duration: 2, lyric: 上 }
-          - { pitch: "3", duration: 1, lyric: 所 }
-          - { pitch: "1", duration: 3, lyric: 有 }
-          - { pitch: "7_", duration: 2, lyric: 雨 }
-          - { pitch: "7_", duration: 1, lyric: 水 }
-      - events:
-          - { pitch: "1", duration: 2, lyric: 小 }
-          - { pitch: "1", duration: 1, lyric: 小 }
-          - { pitch: "1", duration: 2, lyric: 蜘 }
-          - { pitch: "2", duration: 1, lyric: 蛛 }
-          - { pitch: "3", duration: 3, lyric: 又 }
-          - { pitch: "3", duration: 2, lyric: 慢 }
-          - { pitch: "3", duration: 1, lyric: 慢 }
-          - { pitch: "2", duration: 2, lyric: 爬 }
-          - { pitch: "1", duration: 1, lyric: 上 }
-          - { pitch: "2", duration: 2, lyric: 大 }
-          - { pitch: "3", duration: 1, lyric: 水 }
-          - { pitch: "1", duration: 5, lyric: 管 }
-
-  - id: hickory-dickory-dock
-    title: 老鼠時鐘
-    status: ready
-    meter: 6/8
-    key: D major
-    source:
-      type: traditional
-      note: 忠於常見 6/8 傳統旋律；中文詞逐起音對位。
-    phrases:
-      - events:
-          - { pitch: "3", duration: 1, lyric: 滴 }
-          - { pitch: "4", duration: 1, lyric: 答 }
-          - { pitch: "5", duration: 1, lyric: 滴 }
-          - { pitch: "5", duration: 1, lyric: 答 }
-          - { pitch: "6", duration: 1, lyric: 老 }
-          - { pitch: "7", duration: 1, lyric: 鼠 }
-          - { pitch: "1^", duration: 5, lyric: 時 }
-          - { pitch: "5", duration: 1, lyric: 鐘 }
-      - events:
-          - { pitch: "3", duration: 1, lyric: 小 }
-          - { pitch: "4", duration: 1, lyric: 老 }
-          - { pitch: "5", duration: 1, lyric: 鼠 }
-          - { pitch: "5", duration: 1, lyric: 爬 }
-          - { pitch: "6", duration: 1, lyric: 上 }
-          - { pitch: "7", duration: 1, lyric: 大 }
-          - { pitch: "1^", duration: 5, lyric: 時 }
-          - { pitch: "5", duration: 1, lyric: 鐘 }
-      - events:
-          - { pitch: "1^", duration: 2, lyric: 時 }
-          - { pitch: "1^", duration: 1, lyric: 鐘 }
-          - { pitch: "7", duration: 2, lyric: 敲 }
-          - { pitch: "7", duration: 1, lyric: 了 }
-          - { pitch: "6", duration: 2, lyric: 一 }
-          - { pitch: "6", duration: 1, lyric: 點 }
-          - { pitch: "5", duration: 3, lyric: 整 }
-      - events:
-          - { pitch: "5", duration: 1, lyric: 老 }
-          - { pitch: "6", duration: 1, lyric: 鼠 }
-          - { pitch: "5", duration: 1, lyric: 趕 }
-          - { pitch: "4", duration: 1, lyric: 快 }
-          - { pitch: "3", duration: 1, lyric: 跑 }
-          - { pitch: "2", duration: 1, lyric: 下 }
-          - { pitch: "1", duration: 6, lyric: 來 }
-
-catalog:
-  - { id: hot-cross-buns, title: 熱十字麵包, status: migrate }
-  - { id: mary-had-a-little-lamb, title: 瑪莉有隻小綿羊, status: migrate }
-  - { id: twinkle-twinkle, title: 小星星, status: migrate }
-  - { id: frere-jacques, title: 兩隻老虎, status: migrate }
-  - { id: london-bridge, title: 倫敦鐵橋, status: migrate }
-  - { id: row-row-row-your-boat, title: 划呀划小船, status: migrate }
-  - { id: ode-to-joy, title: 歡樂頌, status: migrate }
-  - { id: jingle-bells, title: 聖誕鈴聲, status: migrate }
