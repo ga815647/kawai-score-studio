@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.1.0
+  version: 0.1.1
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -41,6 +41,17 @@ palette:
 notation:
   token_pattern: "^[1-7](?:\\^|_)?$"
   duration_unit: eighth_note
+  note_box:
+    width_px: 58
+    height_px: 80
+    border_width_px: 3
+    border_radius_px: 15
+    vertical_padding_px: 5
+  octave_dot:
+    shape: circle
+    diameter_px: 10
+    min_border_clearance_px: 8
+    min_number_clearance_px: 4
   upper_dot:
     location: inside_box
     alignment: centered_above_number
@@ -60,6 +71,7 @@ workflow:
   - generate_html
   - run_html_gate
   - run_visual_gate
+  - run_print_gate
   - publish_only_after_required_gates_pass
 
 gates:
@@ -79,13 +91,24 @@ gates:
       - octave_dot_inside_box
       - octave_dot_centered
       - octave_dot_inherits_note_color
+      - octave_dot_uses_circle_shape
+      - octave_dot_dimensions_generated_from_scorebook
       - no_generated_text_from_images
+  visual:
+    required: true
+    checks:
+      - octave_dot_diameter_matches_spec
+      - octave_dot_border_clearance_at_least_spec
+      - octave_dot_number_clearance_at_least_spec
+      - octave_dot_does_not_touch_note_box
+      - octave_dot_does_not_touch_note_number
   print:
     required: true
     checks:
       - a4_portrait
       - song_page_not_split
       - no_horizontal_overflow
+      - octave_dot_clearance_survives_print
       - yellow_and_lime_remain_legible
   release:
     required: true
