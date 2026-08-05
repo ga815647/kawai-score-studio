@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.3.1
+  version: 0.4.0
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -71,8 +71,9 @@ layout:
       duration_extension_marks: forbidden
       note_row_height_px: 92
       lyric_top_px: 70
-      staff_pull_up_px: 8
-      min_lyric_to_staff_content_gap_px: 8
+      staff_pull_up_px: 16
+      min_lyric_to_staff_content_gap_px: 3
+      max_lyric_to_staff_content_gap_px: 6
     alignment:
       source: vexflow_first_notehead_absolute_x
       targets:
@@ -141,7 +142,9 @@ workflow:
   - run_content_gate
   - generate_html
   - run_html_gate
-  - run_visual_gate
+  - run_browser_visual_gate
+  - capture_visual_gate_screenshots
+  - upload_visual_gate_artifacts
   - run_print_gate
   - publish_only_after_required_gates_pass
 
@@ -179,6 +182,31 @@ gates:
       - no_generated_text_from_images
   visual:
     required: true
+    runner:
+      engine: playwright
+      version: "1.55.0"
+      browser: chromium
+      viewport:
+        width_px: 1440
+        height_px: 1800
+        device_scale_factor: 1
+      wait_for_selector: ".status--pass"
+      target_song_id: itsy-bitsy-spider
+    measurements:
+      lyric_to_staff_top_line_gap_px:
+        min: 3
+        max: 6
+    screenshots:
+      - id: itsy-bitsy-spider-a4
+        selector: ".song-page[data-song-id='itsy-bitsy-spider']"
+        filename: itsy-bitsy-spider-a4.png
+      - id: itsy-bitsy-spider-first-system
+        selector: ".song-page[data-song-id='itsy-bitsy-spider'] .phrase-system:first-of-type"
+        filename: itsy-bitsy-spider-first-system.png
+    artifacts:
+      directory: reports/visual
+      retention_days: 14
+      exact_head_sha_in_artifact_name: true
     checks:
       - a4_aspect_ratio_preserved
       - fixed_page_scaled_as_one_unit_on_narrow_screens
@@ -187,6 +215,10 @@ gates:
       - staff_is_secondary
       - note_box_center_matches_staff_notehead_within_tolerance
       - lyric_center_matches_staff_notehead_within_tolerance
+      - browser_page_reaches_gate_pass_state
+      - actual_lyric_to_staff_top_line_gap_within_spec
+      - required_a4_and_closeup_screenshots_created
+      - screenshot_metrics_report_created
       - numbered_notation_group_is_close_to_staff
       - lyric_does_not_touch_staff_content
       - vexflow_renders_clef_key_and_time_signature
