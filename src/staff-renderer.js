@@ -47,7 +47,9 @@ export function renderStaffSystem(container, events, song, layout, options = {})
   renderer.resize(config.width_px, config.height_px);
   const context = renderer.getContext();
 
-  const stave = new Stave(0, config.stave_y_px, config.width_px);
+  const stave = new Stave(0, config.stave_y_px, config.width_px, {
+    spaceAboveStaffLn: 0,
+  });
   stave.addClef(config.clef);
   if (config.key_signature === 'from_song_key') stave.addKeySignature(model.keySignature);
   if (options.showTimeSignature) stave.addTimeSignature(song.meter);
