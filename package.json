@@ -7,7 +7,7 @@
     "validate": "node scripts/validate.mjs",
     "build": "node scripts/build.mjs",
     "test": "node --test tests/*.test.mjs",
-    "check": "npm run validate && npm test && npm run build"
+    "check": "npm run validate && npm run build && npm test"
   },
   "dependencies": {
     "yaml": "^2.8.1"
