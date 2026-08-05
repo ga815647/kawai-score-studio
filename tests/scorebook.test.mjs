@@ -33,7 +33,7 @@ test('formal specification and synthetic fixtures pass all structural gates', as
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.7');
+  assert.equal(book.project.version, '0.6.8');
   assert.deepEqual(result.counts, {
     verifiedSongs: 0,
     quarantinedEntries: 3,
@@ -85,12 +85,16 @@ test('layout keeps song-standard rows with per-label VexFlow pointer-rectangle e
   assert.deepEqual(book.layout.system_geometry, {
     staff_width_px: 700,
     staff_canvas_height_px: 170,
-    stave_top_line_y_px: 18,
+    stave_top_line_y_px: 14,
     numbered_row_height_px: 50,
     numbered_note_height_px: 52,
-    numbered_to_staff_top_line_gap_px: 16,
+    numbered_to_staff_top_line_gap_px: 12,
+    locked_standard_rows: {
+      numbered_row_top_px: 0,
+      lyric_row_top_px: 120,
+    },
     lyric_row: {
-      staff_bottom_line_to_top_px: 12,
+      staff_bottom_line_to_top_px: 16,
       line_height_px: 22,
       max_vertical_alignment_delta_px: 1,
       default_baseline_shared_across_song: true,
@@ -109,8 +113,8 @@ test('layout keeps song-standard rows with per-label VexFlow pointer-rectangle e
   });
   assert.deepEqual(book.gates.visual.measurements, {
     minimum_system_count: 2,
-    numbered_to_staff_top_line_gap_px: { min: 14, max: 18 },
-    staff_bottom_line_to_lyric_top_px: { min: 10, max: 14 },
+    numbered_to_staff_top_line_gap_px: { min: 10, max: 14 },
+    staff_bottom_line_to_lyric_top_px: { min: 14, max: 18 },
     lyric_vertical_alignment_delta_px: { max: 1 },
     adjusted_glyph_clearance_px: { min: 6 },
     default_row_delta_across_systems_px: { max: 1 },
@@ -233,7 +237,7 @@ test('invalid baseline and visual geometry are rejected', async () => {
   assert.ok(result.errors.some((error) => error.code === 'visual-gap-range'));
 });
 
-test('build output uses pointer rectangles and scorebook-derived standard label positions', async () => {
+test('build output uses pointer rectangles and locked standard label rows', async () => {
   const [distBook, distFixtures, designCss, html, appSource, audioSource, rendererSource, visualSource, styles] = await Promise.all([
     readFile('dist/scorebook.json', 'utf8'),
     readFile('dist/fixtures.json', 'utf8'),
@@ -248,8 +252,11 @@ test('build output uses pointer rectangles and scorebook-derived standard label 
   assert.equal(JSON.parse(distBook).library.songs.length, 0);
   assert.equal(JSON.parse(distFixtures).fixtures[0].synthetic, true);
   assert.match(designCss, /--staff-width: 700px/);
+  assert.match(designCss, /--stave-top-line-y: 14px/);
   assert.match(designCss, /--numbered-row-height: 50px/);
   assert.match(designCss, /--numbered-note-height: 52px/);
+  assert.match(designCss, /--numbered-staff-gap: 12px/);
+  assert.match(designCss, /--lyric-staff-gap: 16px/);
   assert.match(designCss, /--lyric-alignment-tolerance: 1px/);
   assert.match(designCss, /--glyph-collision-clearance: 6px/);
   assert.match(designCss, /--maximum-event-vertical-shift: 32px/);
@@ -260,8 +267,9 @@ test('build output uses pointer rectangles and scorebook-derived standard label 
   assert.doesNotMatch(rendererSource, /new Annotation|lyricAnnotations|defaultNumberRect|defaultLyricRect|system\.getBoundingClientRect\(\)/);
   assert.match(rendererSource, /note\.getSVGElement\(\)/);
   assert.match(rendererSource, /querySelector\('rect\[opacity="0"\]\[pointer-events="auto"\]'\)/);
-  assert.match(rendererSource, /const defaultNumberBottom = numberedNoteHeight/);
-  assert.match(rendererSource, /const defaultLyricTop = lyricRowTop/);
+  assert.match(rendererSource, /geometry\.locked_standard_rows/);
+  assert.match(rendererSource, /const defaultNumberBottom = lockedNumberedRowTop \+ numberedNoteHeight/);
+  assert.match(rendererSource, /const lyricRowTop = Number\.isFinite\(lockedLyricRowTop\)/);
   assert.match(rendererSource, /scorebook-system-geometry/);
   assert.match(rendererSource, /vexflow-stavenote-pointer-rect/);
   assert.match(rendererSource, /verticalShiftPx/);
@@ -275,16 +283,19 @@ test('build output uses pointer rectangles and scorebook-derived standard label 
 test('package versions and required extreme-note gates are pinned', async () => {
   const { book } = await loadProject();
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-  assert.equal(packageJson.version, '0.6.7');
+  assert.equal(packageJson.version, '0.6.8');
   assert.equal(packageJson.dependencies.vexflow, '5.0.0');
   assert.equal(packageJson.devDependencies['@playwright/test'], '1.55.0');
   assert.ok(book.gates.fixture.checks.includes('fixture_renders_at_least_two_systems'));
   assert.ok(book.gates.fixture.checks.includes('fixture_contains_instrument_lowest_note'));
   assert.ok(book.gates.fixture.checks.includes('fixture_contains_instrument_highest_note'));
   assert.ok(book.gates.html.checks.includes('standard_label_positions_are_derived_from_scorebook_geometry'));
+  assert.ok(book.gates.html.checks.includes('locked_numbered_and_lyric_rows_are_preserved_when_staff_moves'));
   assert.ok(book.gates.html.checks.includes('hidden_studio_rendering_does_not_depend_on_dom_rects'));
   assert.ok(book.gates.html.checks.includes('per_event_adjustment_uses_vexflow_stavenote_pointer_rect'));
   assert.ok(book.gates.html.checks.includes('extreme_notes_use_the_same_collision_rule_as_all_other_notes'));
+  assert.ok(book.gates.visual.checks.includes('staff_moves_up_without_moving_default_numbered_row'));
+  assert.ok(book.gates.visual.checks.includes('staff_moves_up_without_moving_default_lyric_row'));
   assert.ok(book.gates.visual.checks.includes('uncollided_events_keep_zero_vertical_shift'));
   assert.ok(book.gates.visual.checks.includes('colliding_numbered_notation_moves_up_only'));
   assert.ok(book.gates.visual.checks.includes('colliding_lyric_moves_down_only'));
