@@ -120,7 +120,7 @@ main { width: min(calc(100% - 1rem), 860px); margin: 1rem auto 3rem; }
 .note-row {
   position: relative;
   width: var(--staff-width, 700px);
-  height: 102px;
+  height: var(--numbered-note-row-height, 92px);
   padding: 0;
   border: 0;
   overflow: visible;
@@ -130,13 +130,13 @@ main { width: min(calc(100% - 1rem), 860px); margin: 1rem auto 3rem; }
   position: absolute;
   top: 0;
   width: var(--note-box-width, 44px);
-  height: 102px;
+  height: var(--numbered-note-row-height, 92px);
   transform: translateX(-50%);
 }
 .event__notation {
   position: relative;
   width: var(--note-box-width, 44px);
-  height: 102px;
+  height: var(--numbered-note-row-height, 92px);
 }
 .note-box {
   --note-color: #222;
@@ -167,25 +167,9 @@ main { width: min(calc(100% - 1rem), 860px); margin: 1rem auto 3rem; }
 .octave-dot--active { background: currentColor; }
 .octave-dot--upper { grid-row: 1; }
 .octave-dot--lower { grid-row: 3; }
-.extensions {
-  position: absolute;
-  top: 70px;
-  left: 50%;
-  display: block;
-  min-width: 0;
-  height: 10px;
-  overflow: hidden;
-  color: #24292f;
-  font-size: var(--extension-size, 10px);
-  font-weight: 800;
-  line-height: 10px;
-  letter-spacing: -0.08em;
-  text-align: left;
-  white-space: nowrap;
-}
 .lyric {
   position: absolute;
-  top: 82px;
+  top: var(--numbered-lyric-top, 70px);
   left: 50%;
   transform: translateX(-50%);
   color: #24292f;
@@ -207,7 +191,7 @@ main { width: min(calc(100% - 1rem), 860px); margin: 1rem auto 3rem; }
 .staff-panel {
   width: var(--staff-width, 700px);
   height: var(--staff-height, 118px);
-  margin: 0;
+  margin: calc(-1 * var(--staff-pull-up, 8px)) 0 0;
   padding: 0;
   border: 0;
   overflow: visible;
