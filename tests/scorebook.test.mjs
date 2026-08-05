@@ -33,7 +33,7 @@ test('formal specification and synthetic fixtures pass all structural gates', as
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.4');
+  assert.equal(book.project.version, '0.6.5');
   assert.deepEqual(result.counts, {
     verifiedSongs: 0,
     quarantinedEntries: 3,
@@ -73,7 +73,7 @@ test('Studio preview and playback do not require GitHub or Actions', async () =>
   assert.equal(book.rendering.playback.runs_in_browser, true);
 });
 
-test('layout keeps song-standard rows with per-label rendered SVG collision exceptions', async () => {
+test('layout keeps song-standard rows with per-label VexFlow pointer-rectangle exceptions', async () => {
   const { book } = await loadProject();
   assert.deepEqual(book.layout.vertical_order, ['numbered_notation', 'staff', 'lyrics']);
   assert.equal(book.notation.numbered_notation.position, 'above_staff');
@@ -81,7 +81,7 @@ test('layout keeps song-standard rows with per-label rendered SVG collision exce
   assert.equal(book.notation.lyrics.position, 'below_staff');
   assert.equal(book.notation.lyrics.renderer, 'html_overlay');
   assert.equal(book.notation.lyrics.vertical_alignment, 'shared_baseline');
-  assert.equal(book.notation.lyrics.collision_exception, 'per_event_vexflow_stavenote_svg_bbox');
+  assert.equal(book.notation.lyrics.collision_exception, 'per_event_vexflow_stavenote_pointer_rect');
   assert.deepEqual(book.layout.system_geometry, {
     staff_width_px: 700,
     staff_canvas_height_px: 170,
@@ -96,7 +96,7 @@ test('layout keeps song-standard rows with per-label rendered SVG collision exce
     },
     collision_adjustment: {
       scope: 'per_event',
-      trigger: 'vexflow_stavenote_svg_getbbox',
+      trigger: 'vexflow_stavenote_pointer_rect',
       numbered_notation_direction: 'up_only',
       lyric_direction: 'down_only',
       glyph_clearance_px: 6,
@@ -231,7 +231,7 @@ test('invalid baseline and visual geometry are rejected', async () => {
   assert.ok(result.errors.some((error) => error.code === 'visual-gap-range'));
 });
 
-test('build output uses rendered StaveNote SVG bounds and minimal label shifts', async () => {
+test('build output uses VexFlow pointer rectangles and minimal label shifts', async () => {
   const [distBook, distFixtures, designCss, html, appSource, audioSource, rendererSource, visualSource] = await Promise.all([
     readFile('dist/scorebook.json', 'utf8'),
     readFile('dist/fixtures.json', 'utf8'),
@@ -253,10 +253,11 @@ test('build output uses rendered StaveNote SVG bounds and minimal label shifts',
   assert.match(html, /本機 Studio/);
   assert.match(appSource, /geometry: book\.layout\.system_geometry/);
   assert.match(audioSource, /AudioContext/);
-  assert.doesNotMatch(rendererSource, /new Annotation|lyricAnnotations|note\.getBoundingBox\(\)/);
+  assert.doesNotMatch(rendererSource, /new Annotation|lyricAnnotations|note\.getBoundingBox\(\)|element\.getBBox\(\)/);
   assert.match(rendererSource, /note\.getSVGElement\(\)/);
-  assert.match(rendererSource, /element\.getBBox\(\)/);
-  assert.match(rendererSource, /vexflow-stavenote-svg-getbbox/);
+  assert.match(rendererSource, /querySelector\('rect\[opacity="0"\]\[pointer-events="auto"\]'\)/);
+  assert.match(rendererSource, /numericSvgAttribute/);
+  assert.match(rendererSource, /vexflow-stavenote-pointer-rect/);
   assert.match(rendererSource, /verticalShiftPx/);
   assert.match(rendererSource, /numbered\.style\.top/);
   assert.match(rendererSource, /lyric\.style\.top/);
@@ -269,13 +270,13 @@ test('build output uses rendered StaveNote SVG bounds and minimal label shifts',
 test('package versions and required extreme-note gates are pinned', async () => {
   const { book } = await loadProject();
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-  assert.equal(packageJson.version, '0.6.4');
+  assert.equal(packageJson.version, '0.6.5');
   assert.equal(packageJson.dependencies.vexflow, '5.0.0');
   assert.equal(packageJson.devDependencies['@playwright/test'], '1.55.0');
   assert.ok(book.gates.fixture.checks.includes('fixture_renders_at_least_two_systems'));
   assert.ok(book.gates.fixture.checks.includes('fixture_contains_instrument_lowest_note'));
   assert.ok(book.gates.fixture.checks.includes('fixture_contains_instrument_highest_note'));
-  assert.ok(book.gates.html.checks.includes('per_event_adjustment_uses_rendered_stavenote_svg_bbox'));
+  assert.ok(book.gates.html.checks.includes('per_event_adjustment_uses_vexflow_stavenote_pointer_rect'));
   assert.ok(book.gates.visual.checks.includes('uncollided_events_keep_zero_vertical_shift'));
   assert.ok(book.gates.visual.checks.includes('colliding_numbered_notation_moves_up_only'));
   assert.ok(book.gates.visual.checks.includes('colliding_lyric_moves_down_only'));
