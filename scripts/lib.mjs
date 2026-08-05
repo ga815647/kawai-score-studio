@@ -46,6 +46,14 @@ function isPositiveInteger(value) {
   return Number.isInteger(value) && value > 0;
 }
 
+function isPositiveNumber(value) {
+  return Number.isFinite(value) && value > 0;
+}
+
+function isNonNegativeNumber(value) {
+  return Number.isFinite(value) && value >= 0;
+}
+
 function isIsoDate(value) {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
@@ -288,6 +296,55 @@ export function validateProject(book, fixtureBook) {
   if (JSON.stringify(book?.layout?.vertical_order) !== JSON.stringify(['numbered_notation', 'staff', 'lyrics'])) {
     fail('vertical-order', '版面順序必須是簡譜、五線譜、歌詞', 'layout.vertical_order');
   }
+  if (
+    book?.notation?.lyrics?.renderer !== 'html_overlay'
+    || book?.notation?.lyrics?.vertical_alignment !== 'shared_baseline'
+  ) {
+    fail('lyric-rendering', '歌詞必須使用獨立 HTML 列並共用 baseline', 'notation.lyrics');
+  }
+
+  const geometry = book?.layout?.system_geometry;
+  for (const field of [
+    'staff_width_px',
+    'staff_canvas_height_px',
+    'stave_top_line_y_px',
+    'numbered_row_height_px',
+    'numbered_to_staff_top_line_gap_px',
+  ]) {
+    if (!isPositiveNumber(geometry?.[field])) {
+      fail('system-geometry', `layout.system_geometry.${field} 必須是正數`, `layout.system_geometry.${field}`);
+    }
+  }
+  const lyricRow = geometry?.lyric_row;
+  if (
+    !isPositiveNumber(lyricRow?.staff_bottom_line_to_top_px)
+    || !isPositiveNumber(lyricRow?.line_height_px)
+    || !isNonNegativeNumber(lyricRow?.max_vertical_alignment_delta_px)
+  ) {
+    fail('lyric-row-geometry', '歌詞列距離、行高與對齊容許值必須合法', 'layout.system_geometry.lyric_row');
+  }
+
+  const visualMeasurements = book?.gates?.visual?.measurements;
+  for (const field of ['numbered_to_staff_top_line_gap_px', 'staff_bottom_line_to_lyric_top_px']) {
+    const range = visualMeasurements?.[field];
+    if (!isNonNegativeNumber(range?.min) || !isPositiveNumber(range?.max) || range.min > range.max) {
+      fail('visual-gap-range', `${field} 必須有合法 min/max`, `gates.visual.measurements.${field}`);
+    }
+  }
+  if (!isNonNegativeNumber(visualMeasurements?.lyric_vertical_alignment_delta_px?.max)) {
+    fail(
+      'lyric-alignment-range',
+      '歌詞垂直對齊容許值必須是非負數',
+      'gates.visual.measurements.lyric_vertical_alignment_delta_px.max',
+    );
+  }
+  if (
+    lyricRow
+    && visualMeasurements?.lyric_vertical_alignment_delta_px?.max !== lyricRow.max_vertical_alignment_delta_px
+  ) {
+    fail('lyric-alignment-contract', '版型與 Visual Gate 的歌詞對齊容許值必須一致', 'gates.visual.measurements');
+  }
+
   if (book?.layout?.system_breaking?.strategy !== 'measure_and_required_width' || book?.layout?.system_breaking?.fixed_event_count_breaks !== 'forbidden') {
     fail('system-breaking', '換行必須依小節與實際寬度，不可固定 event 數', 'layout.system_breaking');
   }
