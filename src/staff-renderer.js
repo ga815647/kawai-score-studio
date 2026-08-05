@@ -93,7 +93,7 @@ function numericSvgAttribute(element, name, eventId) {
 function renderedGlyphBounds(note, numberedRowHeight, eventId) {
   const element = note.getSVGElement();
   const pointerRect = element?.querySelector('rect[opacity="0"][pointer-events="auto"]');
-  if (!(pointerRect instanceof SVGRectElement)) {
+  if (!pointerRect || typeof pointerRect.getAttribute !== 'function') {
     throw new Error(`找不到 ${eventId} 的 VexFlow StaveNote pointer rect`);
   }
   const x = numericSvgAttribute(pointerRect, 'x', eventId);
@@ -129,6 +129,7 @@ function renderSystem(container, score, palette, options) {
   const height = geometry.staff_canvas_height_px ?? 170;
   const staveY = geometry.stave_top_line_y_px ?? 18;
   const numberedRowHeight = geometry.numbered_row_height_px ?? 50;
+  const numberedNoteHeight = geometry.numbered_note_height_px ?? 52;
   const lyricGap = geometry.lyric_row?.staff_bottom_line_to_top_px ?? 12;
   const lyricLineHeight = geometry.lyric_row?.line_height_px ?? 22;
   const collision = geometry.collision_adjustment ?? {};
@@ -225,7 +226,6 @@ function renderSystem(container, score, palette, options) {
     );
   });
 
-  const systemRect = system.getBoundingClientRect();
   const lyricMap = new Map(model.track.syllables.map((syllable) => [syllable.event, syllable.text]));
   const adjustments = [];
   let maximumLyricShift = 0;
@@ -241,8 +241,7 @@ function renderSystem(container, score, palette, options) {
     numbered.dataset.staffCenterX = center.toFixed(3);
     numberedRow.append(numbered);
 
-    const defaultNumberRect = numbered.getBoundingClientRect();
-    const defaultNumberBottom = defaultNumberRect.bottom - systemRect.top;
+    const defaultNumberBottom = numberedNoteHeight;
     const defaultNumberClearance = glyph.top - defaultNumberBottom;
     const numberedShift = requiredShift(
       glyphClearance - defaultNumberClearance,
@@ -252,6 +251,9 @@ function renderSystem(container, score, palette, options) {
     );
     numbered.style.top = `${-numberedShift}px`;
     numbered.dataset.verticalShiftPx = String(-numberedShift);
+    numbered.dataset.standardTopPx = '0';
+    numbered.dataset.standardBottomPx = numberedNoteHeight.toFixed(3);
+    numbered.dataset.standardGeometrySource = 'scorebook-system-geometry';
     numbered.dataset.defaultGlyphClearancePx = defaultNumberClearance.toFixed(3);
     numbered.dataset.adjustedGlyphClearancePx = (defaultNumberClearance + numberedShift).toFixed(3);
     numbered.dataset.glyphTopPx = glyph.top.toFixed(3);
@@ -264,8 +266,7 @@ function renderSystem(container, score, palette, options) {
     if (lyricText) {
       const lyric = createLyric(event.id, lyricText, center);
       lyricRow.append(lyric);
-      const defaultLyricRect = lyric.getBoundingClientRect();
-      const defaultLyricTop = defaultLyricRect.top - systemRect.top;
+      const defaultLyricTop = lyricRowTop;
       const defaultLyricClearance = defaultLyricTop - glyph.bottom;
       lyricShift = requiredShift(
         glyphClearance - defaultLyricClearance,
@@ -275,6 +276,9 @@ function renderSystem(container, score, palette, options) {
       );
       lyric.style.top = `${lyricShift}px`;
       lyric.dataset.verticalShiftPx = String(lyricShift);
+      lyric.dataset.standardTopPx = lyricRowTop.toFixed(3);
+      lyric.dataset.standardBottomPx = (lyricRowTop + lyricLineHeight).toFixed(3);
+      lyric.dataset.standardGeometrySource = 'scorebook-system-geometry';
       lyric.dataset.defaultGlyphClearancePx = defaultLyricClearance.toFixed(3);
       lyric.dataset.adjustedGlyphClearancePx = (defaultLyricClearance + lyricShift).toFixed(3);
       lyric.dataset.glyphTopPx = glyph.top.toFixed(3);
@@ -305,9 +309,11 @@ function renderSystem(container, score, palette, options) {
   system.dataset.staffTopLineY = staffTopLineY.toFixed(3);
   system.dataset.staffBottomLineY = staffBottomLineY.toFixed(3);
   system.dataset.numberedRowHeight = numberedRowHeight.toFixed(3);
+  system.dataset.numberedNoteHeight = numberedNoteHeight.toFixed(3);
   system.dataset.defaultNumberedTop = '0';
   system.dataset.lyricRowTop = lyricRowTop.toFixed(3);
   system.dataset.defaultLyricTop = lyricRowTop.toFixed(3);
+  system.dataset.standardGeometrySource = 'scorebook-system-geometry';
   system.dataset.glyphClearance = glyphClearance.toFixed(3);
   system.dataset.boundingSource = 'vexflow-stavenote-pointer-rect';
   system.dataset.eventCenters = JSON.stringify(Object.fromEntries(eventCenters));
