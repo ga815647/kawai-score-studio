@@ -84,18 +84,29 @@ function requiredShift(collisionAmount, maximumShift, eventId, target) {
   return shift;
 }
 
+function numericSvgAttribute(element, name, eventId) {
+  const value = Number.parseFloat(element.getAttribute(name) ?? '');
+  if (!Number.isFinite(value)) throw new Error(`${eventId} pointer rect 缺少 ${name}`);
+  return value;
+}
+
 function renderedGlyphBounds(note, numberedRowHeight, eventId) {
   const element = note.getSVGElement();
-  if (!element || typeof element.getBBox !== 'function') {
-    throw new Error(`找不到 ${eventId} 的 VexFlow StaveNote SVG group`);
+  const pointerRect = element?.querySelector('rect[opacity="0"][pointer-events="auto"]');
+  if (!(pointerRect instanceof SVGRectElement)) {
+    throw new Error(`找不到 ${eventId} 的 VexFlow StaveNote pointer rect`);
   }
-  const boundingBox = element.getBBox();
-  const top = numberedRowHeight + boundingBox.y;
+  const x = numericSvgAttribute(pointerRect, 'x', eventId);
+  const y = numericSvgAttribute(pointerRect, 'y', eventId);
+  const width = numericSvgAttribute(pointerRect, 'width', eventId);
+  const height = numericSvgAttribute(pointerRect, 'height', eventId);
+  if (width <= 0 || height <= 0) throw new Error(`${eventId} pointer rect 尺寸必須為正值`);
+  const top = numberedRowHeight + y;
   return {
-    left: boundingBox.x,
+    left: x,
     top,
-    right: boundingBox.x + boundingBox.width,
-    bottom: top + boundingBox.height,
+    right: x + width,
+    bottom: top + height,
   };
 }
 
@@ -245,7 +256,7 @@ function renderSystem(container, score, palette, options) {
     numbered.dataset.adjustedGlyphClearancePx = (defaultNumberClearance + numberedShift).toFixed(3);
     numbered.dataset.glyphTopPx = glyph.top.toFixed(3);
     numbered.dataset.glyphBottomPx = glyph.bottom.toFixed(3);
-    numbered.dataset.boundingSource = 'vexflow-stavenote-svg-getbbox';
+    numbered.dataset.boundingSource = 'vexflow-stavenote-pointer-rect';
     numbered.dataset.collisionAdjusted = String(numberedShift > 0);
 
     let lyricShift = 0;
@@ -268,7 +279,7 @@ function renderSystem(container, score, palette, options) {
       lyric.dataset.adjustedGlyphClearancePx = (defaultLyricClearance + lyricShift).toFixed(3);
       lyric.dataset.glyphTopPx = glyph.top.toFixed(3);
       lyric.dataset.glyphBottomPx = glyph.bottom.toFixed(3);
-      lyric.dataset.boundingSource = 'vexflow-stavenote-svg-getbbox';
+      lyric.dataset.boundingSource = 'vexflow-stavenote-pointer-rect';
       lyric.dataset.collisionAdjusted = String(lyricShift > 0);
       maximumLyricShift = Math.max(maximumLyricShift, lyricShift);
     }
@@ -298,7 +309,7 @@ function renderSystem(container, score, palette, options) {
   system.dataset.lyricRowTop = lyricRowTop.toFixed(3);
   system.dataset.defaultLyricTop = lyricRowTop.toFixed(3);
   system.dataset.glyphClearance = glyphClearance.toFixed(3);
-  system.dataset.boundingSource = 'vexflow-stavenote-svg-getbbox';
+  system.dataset.boundingSource = 'vexflow-stavenote-pointer-rect';
   system.dataset.eventCenters = JSON.stringify(Object.fromEntries(eventCenters));
   system.dataset.verticalAdjustments = JSON.stringify(adjustments);
   return { system, model, eventCenters, adjustments };
