@@ -66,10 +66,19 @@ function createNumberedNote(event, palette) {
   return wrapper;
 }
 
+function createLyric(eventId, text, center) {
+  const lyric = document.createElement('span');
+  lyric.className = 'score-lyric';
+  lyric.dataset.lyricEventId = eventId;
+  lyric.dataset.staffCenterX = center.toFixed(3);
+  lyric.style.left = `${center}px`;
+  lyric.textContent = text;
+  return lyric;
+}
+
 function renderSystem(container, score, palette, options) {
   const VexFlow = getVexFlow();
   const {
-    Annotation,
     BarNote,
     Beam,
     Dot,
@@ -81,25 +90,42 @@ function renderSystem(container, score, palette, options) {
     Voice,
   } = VexFlow;
   const model = createRenderModel(score, options.trackId);
-  const width = options.width ?? 700;
-  const height = options.height ?? 170;
+  const geometry = options.geometry ?? {};
+  const width = geometry.staff_width_px ?? 700;
+  const height = geometry.staff_canvas_height_px ?? 170;
+  const staveY = geometry.stave_top_line_y_px ?? 18;
+  const numberedRowHeight = geometry.numbered_row_height_px ?? 50;
+  const lyricGap = geometry.lyric_row?.staff_bottom_line_to_top_px ?? 12;
+  const lyricLineHeight = geometry.lyric_row?.line_height_px ?? 22;
 
   const system = document.createElement('section');
   system.className = 'score-system';
+  system.dataset.system = String(options.systemIndex ?? 1);
+  system.style.width = `${width}px`;
+
   const numberedRow = document.createElement('div');
   numberedRow.className = 'numbered-row';
   numberedRow.style.width = `${width}px`;
+  numberedRow.style.height = `${numberedRowHeight}px`;
+
   const staff = document.createElement('div');
   staff.className = 'staff-panel';
   staff.style.width = `${width}px`;
   staff.style.height = `${height}px`;
-  system.append(numberedRow, staff);
+
+  const lyricRow = document.createElement('div');
+  lyricRow.className = 'lyric-row';
+  lyricRow.style.width = `${width}px`;
+  lyricRow.style.height = `${lyricLineHeight}px`;
+  lyricRow.style.lineHeight = `${lyricLineHeight}px`;
+
+  system.append(numberedRow, staff, lyricRow);
   container.append(system);
 
   const renderer = new Renderer(staff, Renderer.Backends.SVG);
   renderer.resize(width, height);
   const context = renderer.getContext();
-  const stave = new Stave(0, 18, width, { spaceAboveStaffLn: 0, spaceBelowStaffLn: 6 });
+  const stave = new Stave(0, staveY, width, { spaceAboveStaffLn: 0, spaceBelowStaffLn: 6 });
   stave.addClef('treble');
   stave.addKeySignature(model.score.key.replace(/ major$/, ''));
   if (options.showTimeSignature) stave.addTimeSignature(model.score.meter);
@@ -107,7 +133,6 @@ function renderSystem(container, score, palette, options) {
 
   const segmentNotes = [];
   const tickables = [];
-  const lyricAnnotations = [];
   for (const segment of model.segments) {
     const note = new StaveNote({
       clef: 'treble',
@@ -118,14 +143,6 @@ function renderSystem(container, score, palette, options) {
     note.setAttribute('data-event-id', segment.eventId);
     note.setAttribute('data-event-anchor', segment.eventAnchor ? 'true' : 'false');
     if (segment.dots > 0) Dot.buildAndAttach([note], { all: true });
-    if (segment.lyric) {
-      const annotation = new Annotation(segment.lyric)
-        .setVerticalJustification('bottom')
-        .setJustification('center')
-        .setFont('Arial, sans-serif', '18px', 600);
-      note.addModifier(annotation, 0);
-      lyricAnnotations.push({ eventId: segment.eventId, annotation });
-    }
     segmentNotes.push(note);
     tickables.push(note);
     if (segment.measureEnd) tickables.push(new BarNote());
@@ -157,28 +174,32 @@ function renderSystem(container, score, palette, options) {
     }).setContext(context).drawWithStyle();
   });
 
-  for (const { eventId, annotation } of lyricAnnotations) {
-    const element = annotation.getSVGElement();
-    if (element) {
-      element.dataset.lyricEventId = eventId;
-      element.classList.add('score-lyric');
-    }
-  }
-
+  const lyricMap = new Map(model.track.syllables.map((syllable) => [syllable.event, syllable.text]));
   for (const event of model.events) {
     if (event.kind !== 'note') continue;
     const center = eventCenters.get(event.id);
     if (!Number.isFinite(center)) throw new Error(`找不到 ${event.id} 的音頭中心`);
+
     const numbered = createNumberedNote(event, palette);
     numbered.style.left = `${center}px`;
     numbered.dataset.staffCenterX = center.toFixed(3);
     numberedRow.append(numbered);
+
+    const lyricText = lyricMap.get(event.id);
+    if (lyricText) lyricRow.append(createLyric(event.id, lyricText, center));
   }
 
+  const staffTopLineY = stave.getYForLine(0);
+  const staffBottomLineY = stave.getYForLine(4);
+  const lyricRowTop = numberedRowHeight + staffBottomLineY + lyricGap;
+  lyricRow.style.top = `${lyricRowTop}px`;
+
   const svg = staff.querySelector('svg');
-  svg?.setAttribute('aria-label', `${score.title} 五線譜與歌詞`);
-  system.dataset.staffTopLineY = stave.getYForLine(0).toFixed(3);
-  system.dataset.staffBottomLineY = stave.getYForLine(4).toFixed(3);
+  svg?.setAttribute('aria-label', `${score.title} 五線譜`);
+  system.dataset.staffTopLineY = staffTopLineY.toFixed(3);
+  system.dataset.staffBottomLineY = staffBottomLineY.toFixed(3);
+  system.dataset.numberedRowHeight = numberedRowHeight.toFixed(3);
+  system.dataset.lyricRowTop = lyricRowTop.toFixed(3);
   system.dataset.eventCenters = JSON.stringify(Object.fromEntries(eventCenters));
   return { system, model, eventCenters };
 }
@@ -189,7 +210,8 @@ export function renderScore(container, score, palette, options = {}) {
     options.trackId ? candidate.id === options.trackId : candidate.default === true
   ));
   if (!track) throw new Error('找不到預設歌詞 track');
-  const systems = splitMeasuresByRequiredWidth(score, track, options.width ?? 700);
+  const maximumWidth = options.geometry?.staff_width_px ?? 700;
+  const systems = splitMeasuresByRequiredWidth(score, track, maximumWidth);
   return systems.map((measures, index) => renderSystem(
     container,
     scoreForMeasures(score, measures),
@@ -197,6 +219,7 @@ export function renderScore(container, score, palette, options = {}) {
     {
       ...options,
       trackId: track.id,
+      systemIndex: index + 1,
       showTimeSignature: index === 0,
     },
   ));
