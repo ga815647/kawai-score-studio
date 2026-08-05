@@ -1,4 +1,7 @@
+import { splitEvents } from './layout.js';
+
 const app = document.querySelector('#app');
+const main = document.querySelector('main');
 const status = document.querySelector('#status');
 const songNav = document.querySelector('#song-nav');
 const lyricsToggle = document.querySelector('#toggle-lyrics');
@@ -36,11 +39,9 @@ function createNoteBox(event, palette) {
   box.setAttribute('aria-label', `${suffix === '^' ? '高音' : suffix === '_' ? '低音' : ''}${degree}`);
 
   const upper = createOctaveDot('upper', suffix === '^');
-
   const number = document.createElement('span');
   number.className = 'note-number';
   number.textContent = String(degree);
-
   const lower = createOctaveDot('lower', suffix === '_');
 
   box.append(upper, number, lower);
@@ -52,19 +53,20 @@ function createEvent(event, palette) {
   cell.className = 'event';
   cell.dataset.pitch = event.pitch;
   cell.dataset.duration = String(event.duration);
-  cell.style.setProperty('--duration', Math.max(event.duration, 1));
 
   const notation = document.createElement('div');
   notation.className = 'event__notation';
   notation.append(createNoteBox(event, palette));
 
+  const extensions = document.createElement('span');
+  extensions.className = 'extensions';
   if (event.duration > 1) {
-    const extensions = document.createElement('span');
-    extensions.className = 'extensions';
     extensions.setAttribute('aria-label', `延長 ${event.duration - 1} 單位`);
-    extensions.textContent = Array.from({ length: event.duration - 1 }, () => '—').join(' ');
-    notation.append(extensions);
+    extensions.textContent = Array.from({ length: event.duration - 1 }, () => '—').join('');
+  } else {
+    extensions.setAttribute('aria-hidden', 'true');
   }
+  notation.append(extensions);
 
   const lyric = document.createElement('span');
   lyric.className = 'lyric';
@@ -86,15 +88,15 @@ function pitchStep(token) {
   return octave * 7 + degree - 1;
 }
 
-function createStaff(phrase) {
+function createStaff(events) {
   const width = 960;
-  const height = 120;
+  const height = 108;
   const left = 44;
   const right = 24;
-  const staffTop = 34;
-  const staffGap = 10;
+  const staffTop = 28;
+  const staffGap = 9;
   const usable = width - left - right;
-  const totalDuration = phrase.events.reduce((sum, event) => sum + event.duration, 0);
+  const totalDuration = events.reduce((sum, event) => sum + event.duration, 0);
   const unit = usable / Math.max(totalDuration, 1);
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');
@@ -116,18 +118,18 @@ function createStaff(phrase) {
 
   const label = document.createElementNS(ns, 'text');
   label.setAttribute('x', '10');
-  label.setAttribute('y', '63');
+  label.setAttribute('y', '59');
   label.setAttribute('class', 'staff-clef');
   label.textContent = '𝄞';
   svg.append(label);
 
   let elapsed = 0;
-  for (const event of phrase.events) {
+  for (const event of events) {
     const x = left + elapsed * unit + Math.max(event.duration * unit * 0.5, 8);
     const step = pitchStep(event.pitch);
-    const y = 67 - step * 4.8;
+    const y = 62 - step * 4.4;
 
-    for (let ledgerY = 24; y < ledgerY; ledgerY -= staffGap) {
+    for (let ledgerY = 19; y < ledgerY; ledgerY -= staffGap) {
       const ledger = document.createElementNS(ns, 'line');
       ledger.setAttribute('x1', x - 12);
       ledger.setAttribute('x2', x + 12);
@@ -136,7 +138,7 @@ function createStaff(phrase) {
       ledger.setAttribute('class', 'ledger-line');
       svg.append(ledger);
     }
-    for (let ledgerY = 84; y > ledgerY; ledgerY += staffGap) {
+    for (let ledgerY = 73; y > ledgerY; ledgerY += staffGap) {
       const ledger = document.createElementNS(ns, 'line');
       ledger.setAttribute('x1', x - 12);
       ledger.setAttribute('x2', x + 12);
@@ -161,7 +163,7 @@ function createStaff(phrase) {
       stem.setAttribute('x1', x + 7);
       stem.setAttribute('x2', x + 7);
       stem.setAttribute('y1', y);
-      stem.setAttribute('y2', y - 28);
+      stem.setAttribute('y2', y - 25);
       stem.setAttribute('class', 'staff-stem');
       svg.append(stem);
     }
@@ -181,58 +183,125 @@ function createStaff(phrase) {
   return svg;
 }
 
-function renderSong(song, palette) {
+function createSystem(events, palette, phraseNumber, systemNumber) {
+  const section = document.createElement('section');
+  section.className = 'phrase-system';
+  section.dataset.phrase = String(phraseNumber);
+  section.dataset.system = String(systemNumber);
+  section.dataset.eventCount = String(events.length);
+
+  const row = document.createElement('div');
+  row.className = 'note-row';
+  row.style.setProperty('--event-count', String(events.length));
+  events.forEach((event) => row.append(createEvent(event, palette)));
+  section.append(row);
+
+  const staff = document.createElement('div');
+  staff.className = 'staff-panel';
+  staff.append(createStaff(events));
+  section.append(staff);
+  return section;
+}
+
+function renderSong(song, palette, layout, pageNumber) {
+  const viewport = document.createElement('div');
+  viewport.className = 'page-viewport';
+  viewport.id = song.id;
+
   const article = document.createElement('article');
   article.className = 'song-page';
-  article.id = song.id;
   article.dataset.songId = song.id;
 
   const header = document.createElement('header');
   header.className = 'song-header';
-  header.innerHTML = `
-    <p class="song-meta">${song.meter} · ${song.key}</p>
-    <h2>${song.title}</h2>
-    <p>${song.source.note}</p>
-  `;
+
+  const titleCard = document.createElement('div');
+  titleCard.className = 'song-title-card';
+
+  const kicker = document.createElement('p');
+  kicker.className = 'song-kicker';
+  kicker.textContent = 'KAWAI 16 音木琴';
+
+  const heading = document.createElement('h2');
+  heading.textContent = song.title;
+
+  const source = document.createElement('p');
+  source.className = 'song-source';
+  source.textContent = song.source.note;
+
+  titleCard.append(kicker, heading, source);
+
+  const meta = document.createElement('p');
+  meta.className = 'song-meta';
+  meta.textContent = `${song.meter} · ${song.key}`;
+  header.append(titleCard, meta);
   article.append(header);
 
-  song.phrases.forEach((phrase, index) => {
-    const phraseSection = document.createElement('section');
-    phraseSection.className = 'phrase';
-    phraseSection.dataset.phrase = String(index + 1);
-
-    const row = document.createElement('div');
-    row.className = 'note-row';
-    phrase.events.forEach((event) => row.append(createEvent(event, palette)));
-    phraseSection.append(row);
-
-    const staff = document.createElement('div');
-    staff.className = 'staff-panel';
-    staff.append(createStaff(phrase));
-    phraseSection.append(staff);
-    article.append(phraseSection);
+  const systems = document.createElement('div');
+  systems.className = 'song-systems';
+  let systemNumber = 1;
+  song.phrases.forEach((phrase, phraseIndex) => {
+    for (const events of splitEvents(phrase.events, layout.notation_system.max_events_per_system)) {
+      systems.append(createSystem(events, palette, phraseIndex + 1, systemNumber));
+      systemNumber += 1;
+    }
   });
+  article.append(systems);
 
-  return article;
+  const pageMark = document.createElement('footer');
+  pageMark.className = 'page-mark';
+  pageMark.setAttribute('aria-label', `第 ${pageNumber} 頁`);
+  pageMark.textContent = String(pageNumber);
+  article.append(pageMark);
+
+  viewport.append(article);
+  return viewport;
 }
+
+function fitPageViewport(viewport) {
+  const page = viewport.querySelector('.song-page');
+  page.style.transform = 'none';
+  const naturalWidth = page.offsetWidth;
+  const naturalHeight = page.offsetHeight;
+  const availableWidth = Math.min(naturalWidth, main.clientWidth);
+  const scale = naturalWidth > 0 ? Math.min(1, availableWidth / naturalWidth) : 1;
+
+  page.style.transform = `scale(${scale})`;
+  viewport.style.width = `${naturalWidth * scale}px`;
+  viewport.style.height = `${naturalHeight * scale}px`;
+  viewport.dataset.scale = scale.toFixed(4);
+}
+
+let resizeFrame = 0;
+function fitAllPages() {
+  cancelAnimationFrame(resizeFrame);
+  resizeFrame = requestAnimationFrame(() => {
+    document.querySelectorAll('.page-viewport').forEach(fitPageViewport);
+  });
+}
+
+window.addEventListener('resize', fitAllPages);
+window.addEventListener('afterprint', fitAllPages);
 
 async function start() {
   try {
     const response = await fetch('./scorebook.json', { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const book = await response.json();
+    const readySongs = book.songs.filter((item) => item.status === 'ready');
 
-    for (const song of book.songs.filter((item) => item.status === 'ready')) {
+    readySongs.forEach((song, index) => {
       const link = document.createElement('a');
       link.href = `#${song.id}`;
       link.textContent = song.title;
       songNav.append(link);
-      app.append(renderSong(song, book.palette));
-    }
+      app.append(renderSong(song, book.palette, book.layout, index + 1));
+    });
 
+    fitAllPages();
     const version = document.querySelector('meta[name="scorebook-version"]').content;
     const hash = document.querySelector('meta[name="scorebook-sha256"]').content.slice(0, 12);
-    status.textContent = `內容 Gate PASS · ${book.songs.length} 首已載入 · 規格 ${version} (${hash})`;
+    status.textContent = `必要 Gate PASS · ${readySongs.length} 首已載入 · 規格 ${version} (${hash})`;
     status.classList.add('status--pass');
   } catch (error) {
     status.textContent = '載入失敗';
