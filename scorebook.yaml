@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.4.0
+  version: 0.5.0
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -61,23 +61,25 @@ layout:
     alignment: left
     max_width_percent: 72
   notation_system:
-    colored_note_boxes_primary: true
+    colored_note_numbers_primary: true
+    note_boxes: forbidden
     staff_secondary: true
     max_events_per_system: 13
     horizontal_overflow: forbidden
     note_row_border: none
     system_gap_px: 12
     numbered_notation:
+      number_style: unboxed
       duration_extension_marks: forbidden
-      note_row_height_px: 92
-      lyric_top_px: 70
-      staff_pull_up_px: 16
-      min_lyric_to_staff_content_gap_px: 3
-      max_lyric_to_staff_content_gap_px: 6
+      note_row_height_px: 82
+      lyric_top_px: 58
+      staff_pull_up_px: 12
+      min_lyric_to_staff_content_gap_px: 8
+      max_lyric_to_staff_content_gap_px: 12
     alignment:
-      source: vexflow_first_notehead_absolute_x
+      source: vexflow_notehead_bounds_center_x
       targets:
-        - colored_note_box
+        - colored_note_number
         - lyric
       tolerance_px: 1
     staff:
@@ -111,27 +113,25 @@ notation:
       - 3
       - 6
     tie_composite_values: true
-  note_box:
-    width_px: 44
-    height_px: 68
-    border_width_px: 3
-    border_radius_px: 12
-    vertical_padding_px: 5
+  numbered_note:
+    width_px: 30
+    stack_height_px: 56
+    border: none
+    background: none
   octave_dot:
     shape: circle
     diameter_px: 10
-    min_border_clearance_px: 8
-    min_number_clearance_px: 4
+    min_number_clearance_px: 3
   typography:
-    note_number_px: 27
+    note_number_px: 30
     lyric_px: 15
   upper_dot:
-    location: inside_box
-    alignment: centered_above_number
+    location: above_number
+    alignment: centered
     color: inherit
   lower_dot:
-    location: inside_box
-    alignment: centered_below_number
+    location: below_number
+    alignment: centered
     color: inherit
   barline_color: "#222222"
 
@@ -171,10 +171,12 @@ gates:
       - no_hand_drawn_staff_svg
       - staff_pitch_is_derived_from_song_key
       - composite_duration_is_split_and_tied
-      - shared_vexflow_anchor_used_by_note_box_and_lyric
+      - shared_vexflow_notehead_center_used_by_number_and_lyric
+      - no_note_box_markup
+      - no_note_box_border_or_background
       - no_numbered_duration_extension_marks
       - numbered_notation_spacing_generated_from_scorebook
-      - octave_dot_inside_box
+      - octave_dot_above_or_below_number
       - octave_dot_centered
       - octave_dot_inherits_note_color
       - octave_dot_uses_circle_shape
@@ -194,8 +196,10 @@ gates:
       target_song_id: itsy-bitsy-spider
     measurements:
       lyric_to_staff_top_line_gap_px:
-        min: 3
-        max: 6
+        min: 8
+        max: 12
+      number_center_to_notehead_center_error_px:
+        max: 1
     screenshots:
       - id: itsy-bitsy-spider-a4
         selector: ".song-page[data-song-id='itsy-bitsy-spider']"
@@ -211,24 +215,24 @@ gates:
       - a4_aspect_ratio_preserved
       - fixed_page_scaled_as_one_unit_on_narrow_screens
       - rounded_textbook_title_label
-      - colored_note_boxes_are_primary
+      - colored_note_numbers_are_primary
+      - note_boxes_are_absent
       - staff_is_secondary
-      - note_box_center_matches_staff_notehead_within_tolerance
-      - lyric_center_matches_staff_notehead_within_tolerance
+      - number_center_matches_vexflow_notehead_center_within_tolerance
+      - lyric_center_matches_vexflow_notehead_center_within_tolerance
       - browser_page_reaches_gate_pass_state
       - actual_lyric_to_staff_top_line_gap_within_spec
+      - actual_number_to_notehead_center_error_within_spec
       - required_a4_and_closeup_screenshots_created
       - screenshot_metrics_report_created
-      - numbered_notation_group_is_close_to_staff
+      - numbered_notation_group_has_safe_staff_gap
       - lyric_does_not_touch_staff_content
       - vexflow_renders_clef_key_and_time_signature
       - vexflow_renders_dots_beams_and_ties
       - no_horizontal_scroll
       - no_piano_keyboard
       - octave_dot_diameter_matches_spec
-      - octave_dot_border_clearance_at_least_spec
       - octave_dot_number_clearance_at_least_spec
-      - octave_dot_does_not_touch_note_box
       - octave_dot_does_not_touch_note_number
   print:
     required: true
@@ -237,9 +241,10 @@ gates:
       - exact_page_dimensions
       - song_page_not_split
       - no_horizontal_overflow
+      - no_note_box_in_print
       - no_numbered_duration_underline
       - staff_and_numbered_notation_alignment_survives_print
-      - compact_notation_staff_spacing_survives_print
+      - safe_notation_staff_spacing_survives_print
       - octave_dot_clearance_survives_print
       - yellow_and_lime_remain_legible
   release:
