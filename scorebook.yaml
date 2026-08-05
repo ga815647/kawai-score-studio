@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.6
+  version: 0.6.7
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -154,6 +154,7 @@ layout:
       scope: per_event
       trigger: vexflow_stavenote_pointer_rect
       standard_label_geometry_source: scorebook_system_geometry
+      extreme_event_shift_policy: same_rule_as_every_event
       numbered_notation_direction: up_only
       lyric_direction: down_only
       glyph_clearance_px: 6
@@ -242,6 +243,7 @@ gates:
       - standard_label_positions_are_derived_from_scorebook_geometry
       - hidden_studio_rendering_does_not_depend_on_dom_rects
       - per_event_adjustment_uses_vexflow_stavenote_pointer_rect
+      - extreme_notes_use_the_same_collision_rule_as_all_other_notes
       - one_event_source_for_numbered_notation_staff_and_playback
       - lyric_track_is_separate_from_events
       - local_studio_does_not_require_github
@@ -264,7 +266,6 @@ gates:
         max: 1
       maximum_individual_shift_px:
         max: 32
-      minimum_adjusted_labels_per_extreme_event: 1
     checks:
       - chromium_screenshot_created
       - at_least_two_systems_are_screenshot_tested
@@ -275,7 +276,8 @@ gates:
       - uncollided_events_keep_zero_vertical_shift
       - colliding_numbered_notation_moves_up_only
       - colliding_lyric_moves_down_only
-      - each_extreme_event_adjusts_only_the_labels_that_need_it
+      - extreme_events_follow_the_same_minimal_shift_rule
+      - extreme_event_may_remain_unshifted_when_clearance_is_sufficient
       - instrument_highest_note_is_exercised
       - instrument_lowest_note_is_exercised
       - adjusted_elements_keep_required_glyph_clearance
