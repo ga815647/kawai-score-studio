@@ -87,6 +87,7 @@ export function validateScorebook(book) {
   const page = layout?.page;
   const title = layout?.title;
   const system = layout?.notation_system;
+  const numberedNotation = system?.numbered_notation;
   const alignment = system?.alignment;
   const staff = system?.staff;
   const illustration = layout?.illustration;
@@ -117,6 +118,41 @@ export function validateScorebook(book) {
   }
   if (!isPositiveNumber(system?.system_gap_px)) {
     fail('system-gap', '譜行間距必須是正數', 'layout.notation_system.system_gap_px');
+  }
+  if (
+    numberedNotation?.duration_extension_marks !== 'forbidden'
+    || !isPositiveNumber(numberedNotation?.note_row_height_px)
+    || !isPositiveNumber(numberedNotation?.lyric_top_px)
+    || !isNonNegativeNumber(numberedNotation?.staff_pull_up_px)
+    || !isPositiveNumber(numberedNotation?.min_lyric_to_staff_content_gap_px)
+  ) {
+    fail(
+      'numbered-notation-spacing',
+      '簡譜不得顯示延長底線，且必須定義簡譜列、歌詞位置與五線譜靠近量',
+      'layout.notation_system.numbered_notation',
+    );
+  }
+  if (
+    isPositiveNumber(numberedNotation?.note_row_height_px)
+    && isPositiveNumber(numberedNotation?.lyric_top_px)
+    && numberedNotation.lyric_top_px >= numberedNotation.note_row_height_px
+  ) {
+    fail(
+      'lyric-row-fit',
+      '歌詞頂端必須位於簡譜列高度內',
+      'layout.notation_system.numbered_notation.lyric_top_px',
+    );
+  }
+  if (
+    isNonNegativeNumber(numberedNotation?.staff_pull_up_px)
+    && isPositiveNumber(numberedNotation?.note_row_height_px)
+    && numberedNotation.staff_pull_up_px >= numberedNotation.note_row_height_px
+  ) {
+    fail(
+      'staff-pull-up-fit',
+      '五線譜向上靠近量不可大於簡譜列高度',
+      'layout.notation_system.numbered_notation.staff_pull_up_px',
+    );
   }
   if (
     alignment?.source !== 'vexflow_first_notehead_absolute_x'
@@ -181,10 +217,17 @@ export function validateScorebook(book) {
       fail('note-box-design', `notation.note_box.${field} 必須是正數`, `notation.note_box.${field}`);
     }
   }
-  for (const field of ['note_number_px', 'lyric_px', 'extension_px']) {
+  for (const field of ['note_number_px', 'lyric_px']) {
     if (!isPositiveNumber(typography?.[field])) {
       fail('notation-typography', `notation.typography.${field} 必須是正數`, `notation.typography.${field}`);
     }
+  }
+  if ('extension_px' in (typography ?? {}) || 'extension_color' in (book?.notation ?? {})) {
+    fail(
+      'numbered-duration-extension-removed',
+      '簡譜延長線的字級與顏色規格必須移除',
+      'notation',
+    );
   }
   if (octaveDot?.shape !== 'circle') {
     fail('octave-dot-shape', '上下點必須使用圓形', 'notation.octave_dot.shape');
