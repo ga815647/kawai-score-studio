@@ -13,7 +13,11 @@ function maximumDelta(values) {
   return values.length > 0 ? Math.max(...values) - Math.min(...values) : 0;
 }
 
-test('fixture renders two systems and adjusts only colliding extreme-note events', async ({ page }) => {
+function requiredMagnitude(event, clearanceMinimum) {
+  return Math.max(0, Math.ceil(clearanceMinimum - event.defaultGlyphClearancePx));
+}
+
+test('fixture renders two systems and minimally adjusts colliding extreme-note labels', async ({ page }) => {
   await mkdir(reportDirectory, { recursive: true });
   await page.goto('/?fixture=1', { waitUntil: 'networkidle' });
   await expect(page.locator('.status--pass')).toBeVisible();
@@ -59,20 +63,26 @@ test('fixture renders two systems and adjusts only colliding extreme-note events
       const lyricTop = Math.min(...lyricRects.map((rect) => rect.top));
 
       const numberedEvents = numbered.map((item, index) => ({
+        label: 'numbered',
         eventId: item.dataset.eventId,
         pitch: item.dataset.pitch,
+        boundingSource: item.dataset.boundingSource,
         verticalShiftPx: Number(item.dataset.verticalShiftPx),
         defaultGlyphClearancePx: Number(item.dataset.defaultGlyphClearancePx),
         adjustedGlyphClearancePx: Number(item.dataset.adjustedGlyphClearancePx),
         centerErrorPx: (numberedRects[index].left + numberedRects[index].right) / 2
           - (staffRect.left + Number(item.dataset.staffCenterX)),
         rect: {
+          left: numberedRects[index].left,
+          right: numberedRects[index].right,
           top: numberedRects[index].top,
           bottom: numberedRects[index].bottom,
         },
       }));
       const lyricEvents = lyrics.map((item, index) => ({
+        label: 'lyric',
         eventId: item.dataset.lyricEventId,
+        boundingSource: item.dataset.boundingSource,
         verticalShiftPx: Number(item.dataset.verticalShiftPx),
         defaultGlyphClearancePx: Number(item.dataset.defaultGlyphClearancePx),
         adjustedGlyphClearancePx: Number(item.dataset.adjustedGlyphClearancePx),
@@ -98,6 +108,7 @@ test('fixture renders two systems and adjusts only colliding extreme-note events
 
       return {
         system: Number(element.dataset.system ?? 0),
+        boundingSource: element.dataset.boundingSource,
         numberedCount: numbered.length,
         lyricCount: lyrics.length,
         defaultNumberedRowTop: numberedRowRect.top - systemRect.top,
@@ -144,25 +155,43 @@ test('fixture renders two systems and adjusts only colliding extreme-note events
   const clearanceMinimum = visualMeasurements.adjusted_glyph_clearance_px.min;
   const defaultRowMaximum = visualMeasurements.default_row_delta_across_systems_px.max;
   const maximumShift = visualMeasurements.maximum_individual_shift_px.max;
+  const minimumExtremeAdjustments = visualMeasurements.minimum_adjusted_labels_per_extreme_event;
   const numberedEvents = measurements.flatMap((metric) => metric.numberedEvents);
   const lyricEvents = measurements.flatMap((metric) => metric.lyricEvents);
+  const allLabels = [...numberedEvents, ...lyricEvents];
   const highestNumber = numberedEvents.find((event) => event.pitch === book.instrument.highest_note);
   const lowestNumber = numberedEvents.find((event) => event.pitch === book.instrument.lowest_note);
-  const highestLyric = lyricEvents.find((event) => event.eventId === highestNumber?.eventId);
-  const lowestLyric = lyricEvents.find((event) => event.eventId === lowestNumber?.eventId);
+  const extremeEventIds = [highestNumber?.eventId, lowestNumber?.eventId].filter(Boolean);
+  const extremeLabels = Object.fromEntries(extremeEventIds.map((eventId) => [
+    eventId,
+    allLabels.filter((label) => label.eventId === eventId),
+  ]));
 
   const defaultNumberedRowDelta = maximumDelta(measurements.map((metric) => metric.defaultNumberedRowTop));
   const defaultLyricRowDelta = maximumDelta(measurements.map((metric) => metric.defaultLyricRowTop));
-  const allElements = [...numberedEvents, ...lyricEvents];
-  const allClearancesPass = allElements.every((event) => (
-    event.adjustedGlyphClearancePx >= clearanceMinimum
+  const allBoundingSourcesPass = measurements.every((metric) => (
+    metric.boundingSource === 'vexflow-stavenote-bounding-box'
+  )) && allLabels.every((label) => label.boundingSource === 'vexflow-stavenote-bounding-box');
+  const allClearancesPass = allLabels.every((label) => (
+    label.adjustedGlyphClearancePx >= clearanceMinimum
   ));
-  const uncollidedEventsStayStandard = allElements.every((event) => (
-    event.defaultGlyphClearancePx < clearanceMinimum || event.verticalShiftPx === 0
+  const directionsPass = numberedEvents.every((label) => label.verticalShiftPx <= 0)
+    && lyricEvents.every((label) => label.verticalShiftPx >= 0);
+  const shiftsAreMinimal = allLabels.every((label) => (
+    Math.abs(label.verticalShiftPx) === requiredMagnitude(label, clearanceMinimum)
   ));
-  const shiftedEventsNeededAdjustment = allElements.every((event) => (
-    event.verticalShiftPx === 0 || event.defaultGlyphClearancePx < clearanceMinimum
+  const uncollidedLabelsStayStandard = allLabels.every((label) => (
+    label.defaultGlyphClearancePx < clearanceMinimum || label.verticalShiftPx === 0
   ));
+  const shiftedLabelsNeededAdjustment = allLabels.every((label) => (
+    label.verticalShiftPx === 0 || label.defaultGlyphClearancePx < clearanceMinimum
+  ));
+  const extremeAdjustmentsPass = extremeEventIds.every((eventId) => (
+    extremeLabels[eventId].filter((label) => label.verticalShiftPx !== 0).length >= minimumExtremeAdjustments
+  ));
+  const ordinaryStandardLabelCount = allLabels.filter((label) => (
+    !extremeEventIds.includes(label.eventId) && label.verticalShiftPx === 0
+  )).length;
 
   const pass = measurements.every((metric) => (
     metric.numberToStaffGap >= numberGapRange.min
@@ -178,14 +207,17 @@ test('fixture renders two systems and adjusts only colliding extreme-note events
     && systemCount >= visualMeasurements.minimum_system_count
     && defaultNumberedRowDelta <= defaultRowMaximum
     && defaultLyricRowDelta <= defaultRowMaximum
+    && highestNumber !== undefined
+    && lowestNumber !== undefined
+    && allBoundingSourcesPass
     && allClearancesPass
-    && uncollidedEventsStayStandard
-    && shiftedEventsNeededAdjustment
-    && allElements.every((event) => Math.abs(event.verticalShiftPx) <= maximumShift)
-    && highestNumber?.verticalShiftPx < 0
-    && highestLyric?.verticalShiftPx === 0
-    && lowestNumber?.verticalShiftPx === 0
-    && lowestLyric?.verticalShiftPx > 0
+    && directionsPass
+    && shiftsAreMinimal
+    && uncollidedLabelsStayStandard
+    && shiftedLabelsNeededAdjustment
+    && extremeAdjustmentsPass
+    && ordinaryStandardLabelCount > 0
+    && allLabels.every((label) => Math.abs(label.verticalShiftPx) <= maximumShift)
     && pageOverflow.scrollWidth <= pageOverflow.clientWidth + 1;
 
   const report = {
@@ -193,6 +225,7 @@ test('fixture renders two systems and adjusts only colliding extreme-note events
     headSha: process.env.GITHUB_SHA ?? null,
     fixture: 'layout-rhythm-language',
     systemCount,
+    boundingSource: 'vexflow-stavenote-bounding-box',
     instrumentExtremes: {
       lowestNote: book.instrument.lowest_note,
       highestNote: book.instrument.highest_note,
@@ -202,12 +235,16 @@ test('fixture renders two systems and adjusts only colliding extreme-note events
       numberedRow: round(defaultNumberedRowDelta),
       lyricRow: round(defaultLyricRowDelta),
     },
-    extremeAdjustments: {
-      lowestNumber,
-      lowestLyric,
-      highestNumber,
-      highestLyric,
-    },
+    extremeAdjustments: Object.fromEntries(Object.entries(extremeLabels).map(([eventId, labels]) => [
+      eventId,
+      labels.map((label) => ({
+        label: label.label,
+        verticalShiftPx: label.verticalShiftPx,
+        defaultGlyphClearancePx: round(label.defaultGlyphClearancePx),
+        adjustedGlyphClearancePx: round(label.adjustedGlyphClearancePx),
+      })),
+    ])),
+    ordinaryStandardLabelCount,
     screenshots: [
       'synthetic-fixture-a4.png',
       'synthetic-fixture-first-system.png',
@@ -242,17 +279,18 @@ test('fixture renders two systems and adjusts only colliding extreme-note events
   expect(defaultLyricRowDelta, '全曲預設歌詞列必須一致').toBeLessThanOrEqual(defaultRowMaximum);
   expect(highestNumber, `fixture 必須包含最高音 ${book.instrument.highest_note}`).toBeDefined();
   expect(lowestNumber, `fixture 必須包含最低音 ${book.instrument.lowest_note}`).toBeDefined();
-  expect(highestNumber.verticalShiftPx, '最高音只應把對應簡譜上移').toBeLessThan(0);
-  expect(highestLyric.verticalShiftPx, '最高音歌詞應維持全曲標準').toBe(0);
-  expect(lowestNumber.verticalShiftPx, '最低音簡譜應維持全曲標準').toBe(0);
-  expect(lowestLyric.verticalShiftPx, '最低音只應把對應歌詞下移').toBeGreaterThan(0);
+  expect(allBoundingSourcesPass, '碰撞必須使用每顆 StaveNote bounding box').toBe(true);
   expect(allClearancesPass, '位移後仍須保留音符外框安全距離').toBe(true);
-  expect(uncollidedEventsStayStandard, '未碰撞 event 不可任意位移').toBe(true);
-  expect(shiftedEventsNeededAdjustment, '位移必須由實際外框碰撞觸發').toBe(true);
+  expect(directionsPass, '簡譜只能上移，歌詞只能下移').toBe(true);
+  expect(shiftsAreMinimal, '每個標籤只能做解除碰撞所需的最小位移').toBe(true);
+  expect(uncollidedLabelsStayStandard, '未碰撞標籤不可任意位移').toBe(true);
+  expect(shiftedLabelsNeededAdjustment, '位移必須由該標籤的實際碰撞觸發').toBe(true);
+  expect(extremeAdjustmentsPass, '最高音與最低音都必須實際測到至少一個標籤位移').toBe(true);
+  expect(ordinaryStandardLabelCount, '至少要有一般音域標籤維持全曲標準位置').toBeGreaterThan(0);
 
   for (const metric of measurements) {
-    expect(metric.numberToStaffGap, '簡譜與五線譜距離太近').toBeGreaterThanOrEqual(numberGapRange.min);
-    expect(metric.numberToStaffGap, '簡譜與五線譜距離太遠').toBeLessThanOrEqual(numberGapRange.max);
+    expect(metric.numberToStaffGap, '標準簡譜列與五線譜距離太近').toBeGreaterThanOrEqual(numberGapRange.min);
+    expect(metric.numberToStaffGap, '標準簡譜列與五線譜距離太遠').toBeLessThanOrEqual(numberGapRange.max);
     expect(metric.staffToLyricGap, '標準歌詞列與五線譜距離太近').toBeGreaterThanOrEqual(lyricGapRange.min);
     expect(metric.staffToLyricGap, '標準歌詞列與五線譜距離太遠').toBeLessThanOrEqual(lyricGapRange.max);
     expect(metric.defaultLyricTopDelta, '未位移歌詞 top 必須整齊').toBeLessThanOrEqual(defaultRowMaximum);
