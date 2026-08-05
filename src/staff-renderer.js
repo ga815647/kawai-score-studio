@@ -42,6 +42,7 @@ export function renderStaffSystem(container, events, song, layout, options = {})
   container.replaceChildren();
   container.dataset.staffEngine = 'vexflow';
   container.dataset.vexflowVersion = VexFlow.BUILD.VERSION;
+  container.dataset.staffAnchorSource = 'vexflow-notehead-bounds-center';
 
   const renderer = new Renderer(container, Renderer.Backends.SVG);
   renderer.resize(config.width_px, config.height_px);
@@ -84,10 +85,12 @@ export function renderStaffSystem(container, events, song, layout, options = {})
     .joinVoices([voice])
     .formatToStave([voice], stave, { context, stave });
 
-  const anchors = model.anchorSegmentIndexes.map((segmentIndex) => (
-    segmentNotes[segmentIndex].getAbsoluteX()
-  ));
+  const anchors = model.anchorSegmentIndexes.map((segmentIndex) => {
+    const note = segmentNotes[segmentIndex];
+    return (note.getNoteHeadBeginX() + note.getNoteHeadEndX()) / 2;
+  });
   assertAnchorSequence(anchors, events.length, config.width_px);
+  container.dataset.staffAnchors = anchors.map((value) => value.toFixed(3)).join(',');
 
   voice.setContext(context).setStave(stave).drawWithStyle();
   beams.forEach((beam) => beam.setContext(context).drawWithStyle());
