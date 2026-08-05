@@ -20,7 +20,7 @@ test('browser visual gate captures A4 screenshots and enforces compact spacing',
   await expect(song).toBeVisible();
   await expect(song.locator('.phrase-system')).not.toHaveCount(0);
 
-  const pageScale = Number(await song.locator('..').getAttribute('data-scale'));
+  const pageScale = await song.evaluate((article) => Number(article.parentElement?.dataset.scale ?? '1'));
   expect(pageScale).toBeGreaterThan(0);
 
   const metrics = await song.evaluate((article, gateConfig) => {
@@ -57,18 +57,6 @@ test('browser visual gate captures A4 screenshots and enforces compact spacing',
     });
   }, visualGate);
 
-  expect(metrics.length).toBeGreaterThan(0);
-  for (const metric of metrics) {
-    expect(
-      metric.gap,
-      `第 ${metric.system} 譜行中文到五線譜第一線距離 ${round(metric.gap)}px 小於規格`,
-    ).toBeGreaterThanOrEqual(metric.minimum);
-    expect(
-      metric.gap,
-      `第 ${metric.system} 譜行中文到五線譜第一線距離 ${round(metric.gap)}px 大於規格`,
-    ).toBeLessThanOrEqual(metric.maximum);
-  }
-
   for (const screenshot of visualGate.screenshots) {
     const target = page.locator(screenshot.selector);
     await expect(target).toBeVisible();
@@ -79,8 +67,11 @@ test('browser visual gate captures A4 screenshots and enforces compact spacing',
     });
   }
 
+  const pass = metrics.length > 0 && metrics.every((metric) => (
+    metric.gap >= metric.minimum && metric.gap <= metric.maximum
+  ));
   const report = {
-    pass: true,
+    pass,
     scorebookVersion: book.project.version,
     headSha: process.env.GITHUB_SHA ?? null,
     browser: visualGate.runner.browser,
@@ -100,4 +91,16 @@ test('browser visual gate captures A4 screenshots and enforces compact spacing',
     join(artifactDirectory, 'visual-gate-report.json'),
     `${JSON.stringify(report, null, 2)}\n`,
   );
+
+  expect(metrics.length).toBeGreaterThan(0);
+  for (const metric of metrics) {
+    expect(
+      metric.gap,
+      `第 ${metric.system} 譜行中文到五線譜第一線距離 ${round(metric.gap)}px 小於規格`,
+    ).toBeGreaterThanOrEqual(metric.minimum);
+    expect(
+      metric.gap,
+      `第 ${metric.system} 譜行中文到五線譜第一線距離 ${round(metric.gap)}px 大於規格`,
+    ).toBeLessThanOrEqual(metric.maximum);
+  }
 });
