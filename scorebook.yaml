@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.2.0
+  version: 0.3.0
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -38,6 +38,15 @@ palette:
   "6": { name: 黃綠色, hex: "#7E9F00" }
   "7": { name: 橘色, hex: "#E96B0C" }
 
+rendering:
+  staff:
+    engine: vexflow
+    version: "5.0.0"
+    delivery: local_build_artifact
+    license: MIT
+    output: SVG
+    hand_drawn_staff: forbidden
+
 layout:
   profile: a4_japanese_textbook
   page:
@@ -58,6 +67,21 @@ layout:
     horizontal_overflow: forbidden
     note_row_border: none
     system_gap_px: 12
+    alignment:
+      source: vexflow_first_notehead_absolute_x
+      targets:
+        - colored_note_box
+        - lyric
+      tolerance_px: 1
+    staff:
+      width_px: 700
+      height_px: 118
+      stave_y_px: 18
+      clef: treble
+      key_signature: from_song_key
+      time_signature: first_system_only
+      beam_eighth_notes: true
+      composite_duration: split_and_tie
   illustration:
     mode: optional_later
     carries_text: false
@@ -68,6 +92,18 @@ layout:
 notation:
   token_pattern: "^[1-7](?:\\^|_)?$"
   duration_unit: eighth_note
+  duration_rendering:
+    strategy: greedy_standard_values
+    standard_eighth_units:
+      - 6
+      - 4
+      - 3
+      - 2
+      - 1
+    dotted_eighth_units:
+      - 3
+      - 6
+    tie_composite_values: true
   note_box:
     width_px: 44
     height_px: 68
@@ -112,6 +148,9 @@ gates:
       - valid_note_token
       - instrument_range
       - positive_duration
+      - duration_mappable_to_vexflow
+      - valid_major_key
+      - valid_meter
       - lyric_attack_alignment
       - source_present
   html:
@@ -121,6 +160,11 @@ gates:
       - rendered_lyrics_match_scorebook
       - phrase_events_split_without_loss
       - system_event_count_not_above_spec
+      - vexflow_bundle_is_local_and_version_pinned
+      - no_hand_drawn_staff_svg
+      - staff_pitch_is_derived_from_song_key
+      - composite_duration_is_split_and_tied
+      - shared_vexflow_anchor_used_by_note_box_and_lyric
       - octave_dot_inside_box
       - octave_dot_centered
       - octave_dot_inherits_note_color
@@ -135,6 +179,10 @@ gates:
       - rounded_textbook_title_label
       - colored_note_boxes_are_primary
       - staff_is_secondary
+      - note_box_center_matches_staff_notehead_within_tolerance
+      - lyric_center_matches_staff_notehead_within_tolerance
+      - vexflow_renders_clef_key_and_time_signature
+      - vexflow_renders_dots_beams_and_ties
       - no_horizontal_scroll
       - no_piano_keyboard
       - octave_dot_diameter_matches_spec
@@ -149,6 +197,7 @@ gates:
       - exact_page_dimensions
       - song_page_not_split
       - no_horizontal_overflow
+      - staff_and_numbered_notation_alignment_survives_print
       - octave_dot_clearance_survives_print
       - yellow_and_lime_remain_legible
   release:
