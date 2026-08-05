@@ -3,11 +3,19 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { loadScorebook, parsePitch, validateScorebook } from '../scripts/lib.mjs';
 import { splitEvents } from '../src/layout.js';
+import {
+  createStaffModel,
+  decomposeDuration,
+  parseMajorKey,
+  parseMeter,
+  pitchToVexKey,
+} from '../src/staff-model.js';
 
 test('scorebook passes content and design gate', async () => {
   const { data } = await loadScorebook();
   const result = validateScorebook(data);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
+  assert.equal(data.project.version, '0.3.0');
 });
 
 test('instrument has the expected 16-note range', async () => {
@@ -18,7 +26,23 @@ test('instrument has the expected 16-note range', async () => {
   ]);
 });
 
-test('layout uses the approved A4 Japanese textbook profile', async () => {
+test('staff renderer is pinned to local VexFlow 5.0.0', async () => {
+  const { data } = await loadScorebook();
+  assert.deepEqual(data.rendering.staff, {
+    engine: 'vexflow',
+    version: '5.0.0',
+    delivery: 'local_build_artifact',
+    license: 'MIT',
+    output: 'SVG',
+    hand_drawn_staff: 'forbidden',
+  });
+
+  const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
+  assert.equal(packageJson.dependencies.vexflow, '5.0.0');
+  assert.equal(packageJson.dependencies.yaml, '2.8.1');
+});
+
+test('layout uses the approved A4 Japanese textbook profile and shared anchors', async () => {
   const { data } = await loadScorebook();
   assert.equal(data.layout.profile, 'a4_japanese_textbook');
   assert.deepEqual(data.layout.page, {
@@ -34,13 +58,20 @@ test('layout uses the approved A4 Japanese textbook profile', async () => {
     alignment: 'left',
     max_width_percent: 72,
   });
-  assert.deepEqual(data.layout.notation_system, {
-    colored_note_boxes_primary: true,
-    staff_secondary: true,
-    max_events_per_system: 13,
-    horizontal_overflow: 'forbidden',
-    note_row_border: 'none',
-    system_gap_px: 12,
+  assert.deepEqual(data.layout.notation_system.alignment, {
+    source: 'vexflow_first_notehead_absolute_x',
+    targets: ['colored_note_box', 'lyric'],
+    tolerance_px: 1,
+  });
+  assert.deepEqual(data.layout.notation_system.staff, {
+    width_px: 700,
+    height_px: 118,
+    stave_y_px: 18,
+    clef: 'treble',
+    key_signature: 'from_song_key',
+    time_signature: 'first_system_only',
+    beam_eighth_notes: true,
+    composite_duration: 'split_and_tie',
   });
   assert.deepEqual(data.layout.illustration, {
     mode: 'optional_later',
@@ -79,6 +110,69 @@ test('compact note boxes retain the approved octave dot clearances', async () =>
   assert.ok(numberRowHeight > 0, 'number row must remain separate from both dots');
 });
 
+test('major keys and meters are parsed deterministically', () => {
+  assert.deepEqual(parseMajorKey('C major'), { tonicLetter: 'c', keySignature: 'C' });
+  assert.deepEqual(parseMajorKey('G major'), { tonicLetter: 'g', keySignature: 'G' });
+  assert.deepEqual(parseMajorKey('D major'), { tonicLetter: 'd', keySignature: 'D' });
+  assert.deepEqual(parseMeter('6/8'), { numerator: 6, denominator: 8 });
+  assert.throws(() => parseMajorKey('minor'), /不支援的調性/);
+  assert.throws(() => parseMeter('6'), /不支援的拍號/);
+});
+
+test('numbered pitches map to key-aware staff positions', () => {
+  assert.equal(pitchToVexKey('1', 'C major'), 'c/4');
+  assert.equal(pitchToVexKey('1^', 'C major'), 'c/5');
+  assert.equal(pitchToVexKey('7_', 'C major'), 'b/3');
+
+  assert.equal(pitchToVexKey('1', 'G major'), 'g/4');
+  assert.equal(pitchToVexKey('7', 'G major'), 'f/5');
+  assert.equal(pitchToVexKey('7_', 'G major'), 'f/4');
+
+  assert.equal(pitchToVexKey('1', 'D major'), 'd/4');
+  assert.equal(pitchToVexKey('3', 'D major'), 'f/4');
+  assert.equal(pitchToVexKey('1^', 'D major'), 'd/5');
+});
+
+test('durations map to standard VexFlow values and composite ties', () => {
+  assert.deepEqual(decomposeDuration(1), [{ eighthUnits: 1, vexDuration: '8', dots: 0 }]);
+  assert.deepEqual(decomposeDuration(3), [{ eighthUnits: 3, vexDuration: 'qd', dots: 1 }]);
+  assert.deepEqual(decomposeDuration(6), [{ eighthUnits: 6, vexDuration: 'hd', dots: 1 }]);
+  assert.deepEqual(decomposeDuration(5), [
+    { eighthUnits: 4, vexDuration: 'h', dots: 0 },
+    { eighthUnits: 1, vexDuration: '8', dots: 0 },
+  ]);
+
+  const model = createStaffModel([
+    { pitch: '1', duration: 5, lyric: '管' },
+    { pitch: '2', duration: 1, lyric: '上' },
+  ], { key: 'G major', meter: '6/8' });
+  assert.equal(model.totalEighthUnits, 6);
+  assert.deepEqual(model.anchorSegmentIndexes, [0, 2]);
+  assert.equal(model.segments.length, 3);
+  assert.deepEqual(model.ties, [{ fromSegmentIndex: 0, toSegmentIndex: 1, eventIndex: 0 }]);
+});
+
+test('every real system produces one staff anchor per event without data loss', async () => {
+  const { data } = await loadScorebook();
+  const limit = data.layout.notation_system.max_events_per_system;
+  for (const song of data.songs) {
+    for (const phrase of song.phrases) {
+      const systems = splitEvents(phrase.events, limit);
+      assert.deepEqual(systems.flat(), phrase.events, `${song.title} event order changed`);
+      assert.ok(systems.every((system) => system.length <= limit), `${song.title} system too long`);
+      for (const events of systems) {
+        const model = createStaffModel(events, song);
+        assert.equal(model.anchorSegmentIndexes.length, events.length, `${song.title} anchor count changed`);
+        assert.equal(
+          model.totalEighthUnits,
+          events.reduce((sum, event) => sum + event.duration, 0),
+          `${song.title} duration changed`,
+        );
+      }
+    }
+  }
+});
+
 test('system splitter preserves every event in order and enforces the limit', () => {
   const events = Array.from({ length: 29 }, (_, index) => ({ pitch: String((index % 7) + 1), index }));
   const systems = splitEvents(events, 13);
@@ -87,59 +181,74 @@ test('system splitter preserves every event in order and enforces the limit', ()
   assert.ok(systems.every((system) => system.length <= 13));
 });
 
-test('every real phrase can be split without loss', async () => {
+test('generated staff and alignment contract comes from scorebook', async () => {
   const { data } = await loadScorebook();
-  const limit = data.layout.notation_system.max_events_per_system;
-  for (const song of data.songs) {
-    for (const phrase of song.phrases) {
-      const systems = splitEvents(phrase.events, limit);
-      assert.deepEqual(systems.flat(), phrase.events, `${song.title} event order changed`);
-      assert.ok(systems.every((system) => system.length <= limit), `${song.title} system too long`);
-    }
-  }
-});
-
-test('generated design contract comes from scorebook', async () => {
-  const { data } = await loadScorebook();
-  const [designCss, styles, appSource, layoutSource, html] = await Promise.all([
+  const [
+    designCss,
+    styles,
+    appSource,
+    staffRendererSource,
+    buildSource,
+    html,
+    vexflowBundle,
+  ] = await Promise.all([
     readFile('dist/design.css', 'utf8'),
     readFile('src/styles.css', 'utf8'),
     readFile('src/app.js', 'utf8'),
-    readFile('dist/layout.js', 'utf8'),
+    readFile('src/staff-renderer.js', 'utf8'),
+    readFile('scripts/build.mjs', 'utf8'),
     readFile('dist/index.html', 'utf8'),
+    readFile('dist/vendor/vexflow.js', 'utf8'),
   ]);
 
   assert.match(designCss, /--page-width: 210mm;/);
   assert.match(designCss, /--page-height: 297mm;/);
-  assert.match(designCss, /--page-margin: 12mm;/);
-  assert.match(designCss, /--max-events-per-system: 13;/);
+  assert.match(designCss, /--staff-width: 700px;/);
+  assert.match(designCss, /--staff-height: 118px;/);
+  assert.match(designCss, /--staff-alignment-tolerance: 1px;/);
   assert.match(designCss, new RegExp(`--note-box-width: ${data.notation.note_box.width_px}px;`));
-  assert.match(designCss, new RegExp(`--note-box-height: ${data.notation.note_box.height_px}px;`));
   assert.match(designCss, new RegExp(`--octave-dot-diameter: ${data.notation.octave_dot.diameter_px}px;`));
-  assert.match(html, /href="\.\/design\.css"/);
-  assert.match(styles, /width:\s*var\(--page-width, 210mm\)/);
-  assert.match(styles, /height:\s*var\(--page-height, 297mm\)/);
-  assert.match(styles, /grid-template-columns:\s*repeat\(var\(--event-count\), minmax\(0, 1fr\)\)/);
-  assert.match(styles, /\.song-title-card/);
-  assert.match(styles, /\.page-viewport/);
+
+  const vendorIndex = html.indexOf('<script src="./vendor/vexflow.js"></script>');
+  const appIndex = html.indexOf('<script type="module" src="./app.js"></script>');
+  assert.ok(vendorIndex >= 0 && appIndex > vendorIndex, 'local VexFlow must load before app.js');
+  assert.match(vexflowBundle.slice(0, 200), /VexFlow 5\.0\.0/);
+  assert.match(buildSource, /node_modules\/vexflow\/build\/cjs\/vexflow\.js/);
+  assert.match(buildSource, /dist\/vendor\/vexflow\.js/);
+
+  assert.match(staffRendererSource, /new Renderer\(container, Renderer\.Backends\.SVG\)/);
+  assert.match(staffRendererSource, /new Formatter\(\)/);
+  assert.match(staffRendererSource, /getAbsoluteX\(\)/);
+  assert.match(staffRendererSource, /Dot\.buildAndAttach/);
+  assert.match(staffRendererSource, /Beam\.applyAndGetBeams/);
+  assert.match(staffRendererSource, /new StaveTie/);
+  assert.doesNotMatch(staffRendererSource, /createElementNS|<line|<ellipse/);
+
+  assert.match(appSource, /const \{ anchors \} = renderStaffSystem/);
+  assert.match(appSource, /cell\.style\.left = `\$\{anchorX\}px`/);
+  assert.match(appSource, /lyric\.dataset\.staffAnchorX = anchorX\.toFixed\(3\)/);
+  assert.match(appSource, /assertSharedAnchors/);
+  assert.doesNotMatch(appSource, /createElementNS|grid-template-columns/);
+
+  assert.match(styles, /\.note-row\s*\{[^}]*position:\s*relative/s);
+  assert.match(styles, /\.event\s*\{[^}]*position:\s*absolute/s);
+  assert.match(styles, /transform:\s*translateX\(-50%\)/);
   assert.doesNotMatch(styles, /overflow-x:\s*auto/);
-  assert.match(appSource, /splitEvents\(phrase\.events, layout\.notation_system\.max_events_per_system\)/);
-  assert.match(appSource, /page\.style\.transform = `scale\(\$\{scale\}\)`/);
-  assert.match(layoutSource, /events\.slice\(index, index \+ maxEventsPerSystem\)/);
-  assert.doesNotMatch(appSource, /●/);
-  assert.doesNotMatch(appSource, /piano|keyboard/i);
+  assert.doesNotMatch(styles, /\.staff-line|\.staff-note|\.staff-clef/);
 });
 
-test('all required gates include A4, overflow, and illustration checks', async () => {
+test('all required gates include VexFlow engraving and alignment checks', async () => {
   const { data } = await loadScorebook();
   for (const gate of ['content', 'html', 'visual', 'print', 'release']) {
     assert.equal(data.gates[gate].required, true, `${gate} gate must be required`);
   }
-  assert.ok(data.gates.html.checks.includes('phrase_events_split_without_loss'));
-  assert.ok(data.gates.visual.checks.includes('a4_aspect_ratio_preserved'));
-  assert.ok(data.gates.visual.checks.includes('no_horizontal_scroll'));
-  assert.ok(data.gates.visual.checks.includes('no_piano_keyboard'));
-  assert.ok(data.gates.print.checks.includes('exact_page_dimensions'));
+  assert.ok(data.gates.content.checks.includes('duration_mappable_to_vexflow'));
+  assert.ok(data.gates.html.checks.includes('vexflow_bundle_is_local_and_version_pinned'));
+  assert.ok(data.gates.html.checks.includes('no_hand_drawn_staff_svg'));
+  assert.ok(data.gates.html.checks.includes('shared_vexflow_anchor_used_by_note_box_and_lyric'));
+  assert.ok(data.gates.visual.checks.includes('note_box_center_matches_staff_notehead_within_tolerance'));
+  assert.ok(data.gates.visual.checks.includes('vexflow_renders_dots_beams_and_ties'));
+  assert.ok(data.gates.print.checks.includes('staff_and_numbered_notation_alignment_survives_print'));
 });
 
 test('every rendered event pitch is parseable and playable', async () => {
