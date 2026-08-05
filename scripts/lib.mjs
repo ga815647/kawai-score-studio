@@ -16,6 +16,10 @@ export function parsePitch(token) {
   };
 }
 
+function isPositiveNumber(value) {
+  return Number.isFinite(value) && value > 0;
+}
+
 export function validateScorebook(book) {
   const errors = [];
   const warnings = [];
@@ -49,13 +53,62 @@ export function validateScorebook(book) {
     }
   }
 
+  const noteBox = book?.notation?.note_box;
+  const octaveDot = book?.notation?.octave_dot;
   const upper = book?.notation?.upper_dot;
   const lower = book?.notation?.lower_dot;
+
+  for (const field of ['width_px', 'height_px', 'border_width_px', 'border_radius_px', 'vertical_padding_px']) {
+    if (!isPositiveNumber(noteBox?.[field])) {
+      fail('note-box-design', `notation.note_box.${field} 必須是正數`, `notation.note_box.${field}`);
+    }
+  }
+  if (octaveDot?.shape !== 'circle') {
+    fail('octave-dot-shape', '上下點必須使用圓形', 'notation.octave_dot.shape');
+  }
+  for (const field of ['diameter_px', 'min_border_clearance_px', 'min_number_clearance_px']) {
+    if (!isPositiveNumber(octaveDot?.[field])) {
+      fail('octave-dot-design', `notation.octave_dot.${field} 必須是正數`, `notation.octave_dot.${field}`);
+    }
+  }
+
   if (upper?.location !== 'inside_box' || upper?.alignment !== 'centered_above_number' || upper?.color !== 'inherit') {
     fail('upper-dot-rule', '上點必須在框內、數字正上方、繼承數字顏色', 'notation.upper_dot');
   }
   if (lower?.location !== 'inside_box' || lower?.alignment !== 'centered_below_number' || lower?.color !== 'inherit') {
     fail('lower-dot-rule', '下點必須在框內、數字正下方、繼承數字顏色', 'notation.lower_dot');
+  }
+
+  const layoutValues = [
+    noteBox?.height_px,
+    noteBox?.border_width_px,
+    noteBox?.vertical_padding_px,
+    octaveDot?.diameter_px,
+    octaveDot?.min_border_clearance_px,
+    octaveDot?.min_number_clearance_px,
+  ];
+  if (layoutValues.every(isPositiveNumber)) {
+    const actualBorderClearance = noteBox.border_width_px + noteBox.vertical_padding_px;
+    if (actualBorderClearance < octaveDot.min_border_clearance_px) {
+      fail(
+        'octave-dot-border-clearance',
+        `上下點距框外緣僅 ${actualBorderClearance}px，小於規格 ${octaveDot.min_border_clearance_px}px`,
+        'notation',
+      );
+    }
+
+    const innerHeight = noteBox.height_px
+      - noteBox.border_width_px * 2
+      - noteBox.vertical_padding_px * 2;
+    const reservedHeight = octaveDot.diameter_px * 2
+      + octaveDot.min_number_clearance_px * 2;
+    if (innerHeight <= reservedHeight) {
+      fail(
+        'octave-dot-number-space',
+        '音符框扣除上下點與安全距離後，沒有保留數字顯示空間',
+        'notation',
+      );
+    }
   }
 
   const songIds = new Set();
@@ -90,8 +143,9 @@ export function validateScorebook(book) {
   }
 
   if ((book.songs ?? []).length === 0) fail('songs-empty', '至少需要一首曲目', 'songs');
-  if (!book?.gates?.content?.required || !book?.gates?.html?.required || !book?.gates?.print?.required) {
-    fail('required-gates', 'content、html、print Gate 都必須啟用', 'gates');
+  const requiredGates = ['content', 'html', 'visual', 'print', 'release'];
+  if (requiredGates.some((gate) => !book?.gates?.[gate]?.required)) {
+    fail('required-gates', 'content、html、visual、print、release Gate 都必須啟用', 'gates');
   }
 
   return { pass: errors.length === 0, errors, warnings };
