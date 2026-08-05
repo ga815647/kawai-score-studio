@@ -20,6 +20,20 @@ function isPositiveNumber(value) {
   return Number.isFinite(value) && value > 0;
 }
 
+function isNonNegativeNumber(value) {
+  return Number.isFinite(value) && value >= 0;
+}
+
+function isValidMajorKey(value) {
+  return typeof value === 'string' && /^[A-G](?:#|b)? major$/.test(value);
+}
+
+function isValidMeter(value) {
+  if (typeof value !== 'string') return false;
+  const match = /^(\d+)\/(2|4|8|16)$/.exec(value);
+  return Boolean(match && Number(match[1]) > 0);
+}
+
 export function validateScorebook(book) {
   const errors = [];
   const warnings = [];
@@ -53,10 +67,28 @@ export function validateScorebook(book) {
     }
   }
 
+  const staffRenderer = book?.rendering?.staff;
+  if (
+    staffRenderer?.engine !== 'vexflow'
+    || staffRenderer?.version !== '5.0.0'
+    || staffRenderer?.delivery !== 'local_build_artifact'
+    || staffRenderer?.license !== 'MIT'
+    || staffRenderer?.output !== 'SVG'
+    || staffRenderer?.hand_drawn_staff !== 'forbidden'
+  ) {
+    fail(
+      'staff-renderer',
+      '五線譜必須由本地建置的 VexFlow 5.0.0 SVG 產生，禁止手繪五線譜',
+      'rendering.staff',
+    );
+  }
+
   const layout = book?.layout;
   const page = layout?.page;
   const title = layout?.title;
   const system = layout?.notation_system;
+  const alignment = system?.alignment;
+  const staff = system?.staff;
   const illustration = layout?.illustration;
 
   if (layout?.profile !== 'a4_japanese_textbook') {
@@ -87,6 +119,34 @@ export function validateScorebook(book) {
     fail('system-gap', '譜行間距必須是正數', 'layout.notation_system.system_gap_px');
   }
   if (
+    alignment?.source !== 'vexflow_first_notehead_absolute_x'
+    || !Array.isArray(alignment?.targets)
+    || !alignment.targets.includes('colored_note_box')
+    || !alignment.targets.includes('lyric')
+    || !isNonNegativeNumber(alignment?.tolerance_px)
+  ) {
+    fail(
+      'staff-alignment',
+      '彩色音符框與歌詞必須共用 VexFlow 第一音頭的 X 座標並定義容許誤差',
+      'layout.notation_system.alignment',
+    );
+  }
+  if (
+    !isPositiveNumber(staff?.width_px)
+    || !isPositiveNumber(staff?.height_px)
+    || !isPositiveNumber(staff?.stave_y_px)
+    || staff?.clef !== 'treble'
+    || staff?.key_signature !== 'from_song_key'
+    || staff?.time_signature !== 'first_system_only'
+    || staff?.beam_eighth_notes !== true
+    || staff?.composite_duration !== 'split_and_tie'
+  ) {
+    fail('staff-layout', '五線譜尺寸、譜號、調號、拍號、連桿與複合時值規格不完整', 'layout.notation_system.staff');
+  }
+  if (staff?.width_px > 720 || staff?.height_px > 160) {
+    fail('staff-page-fit', '五線譜尺寸不可超過 A4 教材版面的安全範圍', 'layout.notation_system.staff');
+  }
+  if (
     illustration?.mode !== 'optional_later'
     || illustration?.carries_text !== false
     || illustration?.carries_notation !== false
@@ -94,6 +154,20 @@ export function validateScorebook(book) {
     || illustration?.piano_keyboard !== 'forbidden'
   ) {
     fail('illustration-rule', '插圖本次不預留，且不得承載文字、琴譜或鋼琴鍵盤', 'layout.illustration');
+  }
+
+  const durationRendering = book?.notation?.duration_rendering;
+  if (
+    durationRendering?.strategy !== 'greedy_standard_values'
+    || JSON.stringify(durationRendering?.standard_eighth_units) !== JSON.stringify([6, 4, 3, 2, 1])
+    || JSON.stringify(durationRendering?.dotted_eighth_units) !== JSON.stringify([3, 6])
+    || durationRendering?.tie_composite_values !== true
+  ) {
+    fail(
+      'duration-rendering',
+      '時值必須以 6、4、3、2、1 個八分音符單位拆解，附點值為 3 與 6，複合值使用連結線',
+      'notation.duration_rendering',
+    );
   }
 
   const noteBox = book?.notation?.note_box;
@@ -168,6 +242,8 @@ export function validateScorebook(book) {
     if (!song.title) fail('song-title', '曲目缺少 title', `${songPath}.title`);
     if (song.status !== 'ready') warn('song-not-ready', `${song.title} 尚未標記 ready`, `${songPath}.status`);
     if (!song.source?.type || !song.source?.note) fail('song-source', `${song.title} 缺少來源說明`, `${songPath}.source`);
+    if (!isValidMajorKey(song.key)) fail('song-key', `${song.title} 必須使用可辨識的 major 調性`, `${songPath}.key`);
+    if (!isValidMeter(song.meter)) fail('song-meter', `${song.title} 必須使用合法拍號`, `${songPath}.meter`);
     if (!Array.isArray(song.phrases) || song.phrases.length === 0) fail('song-phrases', `${song.title} 缺少 phrases`, `${songPath}.phrases`);
 
     for (const [phraseIndex, phrase] of (song.phrases ?? []).entries()) {
