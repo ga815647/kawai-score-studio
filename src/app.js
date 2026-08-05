@@ -61,13 +61,13 @@ function createEvent(event, palette, anchorX, nextAnchorX, notation) {
   notationGroup.dataset.staffAnchorX = anchorX.toFixed(3);
   notationGroup.append(createNoteBox(event, palette));
 
+  const nextX = nextAnchorX ?? (anchorX + notation.note_box.width_px * 1.5);
+  const anchorDelta = Math.max(0, nextX - anchorX);
   const extensions = document.createElement('span');
   extensions.className = 'extensions';
   const availableSpan = Math.max(
     0,
-    (nextAnchorX ?? (anchorX + notation.note_box.width_px))
-      - anchorX
-      - notation.note_box.width_px / 2,
+    anchorDelta - notation.note_box.width_px / 2,
   );
   extensions.style.width = `${availableSpan}px`;
   if (event.duration > 1) {
@@ -88,6 +88,7 @@ function createEvent(event, palette, anchorX, nextAnchorX, notation) {
   if (event.bar_after) {
     const bar = document.createElement('span');
     bar.className = 'barline';
+    bar.style.left = `${notation.note_box.width_px / 2 + anchorDelta / 2}px`;
     bar.setAttribute('aria-hidden', 'true');
     cell.append(bar);
   }
@@ -242,6 +243,7 @@ async function start() {
     if (actualVexFlowVersion !== book.rendering.staff.version) {
       throw new Error(`VexFlow 載入版本 ${actualVexFlowVersion ?? 'unknown'} 不符合規格 ${book.rendering.staff.version}`);
     }
+    globalThis.VexFlow.setFonts('Bravura', 'Academico');
 
     const readySongs = book.songs.filter((item) => item.status === 'ready');
     readySongs.forEach((song, index) => {
