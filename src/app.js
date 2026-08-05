@@ -1,242 +1,216 @@
-const app = document.querySelector('#app');
+import { ScorePlayer } from './audio.js';
+import { flattenMeasures } from './score-engine.js';
+import { renderScore } from './staff-renderer.js';
+
+const STORAGE_KEY = 'kawai-score-studio:draft:v2';
+const player = new ScorePlayer();
+
 const status = document.querySelector('#status');
-const songNav = document.querySelector('#song-nav');
-const lyricsToggle = document.querySelector('#toggle-lyrics');
-const staffToggle = document.querySelector('#toggle-staff');
+const libraryTab = document.querySelector('#library-tab');
+const studioTab = document.querySelector('#studio-tab');
+const libraryView = document.querySelector('#library-view');
+const studioView = document.querySelector('#studio-view');
+const libraryContent = document.querySelector('#library-content');
+const quarantineList = document.querySelector('#quarantine-list');
+const draftEditor = document.querySelector('#draft-editor');
+const draftFile = document.querySelector('#draft-file');
+const scorePage = document.querySelector('#score-page');
+const scoreTitle = document.querySelector('#score-title');
+const scoreMeta = document.querySelector('#score-meta');
+const scoreBadge = document.querySelector('#score-badge');
+const scoreRender = document.querySelector('#score-render');
 
-document.querySelector('#print-button').addEventListener('click', () => window.print());
-lyricsToggle.addEventListener('change', () => document.body.classList.toggle('hide-lyrics', !lyricsToggle.checked));
-staffToggle.addEventListener('change', () => document.body.classList.toggle('hide-staff', !staffToggle.checked));
+let book;
+let fixtureBook;
+let activeDraft;
 
-function parsePitch(token) {
-  const match = /^([1-7])(\^|_)?$/.exec(token);
-  if (!match) throw new Error(`非法音符：${token}`);
-  return {
-    degree: Number(match[1]),
-    octave: match[2] === '^' ? 1 : match[2] === '_' ? -1 : 0,
-    suffix: match[2] ?? '',
-  };
+function setMode(mode) {
+  const studio = mode === 'studio';
+  libraryView.hidden = studio;
+  studioView.hidden = !studio;
+  libraryTab.setAttribute('aria-selected', String(!studio));
+  studioTab.setAttribute('aria-selected', String(studio));
+  document.body.dataset.mode = mode;
 }
 
-function createNoteBox(event, palette) {
-  const { degree, suffix } = parsePitch(event.pitch);
-  const color = palette[String(degree)].hex;
-  const box = document.createElement('span');
-  box.className = 'note-box';
-  box.dataset.pitch = event.pitch;
-  box.style.setProperty('--note-color', color);
-  box.setAttribute('aria-label', `${suffix === '^' ? '高音' : suffix === '_' ? '低音' : ''}${degree}`);
+libraryTab.addEventListener('click', () => setMode('library'));
+studioTab.addEventListener('click', () => setMode('studio'));
 
-  const upper = document.createElement('span');
-  upper.className = 'octave-dot octave-dot--upper';
-  upper.textContent = suffix === '^' ? '●' : '';
-
-  const number = document.createElement('span');
-  number.className = 'note-number';
-  number.textContent = String(degree);
-
-  const lower = document.createElement('span');
-  lower.className = 'octave-dot octave-dot--lower';
-  lower.textContent = suffix === '_' ? '●' : '';
-
-  box.append(upper, number, lower);
-  return box;
+function showError(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  status.textContent = `FAIL · ${message}`;
+  status.className = 'status status--fail';
 }
 
-function createEvent(event, palette) {
-  const cell = document.createElement('div');
-  cell.className = 'event';
-  cell.dataset.pitch = event.pitch;
-  cell.dataset.duration = String(event.duration);
-  cell.style.setProperty('--duration', Math.max(event.duration, 1));
+function validateDraft(score) {
+  if (!score || typeof score !== 'object') throw new Error('草稿必須是 JSON 物件');
+  if (!score.id || !score.title || !score.key || !score.meter) throw new Error('草稿缺少 id、title、key 或 meter');
+  if (!Array.isArray(score.measures) || score.measures.length === 0) throw new Error('草稿需要 measures');
+  if (!Array.isArray(score.lyric_tracks) || score.lyric_tracks.length === 0) throw new Error('草稿需要獨立 lyric_tracks');
 
-  const notation = document.createElement('div');
-  notation.className = 'event__notation';
-  notation.append(createNoteBox(event, palette));
-
-  if (event.duration > 1) {
-    const extensions = document.createElement('span');
-    extensions.className = 'extensions';
-    extensions.setAttribute('aria-label', `延長 ${event.duration - 1} 單位`);
-    extensions.textContent = Array.from({ length: event.duration - 1 }, () => '—').join(' ');
-    notation.append(extensions);
+  const ids = new Set();
+  for (const event of flattenMeasures(score)) {
+    if (!event.id || ids.has(event.id)) throw new Error(`event id 缺少或重複：${event.id ?? ''}`);
+    ids.add(event.id);
+    if (!['note', 'rest'].includes(event.kind)) throw new Error(`${event.id} kind 必須是 note 或 rest`);
+    if (!Number.isInteger(event.duration) || event.duration <= 0) throw new Error(`${event.id} duration 必須是正整數`);
+    if ('lyric' in event || 'text' in event) throw new Error(`${event.id} 不可內嵌歌詞`);
+    if (event.kind === 'note' && !event.pitch) throw new Error(`${event.id} note 缺少 pitch`);
+    if (event.kind === 'rest' && 'pitch' in event) throw new Error(`${event.id} rest 不可有 pitch`);
   }
 
-  const lyric = document.createElement('span');
-  lyric.className = 'lyric';
-  lyric.textContent = event.lyric;
-  notation.append(lyric);
-
-  cell.append(notation);
-  if (event.bar_after) {
-    const bar = document.createElement('span');
-    bar.className = 'barline';
-    bar.setAttribute('aria-hidden', 'true');
-    cell.append(bar);
-  }
-  return cell;
-}
-
-function pitchStep(token) {
-  const { degree, octave } = parsePitch(token);
-  return octave * 7 + degree - 1;
-}
-
-function createStaff(phrase) {
-  const width = 960;
-  const height = 120;
-  const left = 44;
-  const right = 24;
-  const staffTop = 34;
-  const staffGap = 10;
-  const usable = width - left - right;
-  const totalDuration = phrase.events.reduce((sum, event) => sum + event.duration, 0);
-  const unit = usable / Math.max(totalDuration, 1);
-  const ns = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(ns, 'svg');
-  svg.classList.add('staff-svg');
-  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-  svg.setAttribute('role', 'img');
-  svg.setAttribute('aria-label', '由相同音符資料產生的五線譜對照');
-
-  for (let line = 0; line < 5; line += 1) {
-    const y = staffTop + line * staffGap;
-    const staffLine = document.createElementNS(ns, 'line');
-    staffLine.setAttribute('x1', left);
-    staffLine.setAttribute('x2', width - right);
-    staffLine.setAttribute('y1', y);
-    staffLine.setAttribute('y2', y);
-    staffLine.setAttribute('class', 'staff-line');
-    svg.append(staffLine);
-  }
-
-  const label = document.createElementNS(ns, 'text');
-  label.setAttribute('x', '10');
-  label.setAttribute('y', '63');
-  label.setAttribute('class', 'staff-clef');
-  label.textContent = '𝄞';
-  svg.append(label);
-
-  let elapsed = 0;
-  for (const event of phrase.events) {
-    const x = left + elapsed * unit + Math.max(event.duration * unit * 0.5, 8);
-    const step = pitchStep(event.pitch);
-    const y = 67 - step * 4.8;
-
-    for (let ledgerY = 24; y < ledgerY; ledgerY -= staffGap) {
-      const ledger = document.createElementNS(ns, 'line');
-      ledger.setAttribute('x1', x - 12);
-      ledger.setAttribute('x2', x + 12);
-      ledger.setAttribute('y1', ledgerY);
-      ledger.setAttribute('y2', ledgerY);
-      ledger.setAttribute('class', 'ledger-line');
-      svg.append(ledger);
-    }
-    for (let ledgerY = 84; y > ledgerY; ledgerY += staffGap) {
-      const ledger = document.createElementNS(ns, 'line');
-      ledger.setAttribute('x1', x - 12);
-      ledger.setAttribute('x2', x + 12);
-      ledger.setAttribute('y1', ledgerY);
-      ledger.setAttribute('y2', ledgerY);
-      ledger.setAttribute('class', 'ledger-line');
-      svg.append(ledger);
-    }
-
-    const note = document.createElementNS(ns, 'ellipse');
-    note.setAttribute('cx', x);
-    note.setAttribute('cy', y);
-    note.setAttribute('rx', '8');
-    note.setAttribute('ry', '5.5');
-    note.setAttribute('class', event.duration >= 4 ? 'staff-note staff-note--open' : 'staff-note');
-    note.dataset.pitch = event.pitch;
-    note.dataset.duration = String(event.duration);
-    svg.append(note);
-
-    if (event.duration < 4) {
-      const stem = document.createElementNS(ns, 'line');
-      stem.setAttribute('x1', x + 7);
-      stem.setAttribute('x2', x + 7);
-      stem.setAttribute('y1', y);
-      stem.setAttribute('y2', y - 28);
-      stem.setAttribute('class', 'staff-stem');
-      svg.append(stem);
-    }
-
-    elapsed += event.duration;
-    if (event.bar_after) {
-      const barX = left + elapsed * unit;
-      const bar = document.createElementNS(ns, 'line');
-      bar.setAttribute('x1', barX);
-      bar.setAttribute('x2', barX);
-      bar.setAttribute('y1', staffTop);
-      bar.setAttribute('y2', staffTop + staffGap * 4);
-      bar.setAttribute('class', 'staff-barline');
-      svg.append(bar);
+  const defaultTracks = score.lyric_tracks.filter((track) => track.default === true);
+  if (defaultTracks.length !== 1) throw new Error('草稿必須恰好有一個 default lyric track');
+  for (const track of score.lyric_tracks) {
+    for (const syllable of track.syllables ?? []) {
+      if (!ids.has(syllable.event)) throw new Error(`歌詞指向不存在的 event：${syllable.event}`);
     }
   }
-  return svg;
+  return score;
 }
 
-function renderSong(song, palette) {
-  const article = document.createElement('article');
-  article.className = 'song-page';
-  article.id = song.id;
-  article.dataset.songId = song.id;
-
-  const header = document.createElement('header');
-  header.className = 'song-header';
-  header.innerHTML = `
-    <p class="song-meta">${song.meter} · ${song.key}</p>
-    <h2>${song.title}</h2>
-    <p>${song.source.note}</p>
-  `;
-  article.append(header);
-
-  song.phrases.forEach((phrase, index) => {
-    const phraseSection = document.createElement('section');
-    phraseSection.className = 'phrase';
-    phraseSection.dataset.phrase = String(index + 1);
-
-    const row = document.createElement('div');
-    row.className = 'note-row';
-    phrase.events.forEach((event) => row.append(createEvent(event, palette)));
-    phraseSection.append(row);
-
-    const staff = document.createElement('div');
-    staff.className = 'staff-panel';
-    staff.append(createStaff(phrase));
-    phraseSection.append(staff);
-    article.append(phraseSection);
-  });
-
-  return article;
+function setEditorScore(score) {
+  draftEditor.value = `${JSON.stringify(score, null, 2)}\n`;
 }
+
+function renderDraft(score) {
+  activeDraft = validateDraft(score);
+  scoreTitle.textContent = activeDraft.title;
+  scoreMeta.textContent = `${activeDraft.meter} · ${activeDraft.key} · ${activeDraft.lyric_tracks.find((track) => track.default)?.locale ?? ''}`;
+  scoreBadge.textContent = activeDraft.synthetic === true ? 'SYNTHETIC FIXTURE' : 'LOCAL DRAFT';
+  scorePage.dataset.scoreId = activeDraft.id;
+  scorePage.dataset.synthetic = String(activeDraft.synthetic === true);
+  renderScore(scoreRender, activeDraft, book.palette, { width: 700, height: 170 });
+  status.textContent = `Studio READY · 本機預覽與播放不需要 GitHub · ${activeDraft.title}`;
+  status.className = 'status status--pass';
+}
+
+function applyEditorDraft() {
+  const parsed = JSON.parse(draftEditor.value);
+  renderDraft(parsed);
+}
+
+function renderLibrary() {
+  libraryContent.replaceChildren();
+  quarantineList.replaceChildren();
+  const songs = book.library.songs;
+  if (songs.length === 0) {
+    const template = document.querySelector('#empty-library-template');
+    libraryContent.append(template.content.cloneNode(true));
+  } else {
+    for (const song of songs) {
+      const card = document.createElement('article');
+      card.className = 'library-song';
+      const heading = document.createElement('h3');
+      heading.textContent = song.alias ? `${song.title}（${song.alias}）` : song.title;
+      const meta = document.createElement('p');
+      meta.textContent = `${song.meter} · ${song.key} · verified`;
+      const score = document.createElement('div');
+      score.className = 'score-render';
+      card.append(heading, meta, score);
+      renderScore(score, song, book.palette, { width: 700, height: 170 });
+      libraryContent.append(card);
+    }
+  }
+
+  for (const item of book.library.quarantine) {
+    const li = document.createElement('li');
+    const label = item.alias ? `${item.title}（${item.alias}）` : item.title;
+    li.textContent = `${label}：${item.reason}`;
+    quarantineList.append(li);
+  }
+}
+
+document.querySelector('#load-fixture').addEventListener('click', () => {
+  const fixture = structuredClone(fixtureBook.fixtures[0]);
+  setEditorScore(fixture);
+  renderDraft(fixture);
+});
+
+document.querySelector('#apply-draft').addEventListener('click', () => {
+  try { applyEditorDraft(); } catch (error) { showError(error); }
+});
+
+document.querySelector('#save-draft').addEventListener('click', () => {
+  try {
+    const parsed = validateDraft(JSON.parse(draftEditor.value));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    status.textContent = '本機草稿已儲存；沒有上傳 GitHub';
+    status.className = 'status status--pass';
+  } catch (error) { showError(error); }
+});
+
+document.querySelector('#clear-draft').addEventListener('click', () => {
+  localStorage.removeItem(STORAGE_KEY);
+  const fixture = structuredClone(fixtureBook.fixtures[0]);
+  setEditorScore(fixture);
+  renderDraft(fixture);
+});
+
+draftFile.addEventListener('change', async () => {
+  try {
+    const file = draftFile.files?.[0];
+    if (!file) return;
+    const parsed = validateDraft(JSON.parse(await file.text()));
+    setEditorScore(parsed);
+    renderDraft(parsed);
+  } catch (error) { showError(error); }
+  finally { draftFile.value = ''; }
+});
+
+document.querySelector('#play-score').addEventListener('click', async () => {
+  try {
+    if (!activeDraft) applyEditorDraft();
+    await player.play(activeDraft);
+    status.textContent = `正在本機播放：${activeDraft.title}`;
+    status.className = 'status status--pass';
+  } catch (error) { showError(error); }
+});
+
+document.querySelector('#stop-score').addEventListener('click', () => {
+  player.stop();
+  status.textContent = '播放已停止';
+  status.className = 'status status--pass';
+});
+
+document.querySelector('#print-score').addEventListener('click', () => window.print());
+window.addEventListener('beforeunload', () => player.stop());
 
 async function start() {
   try {
-    const response = await fetch('./scorebook.json', { cache: 'no-store' });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const book = await response.json();
-
-    for (const song of book.songs.filter((item) => item.status === 'ready')) {
-      const link = document.createElement('a');
-      link.href = `#${song.id}`;
-      link.textContent = song.title;
-      songNav.append(link);
-      app.append(renderSong(song, book.palette));
+    const [bookResponse, fixtureResponse] = await Promise.all([
+      fetch('./scorebook.json', { cache: 'no-store' }),
+      fetch('./fixtures.json', { cache: 'no-store' }),
+    ]);
+    if (!bookResponse.ok || !fixtureResponse.ok) throw new Error('無法載入建置資料');
+    book = await bookResponse.json();
+    fixtureBook = await fixtureResponse.json();
+    if (globalThis.VexFlow?.BUILD?.VERSION !== book.rendering.staff.version) {
+      throw new Error('VexFlow 版本與正式規格不符');
     }
+    globalThis.VexFlow.setFonts('Bravura', 'Academico');
 
+    renderLibrary();
+    let initialDraft = structuredClone(fixtureBook.fixtures[0]);
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try { initialDraft = validateDraft(JSON.parse(saved)); } catch { localStorage.removeItem(STORAGE_KEY); }
+    }
+    setEditorScore(initialDraft);
+    renderDraft(initialDraft);
+
+    const parameters = new URLSearchParams(location.search);
+    setMode(parameters.has('studio') || parameters.has('fixture') ? 'studio' : 'library');
     const version = document.querySelector('meta[name="scorebook-version"]').content;
     const hash = document.querySelector('meta[name="scorebook-sha256"]').content.slice(0, 12);
-    status.textContent = `內容 Gate PASS · ${book.songs.length} 首已載入 · 規格 ${version} (${hash})`;
-    status.classList.add('status--pass');
+    status.textContent = `PASS · 正式曲目 ${book.library.songs.length} 首 · 隔離 ${book.library.quarantine.length} 首 · 規格 ${version} (${hash})`;
+    status.className = 'status status--pass';
   } catch (error) {
-    status.textContent = '載入失敗';
-    status.classList.add('status--fail');
+    showError(error);
     const template = document.querySelector('#error-template');
     const card = template.content.cloneNode(true);
     card.querySelector('pre').textContent = error instanceof Error ? error.stack : String(error);
-    app.append(card);
+    document.querySelector('main').append(card);
   }
 }
 
