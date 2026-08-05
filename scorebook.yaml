@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.8
+  version: 0.6.9
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -141,15 +141,15 @@ layout:
   system_geometry:
     staff_width_px: 700
     staff_canvas_height_px: 170
-    stave_top_line_y_px: 14
+    stave_top_line_y_px: 12
     numbered_row_height_px: 50
     numbered_note_height_px: 52
-    numbered_to_staff_top_line_gap_px: 12
+    numbered_to_staff_top_line_gap_px: 10
     locked_standard_rows:
       numbered_row_top_px: 0
       lyric_row_top_px: 120
     lyric_row:
-      staff_bottom_line_to_top_px: 16
+      staff_bottom_line_to_top_px: 18
       line_height_px: 22
       max_vertical_alignment_delta_px: 1
       default_baseline_shared_across_song: true
@@ -257,11 +257,11 @@ gates:
     measurements:
       minimum_system_count: 2
       numbered_to_staff_top_line_gap_px:
-        min: 10
-        max: 14
+        min: 8
+        max: 12
       staff_bottom_line_to_lyric_top_px:
-        min: 14
-        max: 18
+        min: 16
+        max: 20
       lyric_vertical_alignment_delta_px:
         max: 1
       adjusted_glyph_clearance_px:
