@@ -13,10 +13,6 @@ function maximumDelta(values) {
   return values.length > 0 ? Math.max(...values) - Math.min(...values) : 0;
 }
 
-function rectanglesOverlap(a, b) {
-  return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
-}
-
 test('fixture renders two systems and adjusts only colliding extreme-note events', async ({ page }) => {
   await mkdir(reportDirectory, { recursive: true });
   await page.goto('/?fixture=1', { waitUntil: 'networkidle' });
@@ -33,6 +29,9 @@ test('fixture renders two systems and adjusts only colliding extreme-note events
   for (let systemIndex = 0; systemIndex < systemCount; systemIndex += 1) {
     const system = systems.nth(systemIndex);
     const metric = await system.evaluate((element) => {
+      const rectanglesOverlap = (a, b) => (
+        a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
+      );
       const staff = element.querySelector('.staff-panel');
       const numberedRow = element.querySelector('.numbered-row');
       const lyricRow = element.querySelector('.lyric-row');
@@ -105,8 +104,12 @@ test('fixture renders two systems and adjusts only colliding extreme-note events
         defaultLyricRowTop: lyricRowRect.top - systemRect.top,
         numberToStaffGap: topLine - numberBottom,
         staffToLyricGap: lyricTop - bottomLine,
-        defaultLyricTopDelta: maximumDelta(defaultLyrics.map((event) => event.rect.top)),
-        defaultLyricBottomDelta: maximumDelta(defaultLyrics.map((event) => event.rect.bottom)),
+        defaultLyricTopDelta: defaultLyrics.length > 0
+          ? Math.max(...defaultLyrics.map((event) => event.rect.top)) - Math.min(...defaultLyrics.map((event) => event.rect.top))
+          : 0,
+        defaultLyricBottomDelta: defaultLyrics.length > 0
+          ? Math.max(...defaultLyrics.map((event) => event.rect.bottom)) - Math.min(...defaultLyrics.map((event) => event.rect.bottom))
+          : 0,
         lyricCollisionCount,
         numberedEvents,
         lyricEvents,
