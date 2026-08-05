@@ -33,7 +33,7 @@ test('formal specification and synthetic fixtures pass all structural gates', as
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.6');
+  assert.equal(book.project.version, '0.6.7');
   assert.deepEqual(result.counts, {
     verifiedSongs: 0,
     quarantinedEntries: 3,
@@ -99,6 +99,7 @@ test('layout keeps song-standard rows with per-label VexFlow pointer-rectangle e
       scope: 'per_event',
       trigger: 'vexflow_stavenote_pointer_rect',
       standard_label_geometry_source: 'scorebook_system_geometry',
+      extreme_event_shift_policy: 'same_rule_as_every_event',
       numbered_notation_direction: 'up_only',
       lyric_direction: 'down_only',
       glyph_clearance_px: 6,
@@ -114,7 +115,6 @@ test('layout keeps song-standard rows with per-label VexFlow pointer-rectangle e
     adjusted_glyph_clearance_px: { min: 6 },
     default_row_delta_across_systems_px: { max: 1 },
     maximum_individual_shift_px: { max: 32 },
-    minimum_adjusted_labels_per_extreme_event: 1,
   });
 });
 
@@ -268,14 +268,14 @@ test('build output uses pointer rectangles and scorebook-derived standard label 
   assert.match(styles, /height:\s*var\(--numbered-note-height, 52px\)/);
   assert.match(visualSource, /synthetic-fixture-second-system\.png/);
   assert.match(visualSource, /requiredMagnitude/);
-  assert.match(visualSource, /extremeLabels/);
-  assert.match(visualSource, /allBoundingSourcesPass/);
+  assert.match(visualSource, /extremeEventsFollowSameRule/);
+  assert.match(visualSource, /safeExtremeLabelsStayStandard/);
 });
 
 test('package versions and required extreme-note gates are pinned', async () => {
   const { book } = await loadProject();
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-  assert.equal(packageJson.version, '0.6.6');
+  assert.equal(packageJson.version, '0.6.7');
   assert.equal(packageJson.dependencies.vexflow, '5.0.0');
   assert.equal(packageJson.devDependencies['@playwright/test'], '1.55.0');
   assert.ok(book.gates.fixture.checks.includes('fixture_renders_at_least_two_systems'));
@@ -284,10 +284,12 @@ test('package versions and required extreme-note gates are pinned', async () => 
   assert.ok(book.gates.html.checks.includes('standard_label_positions_are_derived_from_scorebook_geometry'));
   assert.ok(book.gates.html.checks.includes('hidden_studio_rendering_does_not_depend_on_dom_rects'));
   assert.ok(book.gates.html.checks.includes('per_event_adjustment_uses_vexflow_stavenote_pointer_rect'));
+  assert.ok(book.gates.html.checks.includes('extreme_notes_use_the_same_collision_rule_as_all_other_notes'));
   assert.ok(book.gates.visual.checks.includes('uncollided_events_keep_zero_vertical_shift'));
   assert.ok(book.gates.visual.checks.includes('colliding_numbered_notation_moves_up_only'));
   assert.ok(book.gates.visual.checks.includes('colliding_lyric_moves_down_only'));
-  assert.ok(book.gates.visual.checks.includes('each_extreme_event_adjusts_only_the_labels_that_need_it'));
+  assert.ok(book.gates.visual.checks.includes('extreme_events_follow_the_same_minimal_shift_rule'));
+  assert.ok(book.gates.visual.checks.includes('extreme_event_may_remain_unshifted_when_clearance_is_sufficient'));
   for (const gate of ['content', 'fixture', 'html', 'visual', 'print', 'release']) {
     assert.equal(book.gates[gate].required, true, `${gate} gate must be required`);
   }
