@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="scorebook-version" content="{{SCOREBOOK_VERSION}}">
+  <meta name="scorebook-sha256" content="{{SCOREBOOK_SHA256}}">
+  <title>Kawai Score Studio</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="toolbar" aria-label="琴譜工具列">
+    <div>
+      <p class="eyebrow">Kawai Score Studio</p>
+      <h1>木琴琴譜產生器</h1>
+    </div>
+    <div class="toolbar__controls">
+      <label><input id="toggle-lyrics" type="checkbox" checked> 歌詞</label>
+      <label><input id="toggle-staff" type="checkbox" checked> 五線譜</label>
+      <button id="print-button" type="button">列印</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="status" class="status" aria-live="polite">載入曲譜中…</section>
+    <nav id="song-nav" class="song-nav" aria-label="曲目目錄"></nav>
+    <div id="app"></div>
+  </main>
+
+  <template id="error-template">
+    <section class="error-card">
+      <h2>無法載入琴譜</h2>
+      <pre></pre>
+    </section>
+  </template>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
