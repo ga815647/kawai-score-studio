@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.3
+  version: 0.6.4
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -119,7 +119,7 @@ notation:
     participates_in_horizontal_spacing: true
     renderer: html_overlay
     vertical_alignment: shared_baseline
-    collision_exception: per_event_vexflow_stavenote_bounding_box
+    collision_exception: per_event_vexflow_stavenote_svg_bbox
   octave_dot:
     diameter_px: 10
     color: inherit
@@ -151,7 +151,7 @@ layout:
       default_baseline_shared_across_song: true
     collision_adjustment:
       scope: per_event
-      trigger: vexflow_stavenote_bounding_box
+      trigger: vexflow_stavenote_svg_getbbox
       numbered_notation_direction: up_only
       lyric_direction: down_only
       glyph_clearance_px: 6
@@ -237,7 +237,7 @@ gates:
       - lyrics_rendered_in_shared_html_row
       - vexflow_annotations_not_used_for_lyrics
       - song_standard_rows_used_by_default
-      - per_event_adjustment_uses_vexflow_stavenote_bounding_box
+      - per_event_adjustment_uses_rendered_stavenote_svg_bbox
       - one_event_source_for_numbered_notation_staff_and_playback
       - lyric_track_is_separate_from_events
       - local_studio_does_not_require_github
