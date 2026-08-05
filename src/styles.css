@@ -66,7 +66,7 @@ main { width: min(calc(100% - 1rem), 860px); margin: 1rem auto 3rem; }
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .song-title-card {
@@ -110,37 +110,33 @@ main { width: min(calc(100% - 1rem), 860px); margin: 1rem auto 3rem; }
 }
 
 .phrase-system {
-  min-width: 0;
+  width: var(--staff-width, 700px);
+  max-width: 100%;
+  margin-inline: auto;
   break-inside: avoid;
   page-break-inside: avoid;
 }
 
 .note-row {
-  display: grid;
-  grid-template-columns: repeat(var(--event-count), minmax(0, 1fr));
-  align-items: start;
-  gap: 2px;
-  width: 100%;
-  min-width: 0;
-  padding: 0 4px 2px;
+  position: relative;
+  width: var(--staff-width, 700px);
+  height: 102px;
+  padding: 0;
   border: 0;
   overflow: visible;
 }
 
 .event {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  min-width: 0;
+  position: absolute;
+  top: 0;
+  width: var(--note-box-width, 44px);
+  height: 102px;
+  transform: translateX(-50%);
 }
 .event__notation {
-  width: 100%;
-  min-width: 0;
-  display: grid;
-  grid-template-rows: auto 12px 20px;
-  justify-items: center;
-  align-content: start;
-  gap: 1px;
+  position: relative;
+  width: var(--note-box-width, 44px);
+  height: 102px;
 }
 .note-box {
   --note-color: #222;
@@ -172,20 +168,26 @@ main { width: min(calc(100% - 1rem), 860px); margin: 1rem auto 3rem; }
 .octave-dot--upper { grid-row: 1; }
 .octave-dot--lower { grid-row: 3; }
 .extensions {
+  position: absolute;
+  top: 70px;
+  left: 50%;
   display: block;
-  width: 100%;
   min-width: 0;
+  height: 10px;
   overflow: hidden;
   color: #24292f;
   font-size: var(--extension-size, 10px);
   font-weight: 800;
-  line-height: 12px;
+  line-height: 10px;
   letter-spacing: -0.08em;
-  text-align: center;
+  text-align: left;
   white-space: nowrap;
 }
 .lyric {
-  min-width: 0;
+  position: absolute;
+  top: 82px;
+  left: 50%;
+  transform: translateX(-50%);
   color: #24292f;
   font-size: var(--lyric-size, 15px);
   font-weight: 700;
@@ -195,35 +197,34 @@ main { width: min(calc(100% - 1rem), 860px); margin: 1rem auto 3rem; }
 }
 .barline {
   position: absolute;
-  top: 8px;
-  right: -2px;
+  top: 4px;
   width: 2px;
-  height: 58px;
+  height: 60px;
   background: #24292f;
   border-radius: 2px;
 }
 
 .staff-panel {
-  width: 100%;
-  min-width: 0;
-  margin-top: 1px;
+  width: var(--staff-width, 700px);
+  height: var(--staff-height, 118px);
+  margin: 0;
   padding: 0;
   border: 0;
-  overflow: hidden;
+  overflow: visible;
 }
-.staff-svg { display: block; min-width: 0; width: 100%; height: auto; }
-.staff-line, .ledger-line, .staff-stem, .staff-barline { stroke: #24292f; stroke-width: 1.5; }
-.staff-barline { stroke-width: 2; }
-.staff-note { fill: #24292f; stroke: #24292f; stroke-width: 2; transform-box: fill-box; transform-origin: center; transform: rotate(-12deg); }
-.staff-note--open { fill: #fff; }
-.staff-clef { font-family: serif; font-size: 40px; fill: #24292f; }
+.staff-panel > svg {
+  display: block;
+  width: var(--staff-width, 700px);
+  height: var(--staff-height, 118px);
+  overflow: visible;
+}
 
 .page-mark {
   display: grid;
   place-items: center;
   width: 24px;
   height: 24px;
-  margin-top: 5px;
+  margin-top: 4px;
   border-radius: 50%;
   background: #343a40;
   color: #fff;
@@ -268,6 +269,6 @@ main { width: min(calc(100% - 1rem), 860px); margin: 1rem auto 3rem; }
     break-inside: avoid;
     page-break-inside: avoid;
   }
-  .note-row, .staff-panel { overflow: hidden; }
+  .note-row, .staff-panel { overflow: visible; }
   .note-box, .octave-dot, .page-mark { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }
