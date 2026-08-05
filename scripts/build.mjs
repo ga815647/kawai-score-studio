@@ -15,9 +15,24 @@ const html = template
   .replaceAll('{{SCOREBOOK_VERSION}}', data.project.version)
   .replaceAll('{{SCOREBOOK_SHA256}}', hash);
 
+const noteBox = data.notation.note_box;
+const octaveDot = data.notation.octave_dot;
+const designCss = `:root {
+  --note-box-width: ${noteBox.width_px}px;
+  --note-box-height: ${noteBox.height_px}px;
+  --note-box-border-width: ${noteBox.border_width_px}px;
+  --note-box-border-radius: ${noteBox.border_radius_px}px;
+  --note-box-vertical-padding: ${noteBox.vertical_padding_px}px;
+  --octave-dot-diameter: ${octaveDot.diameter_px}px;
+  --octave-dot-min-border-clearance: ${octaveDot.min_border_clearance_px}px;
+  --octave-dot-number-clearance: ${octaveDot.min_number_clearance_px}px;
+}
+`;
+
 await rm('dist', { recursive: true, force: true });
 await mkdir('dist', { recursive: true });
 await writeFile('dist/index.html', html);
+await writeFile('dist/design.css', designCss);
 await writeFile('dist/scorebook.json', `${JSON.stringify(data, null, 2)}\n`);
 await writeFile('dist/gate-report.json', `${JSON.stringify(validation, null, 2)}\n`);
 await cp('src/app.js', 'dist/app.js');
