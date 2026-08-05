@@ -13,10 +13,14 @@ jobs:
         with:
           node-version: 20
       - run: npm install
-      - run: npm run check
+      - name: Install pinned Chromium
+        run: npx --yes playwright@1.55.0 install --with-deps chromium
+      - name: Run required gates including browser screenshots
+        run: npm run check:visual
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: gate-reports
+          name: visual-gate-${{ github.sha }}
           path: reports/
-          if-no-files-found: ignore
+          if-no-files-found: warn
+          retention-days: 14
