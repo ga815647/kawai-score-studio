@@ -44,6 +44,8 @@
 2. 五線譜
 3. 歌詞
 
+簡譜底部到五線譜第一條線的目標距離為 16px。歌詞由獨立 HTML 歌詞列產生，不使用 VexFlow Annotation；同一譜行所有音節共用相同 top、height 與 line-height，只讓 X 座標對準各自音頭。Chromium Gate 要求歌詞 top 與 bottom 的最大高低差都不超過 1px。
+
 ## 引擎測試
 
 引擎 Gate 只使用 [`fixtures/engine-fixtures.yaml`](./fixtures/engine-fixtures.yaml) 的合成資料。fixture 涵蓋：
