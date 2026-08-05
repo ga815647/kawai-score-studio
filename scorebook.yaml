@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.7
+  version: 0.6.8
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -141,12 +141,15 @@ layout:
   system_geometry:
     staff_width_px: 700
     staff_canvas_height_px: 170
-    stave_top_line_y_px: 18
+    stave_top_line_y_px: 14
     numbered_row_height_px: 50
     numbered_note_height_px: 52
-    numbered_to_staff_top_line_gap_px: 16
+    numbered_to_staff_top_line_gap_px: 12
+    locked_standard_rows:
+      numbered_row_top_px: 0
+      lyric_row_top_px: 120
     lyric_row:
-      staff_bottom_line_to_top_px: 12
+      staff_bottom_line_to_top_px: 16
       line_height_px: 22
       max_vertical_alignment_delta_px: 1
       default_baseline_shared_across_song: true
@@ -241,6 +244,7 @@ gates:
       - vexflow_annotations_not_used_for_lyrics
       - song_standard_rows_used_by_default
       - standard_label_positions_are_derived_from_scorebook_geometry
+      - locked_numbered_and_lyric_rows_are_preserved_when_staff_moves
       - hidden_studio_rendering_does_not_depend_on_dom_rects
       - per_event_adjustment_uses_vexflow_stavenote_pointer_rect
       - extreme_notes_use_the_same_collision_rule_as_all_other_notes
@@ -253,11 +257,11 @@ gates:
     measurements:
       minimum_system_count: 2
       numbered_to_staff_top_line_gap_px:
-        min: 14
-        max: 18
-      staff_bottom_line_to_lyric_top_px:
         min: 10
         max: 14
+      staff_bottom_line_to_lyric_top_px:
+        min: 14
+        max: 18
       lyric_vertical_alignment_delta_px:
         max: 1
       adjusted_glyph_clearance_px:
@@ -273,6 +277,8 @@ gates:
       - numbered_notation_to_staff_gap_within_spec
       - lyrics_are_below_staff
       - default_rows_match_across_entire_score
+      - staff_moves_up_without_moving_default_numbered_row
+      - staff_moves_up_without_moving_default_lyric_row
       - uncollided_events_keep_zero_vertical_shift
       - colliding_numbered_notation_moves_up_only
       - colliding_lyric_moves_down_only
@@ -291,6 +297,7 @@ gates:
       - song_page_not_split
       - no_horizontal_overflow
       - numbered_notation_staff_and_lyrics_remain_readable
+      - locked_numbered_and_lyric_rows_survive_print
       - song_standard_rows_survive_print
       - per_event_extreme_note_adjustments_survive_print
   release:
