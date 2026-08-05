@@ -53,14 +53,63 @@ export function validateScorebook(book) {
     }
   }
 
+  const layout = book?.layout;
+  const page = layout?.page;
+  const title = layout?.title;
+  const system = layout?.notation_system;
+  const illustration = layout?.illustration;
+
+  if (layout?.profile !== 'a4_japanese_textbook') {
+    fail('layout-profile', 'layout.profile 必須是 a4_japanese_textbook', 'layout.profile');
+  }
+  if (page?.size !== 'A4' || page?.orientation !== 'portrait' || page?.width_mm !== 210 || page?.height_mm !== 297) {
+    fail('page-geometry', '頁面必須固定為 A4 直式 210 × 297mm', 'layout.page');
+  }
+  if (!isPositiveNumber(page?.margin_mm) || page.margin_mm * 2 >= page.width_mm || page?.fixed_aspect_ratio !== true) {
+    fail('page-margin', 'A4 頁面需有合法邊界並固定長寬比', 'layout.page');
+  }
+  if (title?.style !== 'rounded_textbook_label' || title?.alignment !== 'left') {
+    fail('title-layout', '標題需使用靠左的圓角教材標籤', 'layout.title');
+  }
+  if (!isPositiveNumber(title?.max_width_percent) || title.max_width_percent > 100) {
+    fail('title-width', '標題寬度百分比必須介於 0 與 100', 'layout.title.max_width_percent');
+  }
+  if (system?.colored_note_boxes_primary !== true || system?.staff_secondary !== true) {
+    fail('notation-priority', '彩色方框簡譜必須是主視覺，五線譜為輔助', 'layout.notation_system');
+  }
+  if (!Number.isInteger(system?.max_events_per_system) || system.max_events_per_system <= 0) {
+    fail('system-event-count', '每個譜行的最大 event 數必須是正整數', 'layout.notation_system.max_events_per_system');
+  }
+  if (system?.horizontal_overflow !== 'forbidden' || system?.note_row_border !== 'none') {
+    fail('system-overflow', '譜行不得橫向捲動，也不得使用原本的大外框', 'layout.notation_system');
+  }
+  if (!isPositiveNumber(system?.system_gap_px)) {
+    fail('system-gap', '譜行間距必須是正數', 'layout.notation_system.system_gap_px');
+  }
+  if (
+    illustration?.mode !== 'optional_later'
+    || illustration?.carries_text !== false
+    || illustration?.carries_notation !== false
+    || illustration?.reserved_area !== 'none'
+    || illustration?.piano_keyboard !== 'forbidden'
+  ) {
+    fail('illustration-rule', '插圖本次不預留，且不得承載文字、琴譜或鋼琴鍵盤', 'layout.illustration');
+  }
+
   const noteBox = book?.notation?.note_box;
   const octaveDot = book?.notation?.octave_dot;
+  const typography = book?.notation?.typography;
   const upper = book?.notation?.upper_dot;
   const lower = book?.notation?.lower_dot;
 
   for (const field of ['width_px', 'height_px', 'border_width_px', 'border_radius_px', 'vertical_padding_px']) {
     if (!isPositiveNumber(noteBox?.[field])) {
       fail('note-box-design', `notation.note_box.${field} 必須是正數`, `notation.note_box.${field}`);
+    }
+  }
+  for (const field of ['note_number_px', 'lyric_px', 'extension_px']) {
+    if (!isPositiveNumber(typography?.[field])) {
+      fail('notation-typography', `notation.typography.${field} 必須是正數`, `notation.typography.${field}`);
     }
   }
   if (octaveDot?.shape !== 'circle') {
