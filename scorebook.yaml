@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.2
+  version: 0.6.3
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -119,7 +119,7 @@ notation:
     participates_in_horizontal_spacing: true
     renderer: html_overlay
     vertical_alignment: shared_baseline
-    collision_exception: per_event_actual_vexflow_glyph_bounds
+    collision_exception: per_event_vexflow_stavenote_bounding_box
   octave_dot:
     diameter_px: 10
     color: inherit
@@ -151,7 +151,7 @@ layout:
       default_baseline_shared_across_song: true
     collision_adjustment:
       scope: per_event
-      trigger: actual_vexflow_glyph_bounds
+      trigger: vexflow_stavenote_bounding_box
       numbered_notation_direction: up_only
       lyric_direction: down_only
       glyph_clearance_px: 6
@@ -237,7 +237,7 @@ gates:
       - lyrics_rendered_in_shared_html_row
       - vexflow_annotations_not_used_for_lyrics
       - song_standard_rows_used_by_default
-      - per_event_adjustment_uses_actual_vexflow_glyph_bounds
+      - per_event_adjustment_uses_vexflow_stavenote_bounding_box
       - one_event_source_for_numbered_notation_staff_and_playback
       - lyric_track_is_separate_from_events
       - local_studio_does_not_require_github
@@ -260,6 +260,7 @@ gates:
         max: 1
       maximum_individual_shift_px:
         max: 32
+      minimum_adjusted_labels_per_extreme_event: 1
     checks:
       - chromium_screenshot_created
       - at_least_two_systems_are_screenshot_tested
@@ -268,8 +269,9 @@ gates:
       - lyrics_are_below_staff
       - default_rows_match_across_entire_score
       - uncollided_events_keep_zero_vertical_shift
-      - high_collision_moves_only_its_numbered_notation_up
-      - low_collision_moves_only_its_lyric_down
+      - colliding_numbered_notation_moves_up_only
+      - colliding_lyric_moves_down_only
+      - each_extreme_event_adjusts_only_the_labels_that_need_it
       - instrument_highest_note_is_exercised
       - instrument_lowest_note_is_exercised
       - adjusted_elements_keep_required_glyph_clearance
