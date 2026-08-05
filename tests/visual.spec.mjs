@@ -17,7 +17,7 @@ function requiredMagnitude(event, clearanceMinimum) {
   return Math.max(0, Math.ceil(clearanceMinimum - event.defaultGlyphClearancePx));
 }
 
-test('fixture renders two systems and minimally adjusts colliding extreme-note labels', async ({ page }) => {
+test('fixture renders two systems and minimally adjusts only labels that collide', async ({ page }) => {
   await mkdir(reportDirectory, { recursive: true });
   await page.goto('/?fixture=1', { waitUntil: 'networkidle' });
   await expect(page.locator('.status--pass')).toBeVisible();
@@ -67,6 +67,7 @@ test('fixture renders two systems and minimally adjusts colliding extreme-note l
         eventId: item.dataset.eventId,
         pitch: item.dataset.pitch,
         boundingSource: item.dataset.boundingSource,
+        standardGeometrySource: item.dataset.standardGeometrySource,
         verticalShiftPx: Number(item.dataset.verticalShiftPx),
         defaultGlyphClearancePx: Number(item.dataset.defaultGlyphClearancePx),
         adjustedGlyphClearancePx: Number(item.dataset.adjustedGlyphClearancePx),
@@ -83,6 +84,7 @@ test('fixture renders two systems and minimally adjusts colliding extreme-note l
         label: 'lyric',
         eventId: item.dataset.lyricEventId,
         boundingSource: item.dataset.boundingSource,
+        standardGeometrySource: item.dataset.standardGeometrySource,
         verticalShiftPx: Number(item.dataset.verticalShiftPx),
         defaultGlyphClearancePx: Number(item.dataset.defaultGlyphClearancePx),
         adjustedGlyphClearancePx: Number(item.dataset.adjustedGlyphClearancePx),
@@ -109,6 +111,7 @@ test('fixture renders two systems and minimally adjusts colliding extreme-note l
       return {
         system: Number(element.dataset.system ?? 0),
         boundingSource: element.dataset.boundingSource,
+        standardGeometrySource: element.dataset.standardGeometrySource,
         numberedCount: numbered.length,
         lyricCount: lyrics.length,
         defaultNumberedRowTop: numberedRowRect.top - systemRect.top,
@@ -155,7 +158,6 @@ test('fixture renders two systems and minimally adjusts colliding extreme-note l
   const clearanceMinimum = visualMeasurements.adjusted_glyph_clearance_px.min;
   const defaultRowMaximum = visualMeasurements.default_row_delta_across_systems_px.max;
   const maximumShift = visualMeasurements.maximum_individual_shift_px.max;
-  const minimumExtremeAdjustments = visualMeasurements.minimum_adjusted_labels_per_extreme_event;
   const numberedEvents = measurements.flatMap((metric) => metric.numberedEvents);
   const lyricEvents = measurements.flatMap((metric) => metric.lyricEvents);
   const allLabels = [...numberedEvents, ...lyricEvents];
@@ -172,6 +174,9 @@ test('fixture renders two systems and minimally adjusts colliding extreme-note l
   const allBoundingSourcesPass = measurements.every((metric) => (
     metric.boundingSource === 'vexflow-stavenote-pointer-rect'
   )) && allLabels.every((label) => label.boundingSource === 'vexflow-stavenote-pointer-rect');
+  const allStandardGeometrySourcesPass = measurements.every((metric) => (
+    metric.standardGeometrySource === 'scorebook-system-geometry'
+  )) && allLabels.every((label) => label.standardGeometrySource === 'scorebook-system-geometry');
   const allClearancesPass = allLabels.every((label) => (
     label.adjustedGlyphClearancePx >= clearanceMinimum
   ));
@@ -186,8 +191,15 @@ test('fixture renders two systems and minimally adjusts colliding extreme-note l
   const shiftedLabelsNeededAdjustment = allLabels.every((label) => (
     label.verticalShiftPx === 0 || label.defaultGlyphClearancePx < clearanceMinimum
   ));
-  const extremeAdjustmentsPass = extremeEventIds.every((eventId) => (
-    extremeLabels[eventId].filter((label) => label.verticalShiftPx !== 0).length >= minimumExtremeAdjustments
+  const extremeEventsFollowSameRule = extremeEventIds.length === 2
+    && extremeEventIds.every((eventId) => extremeLabels[eventId].every((label) => (
+      label.adjustedGlyphClearancePx >= clearanceMinimum
+      && Math.abs(label.verticalShiftPx) === requiredMagnitude(label, clearanceMinimum)
+    )));
+  const safeExtremeLabelsStayStandard = extremeEventIds.every((eventId) => (
+    extremeLabels[eventId].every((label) => (
+      label.defaultGlyphClearancePx < clearanceMinimum || label.verticalShiftPx === 0
+    ))
   ));
   const ordinaryStandardLabelCount = allLabels.filter((label) => (
     !extremeEventIds.includes(label.eventId) && label.verticalShiftPx === 0
@@ -210,12 +222,14 @@ test('fixture renders two systems and minimally adjusts colliding extreme-note l
     && highestNumber !== undefined
     && lowestNumber !== undefined
     && allBoundingSourcesPass
+    && allStandardGeometrySourcesPass
     && allClearancesPass
     && directionsPass
     && shiftsAreMinimal
     && uncollidedLabelsStayStandard
     && shiftedLabelsNeededAdjustment
-    && extremeAdjustmentsPass
+    && extremeEventsFollowSameRule
+    && safeExtremeLabelsStayStandard
     && ordinaryStandardLabelCount > 0
     && allLabels.every((label) => Math.abs(label.verticalShiftPx) <= maximumShift)
     && pageOverflow.scrollWidth <= pageOverflow.clientWidth + 1;
@@ -226,6 +240,7 @@ test('fixture renders two systems and minimally adjusts colliding extreme-note l
     fixture: 'layout-rhythm-language',
     systemCount,
     boundingSource: 'vexflow-stavenote-pointer-rect',
+    standardGeometrySource: 'scorebook-system-geometry',
     instrumentExtremes: {
       lowestNote: book.instrument.lowest_note,
       highestNote: book.instrument.highest_note,
@@ -280,12 +295,14 @@ test('fixture renders two systems and minimally adjusts colliding extreme-note l
   expect(highestNumber, `fixture 必須包含最高音 ${book.instrument.highest_note}`).toBeDefined();
   expect(lowestNumber, `fixture 必須包含最低音 ${book.instrument.lowest_note}`).toBeDefined();
   expect(allBoundingSourcesPass, '碰撞必須使用每顆 StaveNote 的 pointer rectangle').toBe(true);
+  expect(allStandardGeometrySourcesPass, '全曲標準位置必須來自 scorebook 幾何').toBe(true);
   expect(allClearancesPass, '位移後仍須保留音符外框安全距離').toBe(true);
   expect(directionsPass, '簡譜只能上移，歌詞只能下移').toBe(true);
   expect(shiftsAreMinimal, '每個標籤只能做解除碰撞所需的最小位移').toBe(true);
   expect(uncollidedLabelsStayStandard, '未碰撞標籤不可任意位移').toBe(true);
   expect(shiftedLabelsNeededAdjustment, '位移必須由該標籤的實際碰撞觸發').toBe(true);
-  expect(extremeAdjustmentsPass, '最高音與最低音都必須實際測到至少一個標籤位移').toBe(true);
+  expect(extremeEventsFollowSameRule, '最高音與最低音必須套用與一般音相同的碰撞規則').toBe(true);
+  expect(safeExtremeLabelsStayStandard, '極端音已有足夠距離時不可強迫位移').toBe(true);
   expect(ordinaryStandardLabelCount, '至少要有一般音域標籤維持全曲標準位置').toBeGreaterThan(0);
 
   for (const metric of measurements) {
