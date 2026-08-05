@@ -15,7 +15,7 @@ test('scorebook passes content and design gate', async () => {
   const { data } = await loadScorebook();
   const result = validateScorebook(data);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(data.project.version, '0.3.0');
+  assert.equal(data.project.version, '0.3.1');
 });
 
 test('instrument has the expected 16-note range', async () => {
@@ -38,11 +38,12 @@ test('staff renderer is pinned to local VexFlow 5.0.0', async () => {
   });
 
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
+  assert.equal(packageJson.version, '0.3.1');
   assert.equal(packageJson.dependencies.vexflow, '5.0.0');
   assert.equal(packageJson.dependencies.yaml, '2.8.1');
 });
 
-test('layout uses the approved A4 Japanese textbook profile and shared anchors', async () => {
+test('layout uses the approved A4 textbook profile and compact numbered notation', async () => {
   const { data } = await loadScorebook();
   assert.equal(data.layout.profile, 'a4_japanese_textbook');
   assert.deepEqual(data.layout.page, {
@@ -57,6 +58,13 @@ test('layout uses the approved A4 Japanese textbook profile and shared anchors',
     style: 'rounded_textbook_label',
     alignment: 'left',
     max_width_percent: 72,
+  });
+  assert.deepEqual(data.layout.notation_system.numbered_notation, {
+    duration_extension_marks: 'forbidden',
+    note_row_height_px: 92,
+    lyric_top_px: 70,
+    staff_pull_up_px: 8,
+    min_lyric_to_staff_content_gap_px: 8,
   });
   assert.deepEqual(data.layout.notation_system.alignment, {
     source: 'vexflow_first_notehead_absolute_x',
@@ -97,6 +105,11 @@ test('compact note boxes retain the approved octave dot clearances', async () =>
     min_border_clearance_px: 8,
     min_number_clearance_px: 4,
   });
+  assert.deepEqual(data.notation.typography, {
+    note_number_px: 27,
+    lyric_px: 15,
+  });
+  assert.equal('extension_color' in data.notation, false);
 
   const box = data.notation.note_box;
   const dot = data.notation.octave_dot;
@@ -181,7 +194,7 @@ test('system splitter preserves every event in order and enforces the limit', ()
   assert.ok(systems.every((system) => system.length <= 13));
 });
 
-test('generated staff and alignment contract comes from scorebook', async () => {
+test('generated staff, spacing, and alignment contract comes from scorebook', async () => {
   const { data } = await loadScorebook();
   const [
     designCss,
@@ -203,11 +216,16 @@ test('generated staff and alignment contract comes from scorebook', async () => 
 
   assert.match(designCss, /--page-width: 210mm;/);
   assert.match(designCss, /--page-height: 297mm;/);
+  assert.match(designCss, /--numbered-note-row-height: 92px;/);
+  assert.match(designCss, /--numbered-lyric-top: 70px;/);
+  assert.match(designCss, /--staff-pull-up: 8px;/);
+  assert.match(designCss, /--min-lyric-staff-gap: 8px;/);
   assert.match(designCss, /--staff-width: 700px;/);
   assert.match(designCss, /--staff-height: 118px;/);
   assert.match(designCss, /--staff-alignment-tolerance: 1px;/);
   assert.match(designCss, new RegExp(`--note-box-width: ${data.notation.note_box.width_px}px;`));
   assert.match(designCss, new RegExp(`--octave-dot-diameter: ${data.notation.octave_dot.diameter_px}px;`));
+  assert.doesNotMatch(designCss, /extension/i);
 
   const vendorIndex = html.indexOf('<script src="./vendor/vexflow.js"></script>');
   const appIndex = html.indexOf('<script type="module" src="./app.js"></script>');
@@ -228,16 +246,20 @@ test('generated staff and alignment contract comes from scorebook', async () => 
   assert.match(appSource, /cell\.style\.left = `\$\{anchorX\}px`/);
   assert.match(appSource, /lyric\.dataset\.staffAnchorX = anchorX\.toFixed\(3\)/);
   assert.match(appSource, /assertSharedAnchors/);
+  assert.doesNotMatch(appSource, /extensions|延長|—/);
   assert.doesNotMatch(appSource, /createElementNS|grid-template-columns/);
 
+  assert.match(styles, /height:\s*var\(--numbered-note-row-height, 92px\)/);
+  assert.match(styles, /top:\s*var\(--numbered-lyric-top, 70px\)/);
+  assert.match(styles, /margin:\s*calc\(-1 \* var\(--staff-pull-up, 8px\)\) 0 0/);
   assert.match(styles, /\.note-row\s*\{[^}]*position:\s*relative/s);
   assert.match(styles, /\.event\s*\{[^}]*position:\s*absolute/s);
   assert.match(styles, /transform:\s*translateX\(-50%\)/);
-  assert.doesNotMatch(styles, /overflow-x:\s*auto/);
+  assert.doesNotMatch(styles, /\.extensions|overflow-x:\s*auto/);
   assert.doesNotMatch(styles, /\.staff-line|\.staff-note|\.staff-clef/);
 });
 
-test('all required gates include VexFlow engraving and alignment checks', async () => {
+test('all required gates include underline removal and compact spacing checks', async () => {
   const { data } = await loadScorebook();
   for (const gate of ['content', 'html', 'visual', 'print', 'release']) {
     assert.equal(data.gates[gate].required, true, `${gate} gate must be required`);
@@ -246,9 +268,12 @@ test('all required gates include VexFlow engraving and alignment checks', async 
   assert.ok(data.gates.html.checks.includes('vexflow_bundle_is_local_and_version_pinned'));
   assert.ok(data.gates.html.checks.includes('no_hand_drawn_staff_svg'));
   assert.ok(data.gates.html.checks.includes('shared_vexflow_anchor_used_by_note_box_and_lyric'));
-  assert.ok(data.gates.visual.checks.includes('note_box_center_matches_staff_notehead_within_tolerance'));
-  assert.ok(data.gates.visual.checks.includes('vexflow_renders_dots_beams_and_ties'));
-  assert.ok(data.gates.print.checks.includes('staff_and_numbered_notation_alignment_survives_print'));
+  assert.ok(data.gates.html.checks.includes('no_numbered_duration_extension_marks'));
+  assert.ok(data.gates.html.checks.includes('numbered_notation_spacing_generated_from_scorebook'));
+  assert.ok(data.gates.visual.checks.includes('numbered_notation_group_is_close_to_staff'));
+  assert.ok(data.gates.visual.checks.includes('lyric_does_not_touch_staff_content'));
+  assert.ok(data.gates.print.checks.includes('no_numbered_duration_underline'));
+  assert.ok(data.gates.print.checks.includes('compact_notation_staff_spacing_survives_print'));
 });
 
 test('every rendered event pitch is parseable and playable', async () => {
