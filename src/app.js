@@ -55,28 +55,12 @@ function createEvent(event, palette, anchorX, nextAnchorX, notation) {
   cell.dataset.duration = String(event.duration);
   cell.dataset.staffAnchorX = anchorX.toFixed(3);
   cell.style.left = `${anchorX}px`;
+  cell.setAttribute('aria-label', `${event.lyric}，${event.pitch}，時值 ${event.duration} 個八分音符單位`);
 
   const notationGroup = document.createElement('div');
   notationGroup.className = 'event__notation';
   notationGroup.dataset.staffAnchorX = anchorX.toFixed(3);
   notationGroup.append(createNoteBox(event, palette));
-
-  const nextX = nextAnchorX ?? (anchorX + notation.note_box.width_px * 1.5);
-  const anchorDelta = Math.max(0, nextX - anchorX);
-  const extensions = document.createElement('span');
-  extensions.className = 'extensions';
-  const availableSpan = Math.max(
-    0,
-    anchorDelta - notation.note_box.width_px / 2,
-  );
-  extensions.style.width = `${availableSpan}px`;
-  if (event.duration > 1) {
-    extensions.setAttribute('aria-label', `延長 ${event.duration - 1} 單位`);
-    extensions.textContent = Array.from({ length: event.duration - 1 }, () => '—').join('');
-  } else {
-    extensions.setAttribute('aria-hidden', 'true');
-  }
-  notationGroup.append(extensions);
 
   const lyric = document.createElement('span');
   lyric.className = 'lyric';
@@ -86,6 +70,8 @@ function createEvent(event, palette, anchorX, nextAnchorX, notation) {
 
   cell.append(notationGroup);
   if (event.bar_after) {
+    const nextX = nextAnchorX ?? (anchorX + notation.note_box.width_px * 1.5);
+    const anchorDelta = Math.max(0, nextX - anchorX);
     const bar = document.createElement('span');
     bar.className = 'barline';
     bar.style.left = `${notation.note_box.width_px / 2 + anchorDelta / 2}px`;
