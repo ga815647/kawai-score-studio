@@ -42,6 +42,7 @@ const designCss = `:root {
   --numbered-lyric-top: ${numberedNotation.lyric_top_px}px;
   --staff-pull-up: ${numberedNotation.staff_pull_up_px}px;
   --min-lyric-staff-gap: ${numberedNotation.min_lyric_to_staff_content_gap_px}px;
+  --max-lyric-staff-gap: ${numberedNotation.max_lyric_to_staff_content_gap_px}px;
   --staff-width: ${staff.width_px}px;
   --staff-height: ${staff.height_px}px;
   --staff-alignment-tolerance: ${alignment.tolerance_px}px;
