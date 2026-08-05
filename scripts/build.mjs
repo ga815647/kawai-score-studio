@@ -40,6 +40,7 @@ const designCss = `:root {
   --numbered-staff-gap: ${geometry.numbered_to_staff_top_line_gap_px}px;
   --lyric-staff-gap: ${geometry.lyric_row.staff_bottom_line_to_top_px}px;
   --lyric-line-height: ${geometry.lyric_row.line_height_px}px;
+  --lyric-alignment-tolerance: ${geometry.lyric_row.max_vertical_alignment_delta_px}px;
   --glyph-collision-clearance: ${collision.glyph_clearance_px}px;
   --maximum-event-vertical-shift: ${collision.maximum_shift_px}px;
   --note-number-size: ${typography.note_number_px}px;
