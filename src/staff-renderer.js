@@ -84,13 +84,15 @@ function requiredShift(collisionAmount, maximumShift, eventId, target) {
   return shift;
 }
 
-function renderedGlyphBounds(note, systemRect, eventId) {
-  const element = note.getSVGElement();
-  if (!element) throw new Error(`找不到 ${eventId} 的 VexFlow SVG 元素`);
-  const rect = element.getBoundingClientRect();
+function renderedGlyphBounds(note, numberedRowHeight, eventId) {
+  const boundingBox = note.getBoundingBox();
+  if (!boundingBox) throw new Error(`找不到 ${eventId} 的 VexFlow StaveNote bounding box`);
+  const top = numberedRowHeight + boundingBox.getY();
   return {
-    top: rect.top - systemRect.top,
-    bottom: rect.bottom - systemRect.top,
+    left: boundingBox.getX(),
+    top,
+    right: boundingBox.getX() + boundingBox.getW(),
+    bottom: top + boundingBox.getH(),
   };
 }
 
@@ -200,16 +202,16 @@ function renderSystem(container, score, palette, options) {
   const lyricRowTop = numberedRowHeight + staffBottomLineY + lyricGap;
   lyricRow.style.top = `${lyricRowTop}px`;
 
-  const systemRect = system.getBoundingClientRect();
   const eventGlyphBounds = new Map();
   model.segments.forEach((segment, index) => {
     if (!segment.eventAnchor || segment.eventKind !== 'note') return;
     eventGlyphBounds.set(
       segment.eventId,
-      renderedGlyphBounds(segmentNotes[index], systemRect, segment.eventId),
+      renderedGlyphBounds(segmentNotes[index], numberedRowHeight, segment.eventId),
     );
   });
 
+  const systemRect = system.getBoundingClientRect();
   const lyricMap = new Map(model.track.syllables.map((syllable) => [syllable.event, syllable.text]));
   const adjustments = [];
   let maximumLyricShift = 0;
@@ -240,6 +242,7 @@ function renderSystem(container, score, palette, options) {
     numbered.dataset.adjustedGlyphClearancePx = (defaultNumberClearance + numberedShift).toFixed(3);
     numbered.dataset.glyphTopPx = glyph.top.toFixed(3);
     numbered.dataset.glyphBottomPx = glyph.bottom.toFixed(3);
+    numbered.dataset.boundingSource = 'vexflow-stavenote-bounding-box';
     numbered.dataset.collisionAdjusted = String(numberedShift > 0);
 
     let lyricShift = 0;
@@ -262,6 +265,7 @@ function renderSystem(container, score, palette, options) {
       lyric.dataset.adjustedGlyphClearancePx = (defaultLyricClearance + lyricShift).toFixed(3);
       lyric.dataset.glyphTopPx = glyph.top.toFixed(3);
       lyric.dataset.glyphBottomPx = glyph.bottom.toFixed(3);
+      lyric.dataset.boundingSource = 'vexflow-stavenote-bounding-box';
       lyric.dataset.collisionAdjusted = String(lyricShift > 0);
       maximumLyricShift = Math.max(maximumLyricShift, lyricShift);
     }
@@ -271,7 +275,9 @@ function renderSystem(container, score, palette, options) {
       pitch: event.pitch,
       numberedShiftPx: -numberedShift,
       lyricShiftPx: lyricShift,
+      glyphLeftPx: glyph.left,
       glyphTopPx: glyph.top,
+      glyphRightPx: glyph.right,
       glyphBottomPx: glyph.bottom,
     });
   }
@@ -289,6 +295,7 @@ function renderSystem(container, score, palette, options) {
   system.dataset.lyricRowTop = lyricRowTop.toFixed(3);
   system.dataset.defaultLyricTop = lyricRowTop.toFixed(3);
   system.dataset.glyphClearance = glyphClearance.toFixed(3);
+  system.dataset.boundingSource = 'vexflow-stavenote-bounding-box';
   system.dataset.eventCenters = JSON.stringify(Object.fromEntries(eventCenters));
   system.dataset.verticalAdjustments = JSON.stringify(adjustments);
   return { system, model, eventCenters, adjustments };
