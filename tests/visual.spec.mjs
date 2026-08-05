@@ -4,6 +4,7 @@ import { expect, test } from '@playwright/test';
 const reportDirectory = 'reports/visual';
 const book = JSON.parse(await readFile('dist/scorebook.json', 'utf8'));
 const visualMeasurements = book.gates.visual.measurements;
+const lockedRows = book.layout.system_geometry.locked_standard_rows;
 
 function round(value) {
   return Math.round(value * 1000) / 1000;
@@ -171,6 +172,12 @@ test('fixture renders two systems and minimally adjusts only labels that collide
 
   const defaultNumberedRowDelta = maximumDelta(measurements.map((metric) => metric.defaultNumberedRowTop));
   const defaultLyricRowDelta = maximumDelta(measurements.map((metric) => metric.defaultLyricRowTop));
+  const lockedNumberedRowsPass = measurements.every((metric) => (
+    Math.abs(metric.defaultNumberedRowTop - lockedRows.numbered_row_top_px) <= defaultRowMaximum
+  ));
+  const lockedLyricRowsPass = measurements.every((metric) => (
+    Math.abs(metric.defaultLyricRowTop - lockedRows.lyric_row_top_px) <= defaultRowMaximum
+  ));
   const allBoundingSourcesPass = measurements.every((metric) => (
     metric.boundingSource === 'vexflow-stavenote-pointer-rect'
   )) && allLabels.every((label) => label.boundingSource === 'vexflow-stavenote-pointer-rect');
@@ -219,6 +226,8 @@ test('fixture renders two systems and minimally adjusts only labels that collide
     && systemCount >= visualMeasurements.minimum_system_count
     && defaultNumberedRowDelta <= defaultRowMaximum
     && defaultLyricRowDelta <= defaultRowMaximum
+    && lockedNumberedRowsPass
+    && lockedLyricRowsPass
     && highestNumber !== undefined
     && lowestNumber !== undefined
     && allBoundingSourcesPass
@@ -241,6 +250,7 @@ test('fixture renders two systems and minimally adjusts only labels that collide
     systemCount,
     boundingSource: 'vexflow-stavenote-pointer-rect',
     standardGeometrySource: 'scorebook-system-geometry',
+    lockedStandardRows: lockedRows,
     instrumentExtremes: {
       lowestNote: book.instrument.lowest_note,
       highestNote: book.instrument.highest_note,
@@ -249,6 +259,10 @@ test('fixture renders two systems and minimally adjusts only labels that collide
     defaultRowDeltas: {
       numberedRow: round(defaultNumberedRowDelta),
       lyricRow: round(defaultLyricRowDelta),
+    },
+    lockedRowsPass: {
+      numberedRow: lockedNumberedRowsPass,
+      lyricRow: lockedLyricRowsPass,
     },
     extremeAdjustments: Object.fromEntries(Object.entries(extremeLabels).map(([eventId, labels]) => [
       eventId,
@@ -292,6 +306,8 @@ test('fixture renders two systems and minimally adjusts only labels that collide
   expect(systemCount, 'fixture 至少要有兩個譜行').toBeGreaterThanOrEqual(2);
   expect(defaultNumberedRowDelta, '全曲預設簡譜列必須一致').toBeLessThanOrEqual(defaultRowMaximum);
   expect(defaultLyricRowDelta, '全曲預設歌詞列必須一致').toBeLessThanOrEqual(defaultRowMaximum);
+  expect(lockedNumberedRowsPass, '五線譜上移時不得移動預設簡譜列').toBe(true);
+  expect(lockedLyricRowsPass, '五線譜上移時不得移動預設歌詞列').toBe(true);
   expect(highestNumber, `fixture 必須包含最高音 ${book.instrument.highest_note}`).toBeDefined();
   expect(lowestNumber, `fixture 必須包含最低音 ${book.instrument.lowest_note}`).toBeDefined();
   expect(allBoundingSourcesPass, '碰撞必須使用每顆 StaveNote 的 pointer rectangle').toBe(true);
@@ -306,6 +322,8 @@ test('fixture renders two systems and minimally adjusts only labels that collide
   expect(ordinaryStandardLabelCount, '至少要有一般音域標籤維持全曲標準位置').toBeGreaterThan(0);
 
   for (const metric of measurements) {
+    expect(metric.defaultNumberedRowTop, '預設簡譜列位置不得改變').toBeCloseTo(lockedRows.numbered_row_top_px, 3);
+    expect(metric.defaultLyricRowTop, '預設歌詞列位置不得改變').toBeCloseTo(lockedRows.lyric_row_top_px, 3);
     expect(metric.numberToStaffGap, '標準簡譜列與五線譜距離太近').toBeGreaterThanOrEqual(numberGapRange.min);
     expect(metric.numberToStaffGap, '標準簡譜列與五線譜距離太遠').toBeLessThanOrEqual(numberGapRange.max);
     expect(metric.staffToLyricGap, '標準歌詞列與五線譜距離太近').toBeGreaterThanOrEqual(lyricGapRange.min);
