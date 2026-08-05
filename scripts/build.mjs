@@ -28,7 +28,7 @@ const system = data.layout.notation_system;
 const numberedNotation = system.numbered_notation;
 const staff = system.staff;
 const alignment = system.alignment;
-const noteBox = data.notation.note_box;
+const numberedNote = data.notation.numbered_note;
 const octaveDot = data.notation.octave_dot;
 const typography = data.notation.typography;
 const designCss = `:root {
@@ -46,13 +46,9 @@ const designCss = `:root {
   --staff-width: ${staff.width_px}px;
   --staff-height: ${staff.height_px}px;
   --staff-alignment-tolerance: ${alignment.tolerance_px}px;
-  --note-box-width: ${noteBox.width_px}px;
-  --note-box-height: ${noteBox.height_px}px;
-  --note-box-border-width: ${noteBox.border_width_px}px;
-  --note-box-border-radius: ${noteBox.border_radius_px}px;
-  --note-box-vertical-padding: ${noteBox.vertical_padding_px}px;
+  --numbered-note-width: ${numberedNote.width_px}px;
+  --numbered-note-stack-height: ${numberedNote.stack_height_px}px;
   --octave-dot-diameter: ${octaveDot.diameter_px}px;
-  --octave-dot-min-border-clearance: ${octaveDot.min_border_clearance_px}px;
   --octave-dot-number-clearance: ${octaveDot.min_number_clearance_px}px;
   --note-number-size: ${typography.note_number_px}px;
   --lyric-size: ${typography.lyric_px}px;
