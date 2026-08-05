@@ -27,11 +27,19 @@ const html = template
 
 const page = book.layout.page;
 const typography = book.layout.typography;
+const geometry = book.layout.system_geometry;
 const designCss = `:root {
   --page-width: ${page.width_mm}mm;
   --page-height: ${page.height_mm}mm;
   --page-margin: ${page.margin_mm}mm;
-  --staff-width: 700px;
+  --staff-width: ${geometry.staff_width_px}px;
+  --staff-canvas-height: ${geometry.staff_canvas_height_px}px;
+  --stave-top-line-y: ${geometry.stave_top_line_y_px}px;
+  --numbered-row-height: ${geometry.numbered_row_height_px}px;
+  --numbered-staff-gap: ${geometry.numbered_to_staff_top_line_gap_px}px;
+  --lyric-staff-gap: ${geometry.lyric_row.staff_bottom_line_to_top_px}px;
+  --lyric-line-height: ${geometry.lyric_row.line_height_px}px;
+  --lyric-alignment-tolerance: ${geometry.lyric_row.max_vertical_alignment_delta_px}px;
   --note-number-size: ${typography.note_number_px}px;
   --lyric-size: ${typography.lyric_px}px;
   --octave-dot-size: ${book.notation.octave_dot.diameter_px}px;
