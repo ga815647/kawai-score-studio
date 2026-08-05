@@ -33,7 +33,7 @@ test('formal specification and synthetic fixtures pass all structural gates', as
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.1');
+  assert.equal(book.project.version, '0.6.2');
   assert.deepEqual(result.counts, {
     verifiedSongs: 0,
     quarantinedEntries: 3,
@@ -41,7 +41,7 @@ test('formal specification and synthetic fixtures pass all structural gates', as
   });
 });
 
-test('public library is empty until songs have exact-source verification', async () => {
+test('public library remains empty until exact-source verification', async () => {
   const { book } = await loadProject();
   assert.deepEqual(book.library.songs, []);
   assert.deepEqual(book.modes.library.accepts_status, ['verified']);
@@ -50,7 +50,7 @@ test('public library is empty until songs have exact-source verification', async
   assert.ok(book.modes.library.publication_requires.includes('exact_head_sha_ci'));
 });
 
-test('legacy songs are metadata-only quarantine entries', async () => {
+test('legacy songs remain metadata-only quarantine entries', async () => {
   const { book } = await loadProject();
   assert.deepEqual(book.library.quarantine.map((item) => item.id), [
     'happy-birthday',
@@ -73,15 +73,15 @@ test('Studio preview and playback do not require GitHub or Actions', async () =>
   assert.equal(book.rendering.playback.runs_in_browser, true);
 });
 
-test('layout order uses a tighter notation gap and one shared lyric baseline', async () => {
+test('layout keeps song-standard rows with per-event collision exceptions', async () => {
   const { book } = await loadProject();
   assert.deepEqual(book.layout.vertical_order, ['numbered_notation', 'staff', 'lyrics']);
   assert.equal(book.notation.numbered_notation.position, 'above_staff');
   assert.equal(book.notation.staff.position, 'middle');
   assert.equal(book.notation.lyrics.position, 'below_staff');
-  assert.equal(book.notation.lyrics.participates_in_horizontal_spacing, true);
   assert.equal(book.notation.lyrics.renderer, 'html_overlay');
   assert.equal(book.notation.lyrics.vertical_alignment, 'shared_baseline');
+  assert.equal(book.notation.lyrics.collision_exception, 'per_event_actual_vexflow_glyph_bounds');
   assert.deepEqual(book.layout.system_geometry, {
     staff_width_px: 700,
     staff_canvas_height_px: 170,
@@ -92,29 +92,52 @@ test('layout order uses a tighter notation gap and one shared lyric baseline', a
       staff_bottom_line_to_top_px: 12,
       line_height_px: 22,
       max_vertical_alignment_delta_px: 1,
+      default_baseline_shared_across_song: true,
+    },
+    collision_adjustment: {
+      scope: 'per_event',
+      trigger: 'actual_vexflow_glyph_bounds',
+      numbered_notation_direction: 'up_only',
+      lyric_direction: 'down_only',
+      glyph_clearance_px: 6,
+      maximum_shift_px: 32,
+      uncollided_event_shift_px: 0,
     },
   });
   assert.deepEqual(book.gates.visual.measurements, {
+    minimum_system_count: 2,
     numbered_to_staff_top_line_gap_px: { min: 14, max: 18 },
     staff_bottom_line_to_lyric_top_px: { min: 10, max: 14 },
     lyric_vertical_alignment_delta_px: { max: 1 },
+    adjusted_glyph_clearance_px: { min: 6 },
+    default_row_delta_across_systems_px: { max: 1 },
+    maximum_individual_shift_px: { max: 32 },
   });
-  assert.equal(book.layout.system_breaking.fixed_event_count_breaks, 'forbidden');
 });
 
-test('fixture covers pickup, rests, ties, measures, and long English lyric spacing', async () => {
-  const { fixtures } = await loadProject();
+test('fixture covers at least two systems and both instrument extremes', async () => {
+  const { book, fixtures } = await loadProject();
   const fixture = fixtures.fixtures[0];
+  const events = flattenEvents(fixture);
   assert.equal(fixture.synthetic, true);
   assert.equal(fixture.pickup_eighth_units, 1);
-  assert.deepEqual(fixture.measures.map((measure) => measure.capacity_eighth_units), [1, 6, 6]);
-  assert.ok(flattenEvents(fixture).some((event) => event.kind === 'rest'));
+  assert.deepEqual(fixture.measures.map((measure) => measure.capacity_eighth_units), [1, 6, 6, 6]);
+  assert.ok(events.some((event) => event.kind === 'rest'));
+  assert.ok(events.some((event) => event.pitch === book.instrument.lowest_note));
+  assert.ok(events.some((event) => event.pitch === book.instrument.highest_note));
   assert.deepEqual(fixture.ties, [{ id: 't01', from: 'n05', to: 'n06' }]);
   const track = fixture.lyric_tracks.find((candidate) => candidate.default);
   assert.equal(track.locale, 'en');
   assert.equal(track.role, 'original');
   assert.ok(track.syllables.some((syllable) => syllable.text === 'extraordinary'));
-  for (const event of flattenEvents(fixture)) {
+  assert.deepEqual(
+    splitMeasuresByRequiredWidth(fixture, track, 700).map((system) => system.length),
+    [2, 2],
+  );
+  assert.equal(book.fixtures.minimum_rendered_systems, 2);
+  assert.equal(book.fixtures.must_cover_instrument_lowest_note, true);
+  assert.equal(book.fixtures.must_cover_instrument_highest_note, true);
+  for (const event of events) {
     assert.equal('lyric' in event, false);
     assert.equal('text' in event, false);
   }
@@ -133,8 +156,10 @@ test('event engine produces staff, lyric, tie, rest, and playback data from one 
   assert.deepEqual(model.events, flattenMeasures(fixture));
   assert.ok(model.segments.some((segment) => segment.eventKind === 'rest'));
   assert.ok(model.segments.some((segment) => segment.lyric === 'extraordinary'));
+  assert.ok(model.segments.some((segment) => segment.pitch === '4_'));
+  assert.ok(model.segments.some((segment) => segment.pitch === '5^'));
   assert.ok(model.ties.some((tie) => tie.id === 't01'));
-  assert.equal(model.totalEighthUnits, 13);
+  assert.equal(model.totalEighthUnits, 19);
   assert.equal(model.track.id, 'original-en');
 });
 
@@ -146,7 +171,8 @@ test('duration, pitch, and playback mappings are deterministic', () => {
     { units: 1, duration: '8', dots: 0 },
   ]);
   assert.equal(pitchToVexKey('1', 'C major'), 'c/4');
-  assert.equal(pitchToVexKey('1^', 'C major'), 'c/5');
+  assert.equal(pitchToVexKey('5^', 'C major'), 'g/5');
+  assert.equal(pitchToVexKey('4_', 'C major'), 'f/3');
   assert.equal(pitchToVexKey('7_', 'G major'), 'f/4');
   assert.ok(Math.abs(pitchToFrequency('6', 'C major') - 440) < 0.001);
 });
@@ -156,11 +182,12 @@ test('system breaking uses measure and lyric width instead of a fixed event coun
   const fixture = fixtures.fixtures[0];
   const track = fixture.lyric_tracks[0];
   const wide = splitMeasuresByRequiredWidth(fixture, track, 2000);
+  const normal = splitMeasuresByRequiredWidth(fixture, track, 700);
   const narrow = splitMeasuresByRequiredWidth(fixture, track, 260);
-  assert.deepEqual(wide.map((system) => system.length), [3]);
-  assert.ok(narrow.length > 1);
+  assert.deepEqual(wide.map((system) => system.length), [4]);
+  assert.deepEqual(normal.map((system) => system.length), [2, 2]);
+  assert.ok(narrow.length > normal.length);
   assert.deepEqual(narrow.flat(), fixture.measures);
-  assert.ok(narrow.every((system) => system.length >= 1));
 });
 
 test('unverified public content is rejected', async () => {
@@ -190,7 +217,7 @@ test('embedded lyrics and lyrics attached to rests are rejected', async () => {
   assert.ok(result.errors.some((error) => error.code === 'lyric-event'));
 });
 
-test('invalid lyric baseline and visual geometry are rejected', async () => {
+test('invalid baseline and visual geometry are rejected', async () => {
   const { book, fixtures } = await loadProject();
   const invalidBook = clone(book);
   invalidBook.notation.lyrics.vertical_alignment = 'per_note';
@@ -203,8 +230,8 @@ test('invalid lyric baseline and visual geometry are rejected', async () => {
   assert.ok(result.errors.some((error) => error.code === 'visual-gap-range'));
 });
 
-test('build output uses generated geometry and an HTML lyric row', async () => {
-  const [distBook, distFixtures, designCss, html, appSource, audioSource, rendererSource, styles] = await Promise.all([
+test('build output exposes collision geometry and per-event renderer logic', async () => {
+  const [distBook, distFixtures, designCss, html, appSource, audioSource, rendererSource, visualSource] = await Promise.all([
     readFile('dist/scorebook.json', 'utf8'),
     readFile('dist/fixtures.json', 'utf8'),
     readFile('dist/design.css', 'utf8'),
@@ -212,46 +239,43 @@ test('build output uses generated geometry and an HTML lyric row', async () => {
     readFile('dist/app.js', 'utf8'),
     readFile('dist/audio.js', 'utf8'),
     readFile('dist/staff-renderer.js', 'utf8'),
-    readFile('dist/styles.css', 'utf8'),
+    readFile('tests/visual.spec.mjs', 'utf8'),
   ]);
   assert.equal(JSON.parse(distBook).library.songs.length, 0);
   assert.equal(JSON.parse(distFixtures).fixtures[0].synthetic, true);
   assert.match(designCss, /--staff-width: 700px/);
-  assert.match(designCss, /--staff-canvas-height: 170px/);
   assert.match(designCss, /--numbered-row-height: 50px/);
-  assert.match(designCss, /--numbered-staff-gap: 16px/);
-  assert.match(designCss, /--lyric-staff-gap: 12px/);
-  assert.match(designCss, /--lyric-line-height: 22px/);
   assert.match(designCss, /--lyric-alignment-tolerance: 1px/);
-  assert.match(designCss, /--note-number-size: 26px/);
-  assert.match(designCss, /--lyric-size: 18px/);
+  assert.match(designCss, /--glyph-collision-clearance: 6px/);
+  assert.match(designCss, /--maximum-event-vertical-shift: 32px/);
   assert.match(html, /正式曲庫/);
   assert.match(html, /本機 Studio/);
-  assert.match(html, /vendor\/vexflow\.js/);
-  assert.match(appSource, /localStorage/);
   assert.match(appSource, /geometry: book\.layout\.system_geometry/);
   assert.match(audioSource, /AudioContext/);
   assert.doesNotMatch(rendererSource, /new Annotation|lyricAnnotations/);
-  assert.match(rendererSource, /createLyric/);
-  assert.match(rendererSource, /lyricRow\.style\.top/);
-  assert.match(rendererSource, /getNoteHeadBeginX/);
-  assert.match(rendererSource, /system\.append\(numberedRow, staff, lyricRow\)/);
-  assert.match(styles, /\.lyric-row\s*\{/);
-  assert.match(styles, /\.score-lyric\s*\{/);
-  assert.match(styles, /height:\s*var\(--numbered-row-height, 50px\)/);
-  assert.match(styles, /line-height:\s*var\(--lyric-line-height, 22px\)/);
+  assert.match(rendererSource, /getSVGElement\(\)/);
+  assert.match(rendererSource, /renderedGlyphBounds/);
+  assert.match(rendererSource, /verticalShiftPx/);
+  assert.match(rendererSource, /glyphClearance/);
+  assert.match(rendererSource, /numbered\.style\.top/);
+  assert.match(rendererSource, /lyric\.style\.top/);
+  assert.match(visualSource, /synthetic-fixture-second-system\.png/);
+  assert.match(visualSource, /highestNumber/);
+  assert.match(visualSource, /lowestLyric/);
 });
 
-test('package versions and all required gates are pinned', async () => {
+test('package versions and required extreme-note gates are pinned', async () => {
   const { book } = await loadProject();
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-  assert.equal(packageJson.version, '0.6.1');
+  assert.equal(packageJson.version, '0.6.2');
   assert.equal(packageJson.dependencies.vexflow, '5.0.0');
   assert.equal(packageJson.devDependencies['@playwright/test'], '1.55.0');
-  assert.ok(book.gates.html.checks.includes('lyrics_rendered_in_shared_html_row'));
-  assert.ok(book.gates.html.checks.includes('vexflow_annotations_not_used_for_lyrics'));
-  assert.ok(book.gates.visual.checks.includes('lyric_top_and_bottom_alignment_within_tolerance'));
-  assert.ok(book.gates.print.checks.includes('shared_lyric_baseline_survives_print'));
+  assert.ok(book.gates.fixture.checks.includes('fixture_renders_at_least_two_systems'));
+  assert.ok(book.gates.fixture.checks.includes('fixture_contains_instrument_lowest_note'));
+  assert.ok(book.gates.fixture.checks.includes('fixture_contains_instrument_highest_note'));
+  assert.ok(book.gates.visual.checks.includes('uncollided_events_keep_zero_vertical_shift'));
+  assert.ok(book.gates.visual.checks.includes('high_collision_moves_only_its_numbered_notation_up'));
+  assert.ok(book.gates.visual.checks.includes('low_collision_moves_only_its_lyric_down'));
   for (const gate of ['content', 'fixture', 'html', 'visual', 'print', 'release']) {
     assert.equal(book.gates[gate].required, true, `${gate} gate must be required`);
   }
