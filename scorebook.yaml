@@ -17,6 +17,18 @@ schema:
   pickup_is_explicit: true
   ties_are_explicit: true
 
+interaction_entry:
+  project_mode: single_chat_project
+  project_name: Kawai Score Studio
+  user_selects_work_type: false
+  assistant_classifies_request: true
+  handles:
+    - score_content
+    - generator_development
+  website_modes_remain_internal:
+    - library
+    - studio
+
 instrument:
   id: kawai-xylophone-16
   name: KAWAI 16 音木琴
@@ -85,17 +97,57 @@ content_policy:
   translation_is_optional: true
   unverified_translation_is_forbidden_in_public_library: true
   traditional_title_may_have_local_alias: true
+  source_acquisition:
+    accepted_routes:
+      user_provided:
+        - score_website
+        - score_image
+        - score_pdf
+        - musicxml
+        - other_static_score_file
+      assistant_web_research:
+        - score_website
+        - score_image
+        - score_pdf
+        - musicxml
+    primary_source_must_be_inspectable_static_notation: true
+    user_provided_source_has_variant_priority: true
+    assistant_must_fix_exact_source_before_transcription: true
+    stop_when_no_verifiable_static_source: true
+    forbidden_transcription_or_verification_sources:
+      - youtube
+      - video
+      - audio_recording
+      - memory_only
+  source_types:
+    - score_website
+    - score_image
+    - score_pdf
+    - musicxml
+    - other_static_score_file
+  source_providers:
+    - user
+    - assistant_web_research
   source_requirements:
     - title
-    - url
-    - publisher
+    - source_type
+    - provided_by
+    - publisher_or_origin
     - accessed_at
     - selected_variant
     - original_key
     - original_meter
     - pickup
     - rights_status
+  source_locator:
+    at_least_one_of:
+      - url
+      - file_reference
+    url_scheme: https
+    file_requires:
+      - content_sha256
   verification_requirements:
+    - source_to_scorebook_checked
     - melody_checked
     - rhythm_checked
     - rests_checked
@@ -264,7 +316,10 @@ library:
 
 workflow:
   - read_scorebook
+  - classify_request_inside_single_project
   - classify_requirement_change
+  - acquire_static_score_from_user_or_web_if_content_request
+  - stop_if_no_verifiable_static_score
   - update_scorebook
   - validate_schema_and_publication_policy
   - validate_engine_fixtures
@@ -284,8 +339,16 @@ gates:
   content:
     required: true
     checks:
+      - single_chat_project_handles_content_and_development
+      - assistant_classifies_request_without_user_mode_selection
       - public_library_contains_only_verified_songs
       - exact_source_metadata_present
+      - source_route_is_user_provided_or_assistant_web_research
+      - primary_source_is_inspectable_static_notation
+      - source_locator_is_url_or_hashed_file_reference
+      - youtube_video_audio_and_memory_are_not_transcription_sources
+      - workflow_stops_without_verifiable_static_source
+      - source_to_scorebook_checked
       - complete_music_verification_present
       - original_language_track_is_default
       - melody_events_do_not_embed_lyrics
