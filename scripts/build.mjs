@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { loadFixtures, loadScorebook, validateProject } from './lib.mjs';
+import { adaptBookForLegacyValidation } from './source-policy.mjs';
 
 const [scorebookResult, fixtureResult] = await Promise.all([
   loadScorebook(),
@@ -8,7 +9,7 @@ const [scorebookResult, fixtureResult] = await Promise.all([
 ]);
 const { source, data: book } = scorebookResult;
 const { data: fixtureBook } = fixtureResult;
-const validation = validateProject(book, fixtureBook);
+const validation = validateProject(adaptBookForLegacyValidation(book), fixtureBook);
 if (!validation.pass) {
   console.error('Required Gate failed. Run npm run validate for details.');
   process.exit(1);

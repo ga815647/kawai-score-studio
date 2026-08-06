@@ -17,22 +17,45 @@ function estimateMeasureWidth(measure, lyricMap) {
   return 38 + eventWidth;
 }
 
+function forbiddenTieBreaks(score) {
+  const measureIndexByEvent = new Map();
+  score.measures.forEach((measure, measureIndex) => {
+    for (const event of measure.events) measureIndexByEvent.set(event.id, measureIndex);
+  });
+
+  const forbidden = new Set();
+  for (const tie of score.ties ?? []) {
+    const fromIndex = measureIndexByEvent.get(tie.from);
+    const toIndex = measureIndexByEvent.get(tie.to);
+    if (!Number.isInteger(fromIndex) || !Number.isInteger(toIndex) || fromIndex >= toIndex) continue;
+    for (let index = fromIndex; index < toIndex; index += 1) forbidden.add(index);
+  }
+  return forbidden;
+}
+
 export function splitMeasuresByRequiredWidth(score, track, maximumWidth = 700) {
   const lyricMap = new Map(track.syllables.map((syllable) => [syllable.event, syllable.text]));
+  const forbiddenBreaks = forbiddenTieBreaks(score);
   const systems = [];
   let current = [];
   let currentWidth = 0;
 
-  for (const measure of score.measures) {
+  score.measures.forEach((measure, measureIndex) => {
     const estimatedWidth = estimateMeasureWidth(measure, lyricMap);
-    if (current.length > 0 && currentWidth + estimatedWidth > maximumWidth) {
+    const previousMeasureIndex = measureIndex - 1;
+    const mayBreakBeforeMeasure = !forbiddenBreaks.has(previousMeasureIndex);
+    if (
+      current.length > 0
+      && currentWidth + estimatedWidth > maximumWidth
+      && mayBreakBeforeMeasure
+    ) {
       systems.push(current);
       current = [];
       currentWidth = 0;
     }
     current.push(measure);
     currentWidth += estimatedWidth;
-  }
+  });
   if (current.length > 0) systems.push(current);
   return systems;
 }
@@ -44,6 +67,77 @@ function scoreForMeasures(score, measures) {
     pickup_eighth_units: measures[0]?.pickup === true ? measures[0].capacity_eighth_units : 0,
     measures,
     ties: (score.ties ?? []).filter((tie) => eventIds.has(tie.from) && eventIds.has(tie.to)),
+  };
+}
+
+function noteCenter(note) {
+  return (note.getNoteHeadBeginX() + note.getNoteHeadEndX()) / 2;
+}
+
+function measureLyricWidth(text, lyricSize) {
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  if (!context) return text.length * lyricSize * 0.6;
+  context.font = `600 ${lyricSize}px "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif`;
+  return context.measureText(text).width;
+}
+
+function applyHorizontalLyricSpacing(model, segmentNotes, barNotes, lyricMap, options) {
+  const minimumGap = options.minimumGapPx ?? 0;
+  const maximumShift = options.maximumShiftPx ?? 24;
+  const lyricSize = options.lyricSizePx ?? 18;
+  const reserve = minimumGap > 0 ? 1 : 0;
+  const rawShiftByEvent = new Map();
+  let cumulativeShift = 0;
+  let previousLyric = null;
+
+  for (const event of model.events) {
+    const range = model.eventRanges.get(event.id);
+    if (!range) continue;
+    if (event.kind === 'note') {
+      const center = noteCenter(segmentNotes[range.firstSegmentIndex]);
+      const text = lyricMap.get(event.id);
+      if (text) {
+        const width = measureLyricWidth(text, lyricSize);
+        const targetCenter = center + cumulativeShift;
+        if (previousLyric) {
+          const requiredCenter = previousLyric.center
+            + previousLyric.width / 2
+            + width / 2
+            + minimumGap
+            + reserve;
+          if (targetCenter < requiredCenter) cumulativeShift += requiredCenter - targetCenter;
+        }
+        previousLyric = { center: center + cumulativeShift, width };
+      }
+    }
+    rawShiftByEvent.set(event.id, cumulativeShift);
+  }
+
+  const recenterShift = -cumulativeShift / 2;
+  const eventShifts = new Map();
+  let maximumAbsoluteShift = 0;
+  for (const event of model.events) {
+    const shift = (rawShiftByEvent.get(event.id) ?? cumulativeShift) + recenterShift;
+    eventShifts.set(event.id, shift);
+    maximumAbsoluteShift = Math.max(maximumAbsoluteShift, Math.abs(shift));
+  }
+  if (maximumAbsoluteShift > maximumShift + 0.001) {
+    throw new Error(`歌詞水平排版需要位移 ${maximumAbsoluteShift.toFixed(2)}px，超過規格上限 ${maximumShift}px`);
+  }
+
+  model.segments.forEach((segment, index) => {
+    segmentNotes[index].setXShift(eventShifts.get(segment.eventId) ?? recenterShift);
+  });
+  for (const bar of barNotes) {
+    bar.note.setXShift(eventShifts.get(bar.eventId) ?? recenterShift);
+  }
+
+  return {
+    eventShifts,
+    cumulativeShift,
+    recenterShift,
+    maximumAbsoluteShift,
   };
 }
 
@@ -125,6 +219,8 @@ function renderSystem(container, score, palette, options) {
   } = VexFlow;
   const model = createRenderModel(score, options.trackId);
   const geometry = options.geometry ?? {};
+  const systemBreaking = options.systemBreaking ?? {};
+  const typography = options.typography ?? {};
   const width = geometry.staff_width_px ?? 700;
   const height = geometry.staff_canvas_height_px ?? 170;
   const staveY = geometry.stave_top_line_y_px ?? 12;
@@ -139,6 +235,9 @@ function renderSystem(container, score, palette, options) {
   const numberedGlyphClearance = collision.numbered_notation_clearance_px ?? 0;
   const lyricGlyphClearance = collision.lyric_clearance_px ?? 2;
   const maximumShift = collision.maximum_shift_px ?? 32;
+  const minimumHorizontalLyricGap = systemBreaking.minimum_horizontal_lyric_gap_px ?? 0;
+  const maximumHorizontalShift = systemBreaking.maximum_horizontal_shift_px ?? 24;
+  const lyricSize = typography.lyric_px ?? 18;
 
   const system = document.createElement('section');
   system.className = 'score-system';
@@ -174,6 +273,7 @@ function renderSystem(container, score, palette, options) {
   stave.setContext(context).draw();
 
   const segmentNotes = [];
+  const barNotes = [];
   const tickables = [];
   for (const segment of model.segments) {
     const note = new StaveNote({
@@ -187,7 +287,11 @@ function renderSystem(container, score, palette, options) {
     if (segment.dots > 0) Dot.buildAndAttach([note], { all: true });
     segmentNotes.push(note);
     tickables.push(note);
-    if (segment.measureEnd) tickables.push(new BarNote());
+    if (segment.measureEnd) {
+      const bar = new BarNote();
+      tickables.push(bar);
+      barNotes.push({ note: bar, eventId: segment.eventId });
+    }
   }
 
   const voice = new Voice({
@@ -197,12 +301,23 @@ function renderSystem(container, score, palette, options) {
   const beams = Beam.applyAndGetBeams(voice);
   new Formatter().joinVoices([voice]).formatToStave([voice], stave, { context, stave });
 
+  const lyricMap = new Map(model.track.syllables.map((syllable) => [syllable.event, syllable.text]));
+  const horizontalSpacing = applyHorizontalLyricSpacing(
+    model,
+    segmentNotes,
+    barNotes,
+    lyricMap,
+    {
+      minimumGapPx: minimumHorizontalLyricGap,
+      maximumShiftPx: maximumHorizontalShift,
+      lyricSizePx: lyricSize,
+    },
+  );
+
   const eventCenters = new Map();
   model.segments.forEach((segment, index) => {
     if (!segment.eventAnchor || segment.eventKind !== 'note') return;
-    const note = segmentNotes[index];
-    const center = (note.getNoteHeadBeginX() + note.getNoteHeadEndX()) / 2;
-    eventCenters.set(segment.eventId, center);
+    eventCenters.set(segment.eventId, noteCenter(segmentNotes[index]));
   });
 
   voice.setContext(context).setStave(stave).drawWithStyle();
@@ -231,7 +346,6 @@ function renderSystem(container, score, palette, options) {
     );
   });
 
-  const lyricMap = new Map(model.track.syllables.map((syllable) => [syllable.event, syllable.text]));
   const adjustments = [];
   let maximumLyricShift = 0;
 
@@ -240,10 +354,12 @@ function renderSystem(container, score, palette, options) {
     const center = eventCenters.get(event.id);
     const glyph = eventGlyphBounds.get(event.id);
     if (!Number.isFinite(center) || !glyph) throw new Error(`找不到 ${event.id} 的音頭幾何資料`);
+    const horizontalShift = horizontalSpacing.eventShifts.get(event.id) ?? 0;
 
     const numbered = createNumberedNote(event, palette);
     numbered.style.left = `${center}px`;
     numbered.dataset.staffCenterX = center.toFixed(3);
+    numbered.dataset.horizontalShiftPx = horizontalShift.toFixed(3);
     numberedRow.append(numbered);
 
     const defaultNumberBottom = lockedNumberedRowTop + numberedNoteHeight;
@@ -282,6 +398,7 @@ function renderSystem(container, score, palette, options) {
       );
       lyric.style.top = `${lyricShift}px`;
       lyric.dataset.verticalShiftPx = String(lyricShift);
+      lyric.dataset.horizontalShiftPx = horizontalShift.toFixed(3);
       lyric.dataset.clearanceThresholdPx = lyricGlyphClearance.toFixed(3);
       lyric.dataset.standardTopPx = lyricRowTop.toFixed(3);
       lyric.dataset.standardBottomPx = (lyricRowTop + lyricLineHeight).toFixed(3);
@@ -298,6 +415,7 @@ function renderSystem(container, score, palette, options) {
     adjustments.push({
       eventId: event.id,
       pitch: event.pitch,
+      horizontalShiftPx: horizontalShift,
       numberedShiftPx: -numberedShift,
       lyricShiftPx: lyricShift,
       glyphLeftPx: glyph.left,
@@ -323,7 +441,11 @@ function renderSystem(container, score, palette, options) {
   system.dataset.standardGeometrySource = 'scorebook-system-geometry';
   system.dataset.numberedGlyphClearance = numberedGlyphClearance.toFixed(3);
   system.dataset.lyricGlyphClearance = lyricGlyphClearance.toFixed(3);
+  system.dataset.minimumHorizontalLyricGap = minimumHorizontalLyricGap.toFixed(3);
+  system.dataset.maximumHorizontalShift = horizontalSpacing.maximumAbsoluteShift.toFixed(3);
+  system.dataset.horizontalSpacingAdjustment = 'minimal-recentered-tick-shift';
   system.dataset.boundingSource = 'vexflow-stavenote-pointer-rect';
+  system.dataset.explicitTieCount = String(score.ties?.length ?? 0);
   system.dataset.eventCenters = JSON.stringify(Object.fromEntries(eventCenters));
   system.dataset.verticalAdjustments = JSON.stringify(adjustments);
   return { system, model, eventCenters, adjustments };
@@ -335,7 +457,12 @@ export function renderScore(container, score, palette, options = {}) {
     options.trackId ? candidate.id === options.trackId : candidate.default === true
   ));
   if (!track) throw new Error('找不到預設歌詞 track');
-  const maximumWidth = options.geometry?.staff_width_px ?? 700;
+  const staffWidth = options.geometry?.staff_width_px ?? 700;
+  const systemBreaking = options.systemBreaking ?? {};
+  const configuredBudget = score.synthetic === true
+    ? systemBreaking.synthetic_fixture_width_budget_px
+    : systemBreaking.verified_song_width_budget_px;
+  const maximumWidth = Math.min(staffWidth, configuredBudget ?? staffWidth);
   const systems = splitMeasuresByRequiredWidth(score, track, maximumWidth);
   return systems.map((measures, index) => renderSystem(
     container,

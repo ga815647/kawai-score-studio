@@ -82,6 +82,8 @@ function renderDraft(score) {
   scorePage.dataset.synthetic = String(activeDraft.synthetic === true);
   renderScore(scoreRender, activeDraft, book.palette, {
     geometry: book.layout.system_geometry,
+    systemBreaking: book.layout.system_breaking,
+    typography: book.layout.typography,
   });
   status.textContent = `Studio READY · 本機預覽與播放不需要 GitHub · ${activeDraft.title}`;
   status.className = 'status status--pass';
@@ -103,6 +105,7 @@ function renderLibrary() {
     for (const song of songs) {
       const card = document.createElement('article');
       card.className = 'library-song';
+      card.dataset.scoreId = song.id;
       const heading = document.createElement('h3');
       heading.textContent = song.alias ? `${song.title}（${song.alias}）` : song.title;
       const meta = document.createElement('p');
@@ -110,10 +113,12 @@ function renderLibrary() {
       const score = document.createElement('div');
       score.className = 'score-render';
       card.append(heading, meta, score);
+      libraryContent.append(card);
       renderScore(score, song, book.palette, {
         geometry: book.layout.system_geometry,
+        systemBreaking: book.layout.system_breaking,
+        typography: book.layout.typography,
       });
-      libraryContent.append(card);
     }
   }
 
@@ -194,7 +199,9 @@ async function start() {
     }
     globalThis.VexFlow.setFonts('Bravura', 'Academico');
 
-    renderLibrary();
+    const parameters = new URLSearchParams(location.search);
+    if (!parameters.has('fixture')) renderLibrary();
+
     let initialDraft = structuredClone(fixtureBook.fixtures[0]);
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -203,7 +210,6 @@ async function start() {
     setEditorScore(initialDraft);
     renderDraft(initialDraft);
 
-    const parameters = new URLSearchParams(location.search);
     setMode(parameters.has('studio') || parameters.has('fixture') ? 'studio' : 'library');
     const version = document.querySelector('meta[name="scorebook-version"]').content;
     const hash = document.querySelector('meta[name="scorebook-sha256"]').content.slice(0, 12);
