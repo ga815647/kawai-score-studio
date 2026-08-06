@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <work>
+    <work-title>Synthetic Source Verification Fixture</work-title>
+  </work>
+  <identification>
+    <encoding>
+      <software>Kawai Score Studio synthetic fixture</software>
+      <encoding-date>2026-08-06</encoding-date>
+    </encoding>
+  </identification>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Melody</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="0" implicit="yes">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>6</beats><beat-type>8</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>1</duration><type>eighth</type>
+        <lyric><syllabic>single</syllabic><text>Bright</text></lyric>
+      </note>
+    </measure>
+    <measure number="1">
+      <note>
+        <pitch><step>F</step><octave>3</octave></pitch>
+        <duration>1</duration><type>eighth</type>
+        <lyric><syllabic>single</syllabic><text>low</text></lyric>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>1</duration><type>eighth</type>
+        <lyric><syllabic>single</syllabic><text>range</text></lyric>
+      </note>
+      <note>
+        <rest/><duration>1</duration><type>eighth</type>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>3</duration><type>quarter</type><dot/>
+        <lyric><syllabic>single</syllabic><text>alignment</text></lyric>
+      </note>
+    </measure>
+    <measure number="2">
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>2</duration><tie type="start"/><type>quarter</type>
+        <notations><tied type="start"/></notations>
+        <lyric><syllabic>single</syllabic><text>highest</text></lyric>
+      </note>
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>1</duration><tie type="stop"/><type>eighth</type>
+        <notations><tied type="stop"/></notations>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>1</duration><type>eighth</type>
+        <lyric><syllabic>single</syllabic><text>note</text></lyric>
+      </note>
+      <note>
+        <rest/><duration>1</duration><type>eighth</type>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>5</octave></pitch>
+        <duration>1</duration><type>eighth</type>
+        <lyric><syllabic>single</syllabic><text>extraordinary</text></lyric>
+      </note>
+    </measure>
+    <measure number="3">
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>1</duration><type>eighth</type>
+        <lyric><syllabic>single</syllabic><text>steady</text></lyric>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>1</duration><type>eighth</type>
+        <lyric><syllabic>single</syllabic><text>rows</text></lyric>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>1</duration><type>eighth</type>
+        <lyric><syllabic>single</syllabic><text>stay</text></lyric>
+      </note>
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>3</duration><type>quarter</type><dot/>
+        <lyric><syllabic>single</syllabic><text>aligned</text></lyric>
+      </note>
+    </measure>
+  </part>
+</score-partwise>
