@@ -289,7 +289,9 @@ layout:
     verified_song_width_budget_px: 600
     synthetic_fixture_width_budget_px: 700
     tie_connected_measures_share_system: true
-    minimum_horizontal_lyric_gap_px: 1
+    minimum_horizontal_lyric_gap_px: 8
+    lyric_spacing_adjustment: minimal_recentered_tick_shift
+    maximum_horizontal_shift_px: 24
     width_inputs:
     - staff_glyphs
     - numbered_notation
@@ -659,6 +661,8 @@ gates:
     - local_studio_does_not_require_github
     - verified_song_uses_formal_width_budget
     - tie_connected_measures_are_not_split
+    - lyric_spacing_uses_minimal_recentered_tick_shift
+    - lyric_spacing_moves_notes_and_bar_boundaries_together
     - no_generated_text_from_images
   visual:
     required: true
@@ -677,11 +681,13 @@ gates:
       adjusted_lyric_glyph_clearance_px:
         min: 2
       horizontal_lyric_gap_px:
-        min: 1
+        min: 8
       default_row_delta_across_systems_px:
         max: 1
       maximum_individual_shift_px:
         max: 32
+      maximum_horizontal_shift_px:
+        max: 24
     checks:
     - chromium_screenshot_created
     - at_least_two_systems_are_screenshot_tested
@@ -705,6 +711,7 @@ gates:
     - long_english_syllables_do_not_collide
     - verified_song_lyrics_do_not_overlap
     - verified_song_cross_measure_ties_are_visible
+    - verified_song_horizontal_shifts_stay_within_limit
     - no_horizontal_scroll
   print:
     required: true
