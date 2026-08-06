@@ -1,9 +1,11 @@
 name: Deploy Pages
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
   workflow_dispatch:
 
 permissions:
@@ -11,16 +13,24 @@ permissions:
   pages: write
   id-token: write
 
-# Keep production deployments serialized without canceling an active publish.
+# Keep the repaired deployment chain separate from the stale legacy queue.
 concurrency:
-  group: pages
+  group: pages-v5
   cancel-in-progress: false
 
 jobs:
   build:
+    if: >-
+      ${{
+        github.event_name == 'workflow_dispatch' ||
+        (github.event.workflow_run.conclusion == 'success' &&
+         github.event.workflow_run.head_branch == 'main')
+      }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || 'main' }}
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -39,7 +49,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: pages-gate-reports-${{ github.sha }}
+          name: pages-gate-reports-${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
           path: |
             reports/
             test-results/
