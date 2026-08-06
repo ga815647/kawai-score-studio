@@ -2,7 +2,8 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 
 const reportDirectory = 'reports/visual';
-const minimumLyricGapPx = 1;
+const minimumLyricGapPx = 8;
+const maximumHorizontalShiftPx = 24;
 
 test('verified Hickory Dickory Dock renders in the formal library', async ({ page }) => {
   await mkdir(reportDirectory, { recursive: true });
@@ -32,9 +33,13 @@ test('verified Hickory Dickory Dock renders in the formal library', async ({ pag
           eventId: element.dataset.lyricEventId,
           left: rect.left,
           right: rect.right,
+          center: (rect.left + rect.right) / 2,
+          staffCenterX: Number(element.dataset.staffCenterX),
+          horizontalShiftPx: Number(element.dataset.horizontalShiftPx ?? 0),
         };
       })
       .sort((left, right) => left.left - right.left);
+    const systemRect = system.getBoundingClientRect();
     const gaps = lyrics.slice(1).map((lyric, index) => ({
       leftEvent: lyrics[index].eventId,
       rightEvent: lyric.eventId,
@@ -44,10 +49,21 @@ test('verified Hickory Dickory Dock renders in the formal library', async ({ pag
       system: Number(system.dataset.system),
       gaps,
       minimumGapPx: gaps.length > 0 ? Math.min(...gaps.map((gap) => gap.gapPx)) : null,
+      maximumHorizontalShiftPx: Number(system.dataset.maximumHorizontalShift ?? 0),
+      centerErrorsPx: lyrics.map((lyric) => ({
+        eventId: lyric.eventId,
+        errorPx: lyric.center - systemRect.left - lyric.staffCenterX,
+      })),
+      lyricShifts: lyrics.map((lyric) => ({
+        eventId: lyric.eventId,
+        horizontalShiftPx: lyric.horizontalShiftPx,
+      })),
       pass: gaps.every((gap) => gap.gapPx >= minimumGap - 0.01),
     };
   }), minimumLyricGapPx);
   expect(lyricSpacing.every((system) => system.pass)).toBe(true);
+  expect(lyricSpacing.every((system) => system.maximumHorizontalShiftPx <= maximumHorizontalShiftPx + 0.01)).toBe(true);
+  expect(lyricSpacing.flatMap((system) => system.centerErrorsPx).every((entry) => Math.abs(entry.errorPx) <= 0.01)).toBe(true);
 
   const explicitTieCount = await systems.evaluateAll((elements) => elements.reduce(
     (total, system) => total + Number(system.dataset.explicitTieCount ?? 0),
@@ -77,6 +93,7 @@ test('verified Hickory Dickory Dock renders in the formal library', async ({ pag
     lyricCount: 28,
     explicitTieCount,
     minimumLyricGapPx,
+    maximumHorizontalShiftPx,
     lyricSpacing,
     overflow,
     screenshot,
