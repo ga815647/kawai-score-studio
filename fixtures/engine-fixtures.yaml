@@ -1,0 +1,57 @@
+fixtures:
+  - id: layout-rhythm-language
+    title: Synthetic Layout Fixture
+    synthetic: true
+    purpose: 驗證至少兩個譜行、木琴最低音與最高音、小節、弱起、休止符、連結線、英文歌詞寬度、簡譜、五線譜與播放共用 event。
+    status: fixture
+    key: C major
+    meter: 6/8
+    pickup_eighth_units: 1
+    measures:
+      - number: 0
+        pickup: true
+        capacity_eighth_units: 1
+        events:
+          - { id: n01, kind: note, pitch: "5", duration: 1 }
+      - number: 1
+        capacity_eighth_units: 6
+        events:
+          - { id: n02, kind: note, pitch: "4_", duration: 1 }
+          - { id: n03, kind: note, pitch: "2", duration: 1 }
+          - { id: r01, kind: rest, duration: 1 }
+          - { id: n04, kind: note, pitch: "3", duration: 3 }
+      - number: 2
+        capacity_eighth_units: 6
+        events:
+          - { id: n05, kind: note, pitch: "4", duration: 2 }
+          - { id: n06, kind: note, pitch: "4", duration: 1 }
+          - { id: n07, kind: note, pitch: "5", duration: 1 }
+          - { id: r02, kind: rest, duration: 1 }
+          - { id: n08, kind: note, pitch: "5^", duration: 1 }
+      - number: 3
+        capacity_eighth_units: 6
+        events:
+          - { id: n09, kind: note, pitch: "1", duration: 1 }
+          - { id: n10, kind: note, pitch: "2", duration: 1 }
+          - { id: n11, kind: note, pitch: "3", duration: 1 }
+          - { id: n12, kind: note, pitch: "4", duration: 3 }
+    ties:
+      - { id: t01, from: n05, to: n06 }
+    lyric_tracks:
+      - id: original-en
+        locale: en
+        role: original
+        status: verified_fixture
+        default: true
+        syllables:
+          - { event: n01, text: Bright }
+          - { event: n02, text: low }
+          - { event: n03, text: range }
+          - { event: n04, text: alignment }
+          - { event: n05, text: highest }
+          - { event: n07, text: note }
+          - { event: n08, text: extraordinary }
+          - { event: n09, text: steady }
+          - { event: n10, text: rows }
+          - { event: n11, text: stay }
+          - { event: n12, text: aligned }

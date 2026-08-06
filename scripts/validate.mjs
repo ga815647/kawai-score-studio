@@ -1,8 +1,11 @@
 import { mkdir, writeFile } from 'node:fs/promises';
-import { loadScorebook, validateScorebook } from './lib.mjs';
+import { loadFixtures, loadScorebook, validateProject } from './lib.mjs';
 
-const { data } = await loadScorebook();
-const result = validateScorebook(data);
+const [{ data: book }, { data: fixtureBook }] = await Promise.all([
+  loadScorebook(),
+  loadFixtures(),
+]);
+const result = validateProject(book, fixtureBook);
 
 await mkdir('reports', { recursive: true });
 await writeFile('reports/gate-report.json', `${JSON.stringify(result, null, 2)}\n`);
@@ -12,6 +15,9 @@ const markdown = [
   '',
   `**Result: ${result.pass ? 'PASS' : 'FAIL'}**`,
   '',
+  `- Verified public songs: ${result.counts?.verifiedSongs ?? 0}`,
+  `- Quarantined legacy entries: ${result.counts?.quarantinedEntries ?? 0}`,
+  `- Synthetic fixtures: ${result.counts?.fixtures ?? 0}`,
   `- Errors: ${result.errors.length}`,
   `- Warnings: ${result.warnings.length}`,
   '',
