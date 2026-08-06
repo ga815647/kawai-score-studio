@@ -1,0 +1,4 @@
+music21==10.5.0
+verovio==6.2.1
+xmlschema==4.3.2
+PyYAML==6.0.3

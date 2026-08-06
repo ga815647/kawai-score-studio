@@ -19,6 +19,7 @@
 11. 圖片只能作無文字裝飾，不得承載音符、歌詞、上下點或五線譜。
 12. 不可使用 KAWAI 16 音木琴不存在的音；移調必須保留音程、節奏、小節與歌詞對位。
 13. 必要 Gate 未通過時，不得標示完成、合併或發佈。
+14. MusicXML、OMR、MIDI 或 AI 轉錄只屬來源證據或草稿，不得取代 `scorebook.yaml`。使用 MusicXML 時，必須通過固定 XSD、獨立事件正規化、逐顆 diff、round-trip 與第二套渲染器證據；工具成功本身不等於內容已驗證。
 
 ## 頁面順序
 
@@ -31,6 +32,16 @@
 全曲預設使用同一組簡譜列與歌詞 baseline。只有 VexFlow 為單顆 `StaveNote` 產生的 pointer rectangle 顯示安全距離不足時，才允許針對該 event 的單一標籤做解除碰撞所需的最小位移。這個矩形由 VexFlow 依音頭、音桿、旗幟與加線幾何產生；簡譜只能上移，歌詞只能下移。是否位移由各標籤的實際幾何決定，不由高音或低音名稱硬編碼；未碰撞標籤必須維持全曲標準位置。
 
 換行必須同時考慮小節邊界、五線譜符號、簡譜與歌詞寬度；禁止固定用 event 數量切行。視覺 fixture 至少要產生兩個譜行，並實際涵蓋木琴最低音與最高音。
+
+## 來源驗證
+
+- `scorebook.yaml` 仍是唯一正式規格；MusicXML 是可重現的來源證據。
+- MusicXML source Gate 只接受單聲部、單一 part 的 MusicXML 4.0 `score-partwise`。
+- 官方 XSD 必須固定到明確 release 與 Git blob SHA，不得默默追蹤最新版。
+- `music21` 正規化結果必須逐顆比對 scorebook 的小節、位置、音高、時值、休止符、tie 與歌詞。
+- MusicXML round-trip 必須再次通過 XSD，且正規化事件不得改變。
+- Verovio 僅作獨立 SVG／MIDI 第二證據，不可反向成為正式資料來源。
+- 所有來源驗證結果寫入 `reports/source/`，不得把 report 當規格來源。
 
 ## 生成檔案
 

@@ -23,10 +23,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: requirements-source.txt
+      - name: Install source verification tools
+        run: python -m pip install -r requirements-source.txt
       - run: npm install
       - name: Install pinned Chromium
         run: npx --yes playwright@1.55.0 install --with-deps chromium
-      - name: Run required gates including synthetic fixture screenshots
+      - name: Run required gates including source evidence and synthetic fixture screenshots
         run: npm run check:visual
       - uses: actions/upload-artifact@v4
         if: always()

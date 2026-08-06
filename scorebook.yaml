@@ -105,6 +105,69 @@ content_policy:
     - lyrics_checked
     - user_approved
 
+source_verification:
+  version: 1
+  canonical_data_remains: scorebook.yaml
+  purpose: 以固定版本的獨立工具，將 MusicXML 來源正規化並逐顆比對 scorebook event，提供可重現的第二證據。
+  input:
+    format: MusicXML
+    version: "4.0"
+    root: score-partwise
+    score_shape: monophonic_single_part
+    entity_declarations: forbidden
+    compressed_mxl: unsupported
+  schema:
+    provider: W3C Music Notation Community Group
+    release: v4.0
+    repository: w3c-cg/musicxml
+    files:
+      musicxml.xsd:
+        git_blob_sha: 2f2d116e94095cf069a1b3daf3691297b83106d1
+      xml.xsd:
+        git_blob_sha: eeb9db56093d2382951cbcd1b61c2ccd9d674c92
+  tools:
+    python: "3.13"
+    music21: "10.5.0"
+    verovio: "6.2.1"
+    xmlschema: "4.3.2"
+    pyyaml: "6.0.3"
+  synthetic_fixture:
+    musicxml_file: fixtures/source-verification.musicxml
+    scorebook_fixture_id: layout-rhythm-language
+    may_be_published_as_song: false
+  comparison:
+    position_source: measure_and_order
+    exact_fields:
+      - measure
+      - event_index
+      - offset_eighth_units
+      - kind
+      - pitch_midi
+      - duration_eighth_units
+      - tie
+      - lyric
+    source_to_scorebook: exact
+    music21_roundtrip: exact
+    source_xsd_validation: required
+    roundtrip_xsd_validation: required
+  independent_evidence:
+    verovio_svg: required
+    verovio_midi: required
+    verovio_is_not_canonical: true
+  reports:
+    directory: reports/source
+    required_files:
+      - musicxml-schema-report.json
+      - normalized-source-events.json
+      - normalized-scorebook-events.json
+      - event-diff.json
+      - roundtrip-diff.json
+      - roundtrip.musicxml
+      - verovio-reference.svg
+      - verovio-reference.mid
+      - source-verification-report.json
+      - source-verification-report.html
+
 notation:
   token_pattern: "^[1-7](?:\\^|_)?$"
   numbered_notation:
@@ -205,6 +268,11 @@ workflow:
   - update_scorebook
   - validate_schema_and_publication_policy
   - validate_engine_fixtures
+  - validate_musicxml_source_against_pinned_xsd
+  - normalize_source_with_music21
+  - compare_source_events_to_scorebook_events
+  - verify_music21_roundtrip
+  - render_verovio_reference_svg_and_midi
   - generate_html
   - run_html_gate
   - run_browser_visual_gate
@@ -236,6 +304,21 @@ gates:
       - fixture_renders_at_least_two_systems
       - fixture_contains_instrument_lowest_note
       - fixture_contains_instrument_highest_note
+  source:
+    required: true
+    checks:
+      - source_fixture_is_synthetic
+      - source_is_musicxml_4_score_partwise
+      - entity_declarations_are_rejected
+      - official_schema_files_match_pinned_git_blob_shas
+      - source_musicxml_passes_xsd
+      - source_is_single_part_and_monophonic
+      - music21_normalized_events_match_scorebook_exactly
+      - music21_roundtrip_passes_xsd
+      - music21_roundtrip_events_match_source_exactly
+      - verovio_svg_is_created
+      - verovio_midi_is_created
+      - source_reports_are_complete
   html:
     required: true
     checks:

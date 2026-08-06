@@ -50,6 +50,37 @@
 
 因此最高音 `5^` 的簡譜可維持全曲共同簡譜列，Do（音 `1`）的歌詞也維持共同 baseline；只有真正超過各自門檻的標籤才個別位移。極端音仍使用與一般音完全相同的幾何規則，不依音名硬編碼。
 
+## MusicXML 來源驗證
+
+MusicXML 是來源證據，不是第二份正式規格。正式內容仍只修改 `scorebook.yaml`。來源 Gate 使用四層互相獨立的確定性檢查：
+
+1. 下載 W3C MusicXML 4.0 官方 XSD，並以固定 Git blob SHA 驗證檔案內容。
+2. 使用固定版本 `music21` 將來源正規化為逐顆 event，與 scorebook fixture 精確比較小節、順序、offset、音高、時值、休止符、tie 與歌詞。
+3. 由 `music21` 寫回 MusicXML，再次通過 XSD 並與來源逐顆比較，確認 round-trip 沒有改變內容。
+4. 使用固定版本 Verovio 產生獨立的 SVG 與 MIDI 參考證據。Verovio 產物不能反向成為正式資料。
+
+目前 Gate 只接受 MusicXML 4.0 `score-partwise`、單一 part、單聲部、未壓縮 `.musicxml`。為避免 XML external entity 風險，含 `ENTITY` 或 DOCTYPE internal subset 的輸入會直接拒絕；單純外部 DOCTYPE 只會在暫存副本中移除，原始來源不會被改寫。
+
+合成來源 fixture 位於 [`fixtures/source-verification.musicxml`](./fixtures/source-verification.musicxml)，只用來驗證工具鏈，不是真實歌曲，也不得發佈。
+
+來源 Gate 會建立：
+
+```text
+reports/source/
+├─ musicxml-schema-report.json
+├─ normalized-source-events.json
+├─ normalized-scorebook-events.json
+├─ event-diff.json
+├─ roundtrip-diff.json
+├─ roundtrip.musicxml
+├─ verovio-reference.svg
+├─ verovio-reference.mid
+├─ source-verification-report.json
+└─ source-verification-report.html
+```
+
+這些檔案是可重新產生的驗證證據，不是規格來源。
+
 ## 引擎測試
 
 引擎 Gate 只使用 [`fixtures/engine-fixtures.yaml`](./fixtures/engine-fixtures.yaml) 的合成資料。fixture 涵蓋：
@@ -71,10 +102,11 @@ fixture 不是真實歌曲，禁止當作正式曲目發佈。
 
 ## 開發與驗證
 
-需要 Node.js 20 以上版本。
+需要 Node.js 20 與 Python 3.13。
 
 ```bash
 npm install
+python -m pip install -r requirements-source.txt
 npx playwright install chromium
 npm run check:visual
 ```
@@ -82,10 +114,11 @@ npm run check:visual
 `npm run check:visual` 依序執行：
 
 1. 正式規格與出版政策 Gate
-2. 合成 fixture 音樂結構 Gate
-3. HTML 建置
-4. 單元測試
-5. Chromium 截圖與幾何 Gate
+2. MusicXML XSD、music21 event diff、round-trip 與 Verovio 證據 Gate
+3. 合成 fixture 音樂結構 Gate
+4. HTML 建置
+5. 單元測試
+6. Chromium 截圖與幾何 Gate
 
 建置輸出位於 `dist/`。本機可使用任一靜態伺服器開啟，例如：
 
@@ -96,6 +129,7 @@ python -m http.server 8000 -d dist
 ## 專案規則
 
 - `scorebook.yaml` 是正式規格檔。
+- MusicXML、OMR、MIDI 與 AI 轉錄只可作來源證據或草稿。
 - `dist/`、`reports/`、`test-results/` 與 `playwright-report/` 都是可重新產生的輸出。
 - 不直接修改生成後的 HTML、簡譜或五線譜來修正正式內容。
 - 圖片只能作無文字裝飾，不得承載音符、歌詞或五線譜。
