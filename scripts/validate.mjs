@@ -1,11 +1,23 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { loadFixtures, loadScorebook, validateProject } from './lib.mjs';
+import { adaptBookForLegacyValidation, validateSourcePolicy } from './source-policy.mjs';
 
 const [{ data: book }, { data: fixtureBook }] = await Promise.all([
   loadScorebook(),
   loadFixtures(),
 ]);
-const result = validateProject(book, fixtureBook);
+
+const structural = validateProject(adaptBookForLegacyValidation(book), fixtureBook);
+const sourcePolicy = validateSourcePolicy(book);
+const result = {
+  pass: structural.pass && sourcePolicy.pass,
+  errors: [...structural.errors, ...sourcePolicy.errors],
+  warnings: [...structural.warnings, ...sourcePolicy.warnings],
+  counts: {
+    ...structural.counts,
+    sourcePolicySongs: sourcePolicy.counts.checkedSongs,
+  },
+};
 
 await mkdir('reports', { recursive: true });
 await writeFile('reports/gate-report.json', `${JSON.stringify(result, null, 2)}\n`);
@@ -16,6 +28,7 @@ const markdown = [
   `**Result: ${result.pass ? 'PASS' : 'FAIL'}**`,
   '',
   `- Verified public songs: ${result.counts?.verifiedSongs ?? 0}`,
+  `- Source-policy songs checked: ${result.counts?.sourcePolicySongs ?? 0}`,
   `- Quarantined legacy entries: ${result.counts?.quarantinedEntries ?? 0}`,
   `- Synthetic fixtures: ${result.counts?.fixtures ?? 0}`,
   `- Errors: ${result.errors.length}`,
