@@ -21,10 +21,12 @@ if (vexflowPackage.version !== book.rendering.staff.version) {
 }
 
 const hash = createHash('sha256').update(source).digest('hex');
+const assetVersion = `${book.project.version}-${hash.slice(0, 12)}`;
 const template = await readFile('src/index.template.html', 'utf8');
 const html = template
   .replaceAll('{{SCOREBOOK_VERSION}}', book.project.version)
-  .replaceAll('{{SCOREBOOK_SHA256}}', hash);
+  .replaceAll('{{SCOREBOOK_SHA256}}', hash)
+  .replaceAll('{{ASSET_VERSION}}', assetVersion);
 
 const page = book.layout.page;
 const typography = book.layout.typography;
@@ -52,19 +54,38 @@ const designCss = `:root {
 }
 `;
 
+const buildInfo = {
+  version: book.project.version,
+  scorebook_sha256: hash,
+  asset_version: assetVersion,
+  commit_sha: process.env.GITHUB_SHA ?? null,
+};
+
 await rm('dist', { recursive: true, force: true });
 await mkdir('dist/vendor', { recursive: true });
 await writeFile('dist/index.html', html);
 await writeFile('dist/design.css', designCss);
+await writeFile('dist/build-info.json', `${JSON.stringify(buildInfo, null, 2)}\n`);
 await writeFile('dist/scorebook.json', `${JSON.stringify(book, null, 2)}\n`);
 await writeFile('dist/fixtures.json', `${JSON.stringify(fixtureBook, null, 2)}\n`);
 await writeFile('dist/gate-report.json', `${JSON.stringify(validation, null, 2)}\n`);
-for (const file of ['app.js', 'audio.js', 'score-engine.js', 'staff-renderer.js', 'styles.css']) {
-  await cp(`src/${file}`, `dist/${file}`);
+
+for (const file of ['app.js', 'audio.js', 'score-engine.js', 'staff-renderer.js']) {
+  let content = await readFile(`src/${file}`, 'utf8');
+  content = content.replaceAll('{{ASSET_VERSION}}', assetVersion);
+  if (file === 'staff-renderer.js') {
+    content = content.replace(
+      "from './score-engine.js';",
+      `from './score-engine.js?v=${assetVersion}';`,
+    );
+  }
+  await writeFile(`dist/${file}`, content);
 }
+await cp('src/styles.css', 'dist/styles.css');
 await cp('node_modules/vexflow/build/cjs/vexflow.js', 'dist/vendor/vexflow.js');
 
 console.log(
   `Built dist/ from scorebook ${book.project.version} (${hash.slice(0, 12)}); `
-  + `${validation.counts.verifiedSongs} verified songs, ${validation.counts.fixtures} fixtures`,
+  + `${validation.counts.verifiedSongs} verified songs, ${validation.counts.fixtures} fixtures; `
+  + `assets ${assetVersion}`,
 );

@@ -14,7 +14,11 @@
 6. 瑪麗有隻小綿羊
 7. 生日快樂
 
-正式網站只提供曲庫，不公開 JSON 草稿編輯器或本機 Studio。每首曲目都有播放、停止與單曲列印按鈕。列印採 A4 直式，只輸出選定歌曲；長曲可分頁，但任何完整譜行都不得被頁界切開。
+正式網站開頭提供曲目目錄，點選曲名可跳到該首琴譜。公開頁面不提供 JSON 草稿編輯器、本機 Studio 或隔離曲目面板；合成 fixture 只保留在 `?fixture=1` 內部 Gate 路徑。
+
+每首曲目都有播放、停止與「A4 列印」按鈕。列印採 A4 直式，只輸出選定歌曲；長曲可分頁，但任何完整譜行都不得被頁界切開。
+
+網站資源依 scorebook SHA 加上版本識別，並以 `build-info.json` 檢查頁面是否仍停在舊快取；偵測到不一致時會自動以目前建置雜湊重新載入。
 
 ## 工作入口
 
@@ -22,7 +26,7 @@
 - 唯一正式規格：`scorebook.yaml`
 - 正式輸出：HTML
 - 合成 fixture：只供 `?fixture=1` 內部 CI／Gate 路徑使用
-- 正式發佈：branch、PR、exact head SHA CI 與必要 Gate 全部成功後，另待使用者批准
+- 正式發佈：branch、PR、exact head SHA CI、`main` CI 與 GitHub Pages deployment 全部成功後才算交付
 
 YouTube、影片、音訊錄音與記憶不得作為正式旋律來源。使用者提供的靜態來源優先決定版本。
 
@@ -46,4 +50,4 @@ npx playwright install chromium
 npm run check:visual
 ```
 
-`npm run check:visual` 依序執行來源政策、結構、MusicXML fixture、建置、單元測試、Chromium 視覺與 A4 列印 Gate。
+`npm run check:visual` 依序執行來源政策、結構、MusicXML fixture、建置、單元測試、Chromium 視覺、曲目目錄跳轉與 A4 單曲列印 Gate。

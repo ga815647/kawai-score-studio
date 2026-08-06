@@ -1,12 +1,12 @@
-import { ScorePlayer } from './audio.js';
-import { renderScore } from './staff-renderer.js';
+import { ScorePlayer } from './audio.js?v={{ASSET_VERSION}}';
+import { renderScore } from './staff-renderer.js?v={{ASSET_VERSION}}';
 
 const player = new ScorePlayer();
 const status = document.querySelector('#status');
+const songDirectory = document.querySelector('#song-directory');
+const songDirectoryList = document.querySelector('#song-directory-list');
 const libraryView = document.querySelector('#library-view');
 const libraryContent = document.querySelector('#library-content');
-const quarantinePanel = document.querySelector('#quarantine-panel');
-const quarantineList = document.querySelector('#quarantine-list');
 const fixtureView = document.querySelector('#studio-view');
 const fixturePage = document.querySelector('#score-page');
 const fixtureTitle = document.querySelector('#score-title');
@@ -16,6 +16,7 @@ const fixtureRender = document.querySelector('#score-render');
 
 let book;
 let fixtureBook;
+let buildInfo;
 let activePrintCard;
 
 function showError(error) {
@@ -26,6 +27,10 @@ function showError(error) {
 
 function scoreLabel(score) {
   return score.alias ? `${score.title}（${score.alias}）` : score.title;
+}
+
+function scoreAnchor(score) {
+  return `song-${score.id}`;
 }
 
 function renderOptions() {
@@ -64,9 +69,21 @@ function createButton(action, label) {
   return button;
 }
 
+function createDirectoryEntry(song) {
+  const item = document.createElement('li');
+  const link = document.createElement('a');
+  link.href = `#${scoreAnchor(song)}`;
+  link.textContent = scoreLabel(song);
+  link.dataset.scoreId = song.id;
+  item.append(link);
+  songDirectoryList.append(item);
+}
+
 function createLibraryCard(song) {
   const card = document.createElement('article');
   card.className = 'library-song';
+  card.id = scoreAnchor(song);
+  card.tabIndex = -1;
   card.dataset.scoreId = song.id;
 
   const controls = document.createElement('div');
@@ -75,7 +92,7 @@ function createLibraryCard(song) {
   controls.append(
     createButton('play', '播放'),
     createButton('stop', '停止'),
-    createButton('print', '列印'),
+    createButton('print', 'A4 列印'),
   );
 
   const page = document.createElement('section');
@@ -89,7 +106,9 @@ function createLibraryCard(song) {
   badge.className = 'score-badge';
   badge.textContent = 'VERIFIED LIBRARY';
   const heading = document.createElement('h3');
+  heading.id = `${scoreAnchor(song)}-title`;
   heading.textContent = scoreLabel(song);
+  card.setAttribute('aria-labelledby', heading.id);
   const meta = document.createElement('p');
   const locale = song.lyric_tracks.find((track) => track.default)?.locale ?? '';
   meta.textContent = `${song.meter} · ${song.key} · ${locale}`;
@@ -106,17 +125,13 @@ function createLibraryCard(song) {
 }
 
 function renderLibrary() {
+  songDirectoryList.replaceChildren();
   libraryContent.replaceChildren();
-  quarantineList.replaceChildren();
 
-  for (const song of book.library.songs) createLibraryCard(song);
-
-  for (const item of book.library.quarantine) {
-    const li = document.createElement('li');
-    li.textContent = `${scoreLabel(item)}：${item.reason}`;
-    quarantineList.append(li);
+  for (const song of book.library.songs) {
+    createDirectoryEntry(song);
+    createLibraryCard(song);
   }
-  quarantinePanel.hidden = book.library.quarantine.length === 0;
 }
 
 function renderFixture() {
@@ -128,6 +143,19 @@ function renderFixture() {
   fixturePage.dataset.synthetic = 'true';
   renderScore(fixtureRender, fixture, book.palette, renderOptions());
 }
+
+songDirectoryList.addEventListener('click', (event) => {
+  const link = event.target.closest('a[href^="#song-"]');
+  if (!link) return;
+  const target = document.querySelector(link.hash);
+  if (!target) return;
+
+  event.preventDefault();
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+  history.pushState(null, '', link.hash);
+  target.focus({ preventScroll: true });
+});
 
 libraryContent.addEventListener('click', async (event) => {
   const button = event.target.closest('button[data-action]');
@@ -163,23 +191,48 @@ libraryContent.addEventListener('click', async (event) => {
 window.addEventListener('afterprint', cleanupPrintTarget);
 window.addEventListener('beforeunload', () => player.stop());
 
+function reloadCurrentBuildIfNeeded(parameters) {
+  const pageHash = document.querySelector('meta[name="scorebook-sha256"]').content;
+  if (pageHash === buildInfo.scorebook_sha256) return false;
+
+  const currentBuild = buildInfo.scorebook_sha256.slice(0, 12);
+  if (parameters.get('build') === currentBuild) {
+    throw new Error(`頁面快取仍停在舊版本；請重新整理後再試（目前應為 ${buildInfo.version}）`);
+  }
+
+  parameters.set('build', currentBuild);
+  const query = parameters.toString();
+  location.replace(`${location.pathname}${query ? `?${query}` : ''}${location.hash}`);
+  return true;
+}
+
 async function start() {
   try {
     const parameters = new URLSearchParams(location.search);
     const fixtureMode = parameters.has('fixture');
-    const requests = [fetch('./scorebook.json', { cache: 'no-store' })];
-    if (fixtureMode) requests.push(fetch('./fixtures.json', { cache: 'no-store' }));
+    const buildResponse = await fetch(`./build-info.json?t=${Date.now()}`, { cache: 'no-store' });
+    if (!buildResponse.ok) throw new Error('無法載入建置版本');
+    buildInfo = await buildResponse.json();
+    if (reloadCurrentBuildIfNeeded(parameters)) return;
+
+    const buildKey = buildInfo.scorebook_sha256.slice(0, 12);
+    const requests = [fetch(`./scorebook.json?v=${buildKey}`, { cache: 'no-store' })];
+    if (fixtureMode) requests.push(fetch(`./fixtures.json?v=${buildKey}`, { cache: 'no-store' }));
     const responses = await Promise.all(requests);
     if (responses.some((response) => !response.ok)) throw new Error('無法載入建置資料');
 
     book = await responses[0].json();
     fixtureBook = fixtureMode ? await responses[1].json() : undefined;
+    if (book.project.version !== buildInfo.version) {
+      throw new Error('規格版本與建置版本不一致');
+    }
     if (globalThis.VexFlow?.BUILD?.VERSION !== book.rendering.staff.version) {
       throw new Error('VexFlow 版本與正式規格不符');
     }
     globalThis.VexFlow.setFonts('Bravura', 'Academico');
 
     if (fixtureMode) {
+      songDirectory.hidden = true;
       libraryView.hidden = true;
       fixtureView.hidden = false;
       document.body.dataset.view = 'fixture';
@@ -189,12 +242,11 @@ async function start() {
     }
 
     fixtureView.hidden = true;
+    songDirectory.hidden = false;
     libraryView.hidden = false;
     document.body.dataset.view = 'library';
     renderLibrary();
-    const version = document.querySelector('meta[name="scorebook-version"]').content;
-    const hash = document.querySelector('meta[name="scorebook-sha256"]').content.slice(0, 12);
-    setReady(`PASS · 正式曲目 ${book.library.songs.length} 首 · 規格 ${version} (${hash})`);
+    setReady(`PASS · 正式曲目 ${book.library.songs.length} 首 · 規格 ${buildInfo.version} (${buildKey})`);
   } catch (error) {
     showError(error);
     const template = document.querySelector('#error-template');
