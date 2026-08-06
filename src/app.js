@@ -1,40 +1,22 @@
 import { ScorePlayer } from './audio.js';
-import { flattenMeasures } from './score-engine.js';
 import { renderScore } from './staff-renderer.js';
 
-const STORAGE_KEY = 'kawai-score-studio:draft:v2';
 const player = new ScorePlayer();
-
 const status = document.querySelector('#status');
-const libraryTab = document.querySelector('#library-tab');
-const studioTab = document.querySelector('#studio-tab');
 const libraryView = document.querySelector('#library-view');
-const studioView = document.querySelector('#studio-view');
 const libraryContent = document.querySelector('#library-content');
+const quarantinePanel = document.querySelector('#quarantine-panel');
 const quarantineList = document.querySelector('#quarantine-list');
-const draftEditor = document.querySelector('#draft-editor');
-const draftFile = document.querySelector('#draft-file');
-const scorePage = document.querySelector('#score-page');
-const scoreTitle = document.querySelector('#score-title');
-const scoreMeta = document.querySelector('#score-meta');
-const scoreBadge = document.querySelector('#score-badge');
-const scoreRender = document.querySelector('#score-render');
+const fixtureView = document.querySelector('#studio-view');
+const fixturePage = document.querySelector('#score-page');
+const fixtureTitle = document.querySelector('#score-title');
+const fixtureMeta = document.querySelector('#score-meta');
+const fixtureBadge = document.querySelector('#score-badge');
+const fixtureRender = document.querySelector('#score-render');
 
 let book;
 let fixtureBook;
-let activeDraft;
-
-function setMode(mode) {
-  const studio = mode === 'studio';
-  libraryView.hidden = studio;
-  studioView.hidden = !studio;
-  libraryTab.setAttribute('aria-selected', String(!studio));
-  studioTab.setAttribute('aria-selected', String(studio));
-  document.body.dataset.mode = mode;
-}
-
-libraryTab.addEventListener('click', () => setMode('library'));
-studioTab.addEventListener('click', () => setMode('studio'));
+let activePrintCard;
 
 function showError(error) {
   const message = error instanceof Error ? error.message : String(error);
@@ -42,179 +24,177 @@ function showError(error) {
   status.className = 'status status--fail';
 }
 
-function validateDraft(score) {
-  if (!score || typeof score !== 'object') throw new Error('草稿必須是 JSON 物件');
-  if (!score.id || !score.title || !score.key || !score.meter) throw new Error('草稿缺少 id、title、key 或 meter');
-  if (!Array.isArray(score.measures) || score.measures.length === 0) throw new Error('草稿需要 measures');
-  if (!Array.isArray(score.lyric_tracks) || score.lyric_tracks.length === 0) throw new Error('草稿需要獨立 lyric_tracks');
-
-  const ids = new Set();
-  for (const event of flattenMeasures(score)) {
-    if (!event.id || ids.has(event.id)) throw new Error(`event id 缺少或重複：${event.id ?? ''}`);
-    ids.add(event.id);
-    if (!['note', 'rest'].includes(event.kind)) throw new Error(`${event.id} kind 必須是 note 或 rest`);
-    if (!Number.isInteger(event.duration) || event.duration <= 0) throw new Error(`${event.id} duration 必須是正整數`);
-    if ('lyric' in event || 'text' in event) throw new Error(`${event.id} 不可內嵌歌詞`);
-    if (event.kind === 'note' && !event.pitch) throw new Error(`${event.id} note 缺少 pitch`);
-    if (event.kind === 'rest' && 'pitch' in event) throw new Error(`${event.id} rest 不可有 pitch`);
-  }
-
-  const defaultTracks = score.lyric_tracks.filter((track) => track.default === true);
-  if (defaultTracks.length !== 1) throw new Error('草稿必須恰好有一個 default lyric track');
-  for (const track of score.lyric_tracks) {
-    for (const syllable of track.syllables ?? []) {
-      if (!ids.has(syllable.event)) throw new Error(`歌詞指向不存在的 event：${syllable.event}`);
-    }
-  }
-  return score;
+function scoreLabel(score) {
+  return score.alias ? `${score.title}（${score.alias}）` : score.title;
 }
 
-function setEditorScore(score) {
-  draftEditor.value = `${JSON.stringify(score, null, 2)}\n`;
-}
-
-function renderDraft(score) {
-  activeDraft = validateDraft(score);
-  scoreTitle.textContent = activeDraft.title;
-  scoreMeta.textContent = `${activeDraft.meter} · ${activeDraft.key} · ${activeDraft.lyric_tracks.find((track) => track.default)?.locale ?? ''}`;
-  scoreBadge.textContent = activeDraft.synthetic === true ? 'SYNTHETIC FIXTURE' : 'LOCAL DRAFT';
-  scorePage.dataset.scoreId = activeDraft.id;
-  scorePage.dataset.synthetic = String(activeDraft.synthetic === true);
-  renderScore(scoreRender, activeDraft, book.palette, {
+function renderOptions() {
+  return {
     geometry: book.layout.system_geometry,
     systemBreaking: book.layout.system_breaking,
     typography: book.layout.typography,
-  });
-  status.textContent = `Studio READY · 本機預覽與播放不需要 GitHub · ${activeDraft.title}`;
+  };
+}
+
+function setReady(message) {
+  status.textContent = message;
   status.className = 'status status--pass';
 }
 
-function applyEditorDraft() {
-  const parsed = JSON.parse(draftEditor.value);
-  renderDraft(parsed);
+function cleanupPrintTarget() {
+  activePrintCard?.classList.remove('print-selected');
+  activePrintCard = undefined;
+  document.body.classList.remove('printing-selected-song');
+  delete document.body.dataset.printScoreId;
+}
+
+function selectForPrint(card) {
+  cleanupPrintTarget();
+  activePrintCard = card;
+  card.classList.add('print-selected');
+  document.body.classList.add('printing-selected-song');
+  document.body.dataset.printScoreId = card.dataset.scoreId;
+}
+
+function createButton(action, label) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.dataset.action = action;
+  button.textContent = label;
+  return button;
+}
+
+function createLibraryCard(song) {
+  const card = document.createElement('article');
+  card.className = 'library-song';
+  card.dataset.scoreId = song.id;
+
+  const controls = document.createElement('div');
+  controls.className = 'song-controls';
+  controls.setAttribute('aria-label', `${scoreLabel(song)}操作`);
+  controls.append(
+    createButton('play', '播放'),
+    createButton('stop', '停止'),
+    createButton('print', '列印'),
+  );
+
+  const page = document.createElement('section');
+  page.className = 'score-page library-score-page';
+  page.dataset.scoreId = song.id;
+  page.dataset.synthetic = 'false';
+
+  const header = document.createElement('header');
+  header.className = 'score-header';
+  const badge = document.createElement('p');
+  badge.className = 'score-badge';
+  badge.textContent = 'VERIFIED LIBRARY';
+  const heading = document.createElement('h3');
+  heading.textContent = scoreLabel(song);
+  const meta = document.createElement('p');
+  const locale = song.lyric_tracks.find((track) => track.default)?.locale ?? '';
+  meta.textContent = `${song.meter} · ${song.key} · ${locale}`;
+  header.append(badge, heading, meta);
+
+  const score = document.createElement('div');
+  score.className = 'score-render';
+  page.append(header, score);
+  card.append(controls, page);
+  libraryContent.append(card);
+
+  renderScore(score, song, book.palette, renderOptions());
+  return card;
 }
 
 function renderLibrary() {
   libraryContent.replaceChildren();
   quarantineList.replaceChildren();
-  const songs = book.library.songs;
-  if (songs.length === 0) {
-    const template = document.querySelector('#empty-library-template');
-    libraryContent.append(template.content.cloneNode(true));
-  } else {
-    for (const song of songs) {
-      const card = document.createElement('article');
-      card.className = 'library-song';
-      card.dataset.scoreId = song.id;
-      const heading = document.createElement('h3');
-      heading.textContent = song.alias ? `${song.title}（${song.alias}）` : song.title;
-      const meta = document.createElement('p');
-      meta.textContent = `${song.meter} · ${song.key} · verified`;
-      const score = document.createElement('div');
-      score.className = 'score-render';
-      card.append(heading, meta, score);
-      libraryContent.append(card);
-      renderScore(score, song, book.palette, {
-        geometry: book.layout.system_geometry,
-        systemBreaking: book.layout.system_breaking,
-        typography: book.layout.typography,
-      });
-    }
-  }
+
+  for (const song of book.library.songs) createLibraryCard(song);
 
   for (const item of book.library.quarantine) {
     const li = document.createElement('li');
-    const label = item.alias ? `${item.title}（${item.alias}）` : item.title;
-    li.textContent = `${label}：${item.reason}`;
+    li.textContent = `${scoreLabel(item)}：${item.reason}`;
     quarantineList.append(li);
   }
+  quarantinePanel.hidden = book.library.quarantine.length === 0;
 }
 
-document.querySelector('#load-fixture').addEventListener('click', () => {
+function renderFixture() {
   const fixture = structuredClone(fixtureBook.fixtures[0]);
-  setEditorScore(fixture);
-  renderDraft(fixture);
-});
+  fixtureTitle.textContent = fixture.title;
+  fixtureMeta.textContent = `${fixture.meter} · ${fixture.key} · ${fixture.lyric_tracks.find((track) => track.default)?.locale ?? ''}`;
+  fixtureBadge.textContent = 'SYNTHETIC FIXTURE';
+  fixturePage.dataset.scoreId = fixture.id;
+  fixturePage.dataset.synthetic = 'true';
+  renderScore(fixtureRender, fixture, book.palette, renderOptions());
+}
 
-document.querySelector('#apply-draft').addEventListener('click', () => {
-  try { applyEditorDraft(); } catch (error) { showError(error); }
-});
+libraryContent.addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-action]');
+  const card = button?.closest('.library-song');
+  if (!button || !card) return;
+  const song = book.library.songs.find((item) => item.id === card.dataset.scoreId);
+  if (!song) return;
 
-document.querySelector('#save-draft').addEventListener('click', () => {
   try {
-    const parsed = validateDraft(JSON.parse(draftEditor.value));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
-    status.textContent = '本機草稿已儲存；沒有上傳 GitHub';
-    status.className = 'status status--pass';
-  } catch (error) { showError(error); }
+    switch (button.dataset.action) {
+      case 'play':
+        await player.play(song);
+        setReady(`正在本機播放：${scoreLabel(song)}`);
+        break;
+      case 'stop':
+        player.stop();
+        setReady(`播放已停止：${scoreLabel(song)}`);
+        break;
+      case 'print':
+        player.stop();
+        selectForPrint(card);
+        setReady(`準備列印：${scoreLabel(song)} · A4 直式`);
+        requestAnimationFrame(() => window.print());
+        break;
+      default:
+        break;
+    }
+  } catch (error) {
+    showError(error);
+  }
 });
 
-document.querySelector('#clear-draft').addEventListener('click', () => {
-  localStorage.removeItem(STORAGE_KEY);
-  const fixture = structuredClone(fixtureBook.fixtures[0]);
-  setEditorScore(fixture);
-  renderDraft(fixture);
-});
-
-draftFile.addEventListener('change', async () => {
-  try {
-    const file = draftFile.files?.[0];
-    if (!file) return;
-    const parsed = validateDraft(JSON.parse(await file.text()));
-    setEditorScore(parsed);
-    renderDraft(parsed);
-  } catch (error) { showError(error); }
-  finally { draftFile.value = ''; }
-});
-
-document.querySelector('#play-score').addEventListener('click', async () => {
-  try {
-    if (!activeDraft) applyEditorDraft();
-    await player.play(activeDraft);
-    status.textContent = `正在本機播放：${activeDraft.title}`;
-    status.className = 'status status--pass';
-  } catch (error) { showError(error); }
-});
-
-document.querySelector('#stop-score').addEventListener('click', () => {
-  player.stop();
-  status.textContent = '播放已停止';
-  status.className = 'status status--pass';
-});
-
-document.querySelector('#print-score').addEventListener('click', () => window.print());
+window.addEventListener('afterprint', cleanupPrintTarget);
 window.addEventListener('beforeunload', () => player.stop());
 
 async function start() {
   try {
-    const [bookResponse, fixtureResponse] = await Promise.all([
-      fetch('./scorebook.json', { cache: 'no-store' }),
-      fetch('./fixtures.json', { cache: 'no-store' }),
-    ]);
-    if (!bookResponse.ok || !fixtureResponse.ok) throw new Error('無法載入建置資料');
-    book = await bookResponse.json();
-    fixtureBook = await fixtureResponse.json();
+    const parameters = new URLSearchParams(location.search);
+    const fixtureMode = parameters.has('fixture');
+    const requests = [fetch('./scorebook.json', { cache: 'no-store' })];
+    if (fixtureMode) requests.push(fetch('./fixtures.json', { cache: 'no-store' }));
+    const responses = await Promise.all(requests);
+    if (responses.some((response) => !response.ok)) throw new Error('無法載入建置資料');
+
+    book = await responses[0].json();
+    fixtureBook = fixtureMode ? await responses[1].json() : undefined;
     if (globalThis.VexFlow?.BUILD?.VERSION !== book.rendering.staff.version) {
       throw new Error('VexFlow 版本與正式規格不符');
     }
     globalThis.VexFlow.setFonts('Bravura', 'Academico');
 
-    const parameters = new URLSearchParams(location.search);
-    if (!parameters.has('fixture')) renderLibrary();
-
-    let initialDraft = structuredClone(fixtureBook.fixtures[0]);
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try { initialDraft = validateDraft(JSON.parse(saved)); } catch { localStorage.removeItem(STORAGE_KEY); }
+    if (fixtureMode) {
+      libraryView.hidden = true;
+      fixtureView.hidden = false;
+      document.body.dataset.view = 'fixture';
+      renderFixture();
+      setReady('PASS · Synthetic fixture internal route');
+      return;
     }
-    setEditorScore(initialDraft);
-    renderDraft(initialDraft);
 
-    setMode(parameters.has('studio') || parameters.has('fixture') ? 'studio' : 'library');
+    fixtureView.hidden = true;
+    libraryView.hidden = false;
+    document.body.dataset.view = 'library';
+    renderLibrary();
     const version = document.querySelector('meta[name="scorebook-version"]').content;
     const hash = document.querySelector('meta[name="scorebook-sha256"]').content.slice(0, 12);
-    status.textContent = `PASS · 正式曲目 ${book.library.songs.length} 首 · 隔離 ${book.library.quarantine.length} 首 · 規格 ${version} (${hash})`;
-    status.className = 'status status--pass';
+    setReady(`PASS · 正式曲目 ${book.library.songs.length} 首 · 規格 ${version} (${hash})`);
   } catch (error) {
     showError(error);
     const template = document.querySelector('#error-template');
