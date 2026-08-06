@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.11
+  version: 0.6.12
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -286,11 +286,16 @@ layout:
   system_breaking:
     strategy: measure_and_required_width
     fixed_event_count_breaks: forbidden
+    verified_song_width_budget_px: 600
+    synthetic_fixture_width_budget_px: 700
+    tie_connected_measures_share_system: true
+    minimum_horizontal_lyric_gap_px: 1
     width_inputs:
     - staff_glyphs
     - numbered_notation
     - lyric_text
     - measure_boundaries
+    - tie_boundaries
   typography:
     note_number_px: 26
     lyric_px: 18
@@ -652,6 +657,8 @@ gates:
     - one_event_source_for_numbered_notation_staff_and_playback
     - lyric_track_is_separate_from_events
     - local_studio_does_not_require_github
+    - verified_song_uses_formal_width_budget
+    - tie_connected_measures_are_not_split
     - no_generated_text_from_images
   visual:
     required: true
@@ -669,6 +676,8 @@ gates:
         min: 0
       adjusted_lyric_glyph_clearance_px:
         min: 2
+      horizontal_lyric_gap_px:
+        min: 1
       default_row_delta_across_systems_px:
         max: 1
       maximum_individual_shift_px:
@@ -694,6 +703,8 @@ gates:
     - adjusted_elements_keep_label_specific_glyph_clearance
     - lyric_centers_match_notehead_centers
     - long_english_syllables_do_not_collide
+    - verified_song_lyrics_do_not_overlap
+    - verified_song_cross_measure_ties_are_visible
     - no_horizontal_scroll
   print:
     required: true
