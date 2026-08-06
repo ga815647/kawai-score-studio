@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.9
+  version: 0.6.10
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -160,7 +160,8 @@ layout:
       extreme_event_shift_policy: same_rule_as_every_event
       numbered_notation_direction: up_only
       lyric_direction: down_only
-      glyph_clearance_px: 6
+      numbered_notation_clearance_px: 0
+      lyric_clearance_px: 2
       maximum_shift_px: 32
       uncollided_event_shift_px: 0
   system_breaking:
@@ -247,6 +248,7 @@ gates:
       - locked_numbered_and_lyric_rows_are_preserved_when_staff_moves
       - hidden_studio_rendering_does_not_depend_on_dom_rects
       - per_event_adjustment_uses_vexflow_stavenote_pointer_rect
+      - numbered_notation_and_lyrics_use_separate_clearance_thresholds
       - extreme_notes_use_the_same_collision_rule_as_all_other_notes
       - one_event_source_for_numbered_notation_staff_and_playback
       - lyric_track_is_separate_from_events
@@ -264,8 +266,10 @@ gates:
         max: 20
       lyric_vertical_alignment_delta_px:
         max: 1
-      adjusted_glyph_clearance_px:
-        min: 6
+      adjusted_numbered_glyph_clearance_px:
+        min: 0
+      adjusted_lyric_glyph_clearance_px:
+        min: 2
       default_row_delta_across_systems_px:
         max: 1
       maximum_individual_shift_px:
@@ -280,13 +284,15 @@ gates:
       - staff_moves_up_without_moving_default_numbered_row
       - staff_moves_up_without_moving_default_lyric_row
       - uncollided_events_keep_zero_vertical_shift
+      - numbered_notation_moves_only_for_actual_overlap
+      - lyrics_keep_two_pixel_clearance
       - colliding_numbered_notation_moves_up_only
       - colliding_lyric_moves_down_only
       - extreme_events_follow_the_same_minimal_shift_rule
       - extreme_event_may_remain_unshifted_when_clearance_is_sufficient
       - instrument_highest_note_is_exercised
       - instrument_lowest_note_is_exercised
-      - adjusted_elements_keep_required_glyph_clearance
+      - adjusted_elements_keep_label_specific_glyph_clearance
       - lyric_centers_match_notehead_centers
       - long_english_syllables_do_not_collide
       - no_horizontal_scroll
