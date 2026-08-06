@@ -33,7 +33,7 @@ test('formal specification and synthetic fixtures pass all structural gates', as
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.11');
+  assert.equal(book.project.version, '0.6.12');
   assert.deepEqual(result.counts, {
     verifiedSongs: 1,
     quarantinedEntries: 2,
@@ -93,6 +93,20 @@ test('public library contains the user-selected Hickory Dickory Dock variant', a
     'Hick-', 'o-', 'ry', 'Dick-', 'o-', 'ry', 'Dock,',
   ]);
   assert.equal(track.syllables.at(-1).text, 'Dock.');
+
+  const systems = splitMeasuresByRequiredWidth(
+    song,
+    track,
+    book.layout.system_breaking.verified_song_width_budget_px,
+  );
+  assert.deepEqual(systems.map((system) => system.length), [2, 2, 3, 3]);
+  const systemByEvent = new Map();
+  systems.forEach((system, systemIndex) => {
+    system.flatMap((measure) => measure.events).forEach((event) => systemByEvent.set(event.id, systemIndex));
+  });
+  for (const tie of song.ties) {
+    assert.equal(systemByEvent.get(tie.from), systemByEvent.get(tie.to), `${tie.id} was split across systems`);
+  }
 });
 
 test('unverified legacy songs remain metadata-only quarantine entries', async () => {
@@ -156,6 +170,21 @@ test('layout locks rows and uses separate notation and lyric collision clearance
       uncollided_event_shift_px: 0,
     },
   });
+  assert.deepEqual(book.layout.system_breaking, {
+    strategy: 'measure_and_required_width',
+    fixed_event_count_breaks: 'forbidden',
+    verified_song_width_budget_px: 600,
+    synthetic_fixture_width_budget_px: 700,
+    tie_connected_measures_share_system: true,
+    minimum_horizontal_lyric_gap_px: 1,
+    width_inputs: [
+      'staff_glyphs',
+      'numbered_notation',
+      'lyric_text',
+      'measure_boundaries',
+      'tie_boundaries',
+    ],
+  });
   assert.deepEqual(book.gates.visual.measurements, {
     minimum_system_count: 2,
     numbered_to_staff_top_line_gap_px: { min: 8, max: 12 },
@@ -163,6 +192,7 @@ test('layout locks rows and uses separate notation and lyric collision clearance
     lyric_vertical_alignment_delta_px: { max: 1 },
     adjusted_numbered_glyph_clearance_px: { min: 0 },
     adjusted_lyric_glyph_clearance_px: { min: 2 },
+    horizontal_lyric_gap_px: { min: 1 },
     default_row_delta_across_systems_px: { max: 1 },
     maximum_individual_shift_px: { max: 32 },
   });
@@ -184,7 +214,11 @@ test('fixture covers at least two systems and both instrument extremes', async (
   assert.equal(track.role, 'original');
   assert.ok(track.syllables.some((syllable) => syllable.text === 'extraordinary'));
   assert.deepEqual(
-    splitMeasuresByRequiredWidth(fixture, track, 700).map((system) => system.length),
+    splitMeasuresByRequiredWidth(
+      fixture,
+      track,
+      book.layout.system_breaking.synthetic_fixture_width_budget_px,
+    ).map((system) => system.length),
     [2, 2],
   );
   assert.equal(book.fixtures.minimum_rendered_systems, 2);
@@ -310,6 +344,7 @@ test('build output uses pointer rectangles, locked rows, and separate thresholds
   assert.match(html, /正式曲庫/);
   assert.match(html, /本機 Studio/);
   assert.match(appSource, /geometry: book\.layout\.system_geometry/);
+  assert.match(appSource, /systemBreaking: book\.layout\.system_breaking/);
   assert.match(audioSource, /AudioContext/);
   assert.doesNotMatch(rendererSource, /new Annotation|lyricAnnotations|defaultNumberRect|defaultLyricRect|system\.getBoundingClientRect\(\)/);
   assert.match(rendererSource, /note\.getSVGElement\(\)/);
@@ -319,6 +354,8 @@ test('build output uses pointer rectangles, locked rows, and separate thresholds
   assert.match(rendererSource, /clearanceThresholdPx/);
   assert.match(rendererSource, /scorebook-system-geometry/);
   assert.match(rendererSource, /vexflow-stavenote-pointer-rect/);
+  assert.match(rendererSource, /forbiddenTieBreaks/);
+  assert.match(rendererSource, /verified_song_width_budget_px/);
   assert.match(styles, /height:\s*var\(--numbered-note-height, 52px\)/);
   assert.match(visualSource, /synthetic-fixture-second-system\.png/);
   assert.match(visualSource, /clearanceThresholdPx/);
@@ -329,17 +366,20 @@ test('build output uses pointer rectangles, locked rows, and separate thresholds
 test('package versions and required clearance gates are pinned', async () => {
   const { book } = await loadProject();
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-  assert.equal(packageJson.version, '0.6.11');
+  assert.equal(packageJson.version, '0.6.12');
   assert.equal(packageJson.dependencies.vexflow, '5.0.0');
   assert.equal(packageJson.devDependencies['@playwright/test'], '1.55.0');
   assert.ok(book.gates.fixture.checks.includes('fixture_renders_at_least_two_systems'));
   assert.ok(book.gates.fixture.checks.includes('fixture_contains_instrument_lowest_note'));
   assert.ok(book.gates.fixture.checks.includes('fixture_contains_instrument_highest_note'));
   assert.ok(book.gates.html.checks.includes('numbered_notation_and_lyrics_use_separate_clearance_thresholds'));
+  assert.ok(book.gates.html.checks.includes('tie_connected_measures_are_not_split'));
   assert.ok(book.gates.visual.checks.includes('numbered_notation_moves_only_for_actual_overlap'));
   assert.ok(book.gates.visual.checks.includes('lyrics_keep_two_pixel_clearance'));
   assert.ok(book.gates.visual.checks.includes('adjusted_elements_keep_label_specific_glyph_clearance'));
   assert.ok(book.gates.visual.checks.includes('extreme_event_may_remain_unshifted_when_clearance_is_sufficient'));
+  assert.ok(book.gates.visual.checks.includes('verified_song_lyrics_do_not_overlap'));
+  assert.ok(book.gates.visual.checks.includes('verified_song_cross_measure_ties_are_visible'));
   for (const gate of ['content', 'fixture', 'html', 'visual', 'print', 'release']) {
     assert.equal(book.gates[gate].required, true, `${gate} gate must be required`);
   }
