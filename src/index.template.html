@@ -13,79 +13,41 @@
   <header class="toolbar">
     <div>
       <p class="eyebrow">Kawai Score Studio</p>
-      <h1>木琴琴譜工作室</h1>
+      <h1>木琴正式曲庫</h1>
     </div>
-    <nav class="mode-tabs" aria-label="模式切換">
-      <button id="library-tab" type="button" aria-selected="true">正式曲庫</button>
-      <button id="studio-tab" type="button" aria-selected="false">本機 Studio</button>
-    </nav>
   </header>
 
   <main>
     <section id="status" class="status" aria-live="polite">載入規格中…</section>
 
-    <section id="library-view" class="mode-view">
+    <section id="library-view">
       <header class="view-heading">
         <div>
           <p class="section-kicker">Verified Library</p>
           <h2>正式曲庫</h2>
         </div>
-        <p>只顯示來源、旋律、節奏與歌詞均已核對並經使用者批准的曲目。</p>
+        <p>每首曲目都可直接播放、停止或單獨以 A4 直式列印。</p>
       </header>
       <div id="library-content"></div>
-      <details class="quarantine-panel">
+      <details id="quarantine-panel" class="quarantine-panel" hidden>
         <summary>查看隔離中的舊曲目</summary>
         <ul id="quarantine-list"></ul>
       </details>
     </section>
 
-    <section id="studio-view" class="mode-view" hidden>
-      <header class="view-heading">
-        <div>
-          <p class="section-kicker">Local Draft Studio</p>
-          <h2>本機草稿預覽與播放</h2>
-        </div>
-        <p>草稿只留在這個瀏覽器；預覽與播放不需要 GitHub、PR 或 Actions。</p>
-      </header>
-
-      <div class="studio-grid">
-        <section class="studio-editor" aria-label="草稿編輯器">
-          <div class="studio-controls">
-            <button id="load-fixture" type="button">載入合成測試</button>
-            <label class="file-button">匯入 JSON<input id="draft-file" type="file" accept="application/json,.json"></label>
-            <button id="apply-draft" type="button">套用草稿</button>
-            <button id="save-draft" type="button">儲存本機</button>
-            <button id="clear-draft" type="button">清除本機</button>
-          </div>
-          <textarea id="draft-editor" spellcheck="false" aria-label="JSON 草稿"></textarea>
-          <p class="editor-note">旋律 event 不可內嵌歌詞；歌詞以 lyric track 的 event id 對位。</p>
-        </section>
-
-        <section class="studio-preview" aria-label="草稿預覽">
-          <div class="preview-toolbar">
-            <button id="play-score" type="button">播放</button>
-            <button id="stop-score" type="button">停止</button>
-            <button id="print-score" type="button">列印</button>
-          </div>
-          <article id="score-page" class="score-page">
-            <header class="score-header">
-              <p id="score-badge" class="score-badge">SYNTHETIC FIXTURE</p>
-              <h2 id="score-title">尚未載入草稿</h2>
-              <p id="score-meta"></p>
-            </header>
-            <div id="score-render" class="score-render"></div>
-          </article>
-        </section>
+    <section id="studio-view" hidden aria-label="內部合成測試">
+      <div id="fixture-view">
+        <article id="score-page" class="score-page fixture-score-page">
+          <header class="score-header">
+            <p id="score-badge" class="score-badge">SYNTHETIC FIXTURE</p>
+            <h2 id="score-title">尚未載入測試資料</h2>
+            <p id="score-meta"></p>
+          </header>
+          <div id="score-render" class="score-render"></div>
+        </article>
       </div>
     </section>
   </main>
-
-  <template id="empty-library-template">
-    <section class="empty-state">
-      <h3>目前沒有已驗證的正式曲目</h3>
-      <p>舊曲目已撤出公開曲庫。待指定確切來源並逐項核對後，再透過 PR 與 Gate 發佈。</p>
-    </section>
-  </template>
 
   <template id="error-template">
     <section class="error-card">
