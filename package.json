@@ -8,7 +8,7 @@
     "source:verify": "python scripts/verify_source.py",
     "build": "node scripts/build.mjs",
     "test": "node --test tests/*.test.mjs",
-    "visual": "npx --yes @playwright/test@1.55.0 test tests/visual.spec.mjs",
+    "visual": "npx --yes @playwright/test@1.55.0 test",
     "check": "npm run validate && npm run source:verify && npm run build && npm test",
     "check:visual": "npm run check && npm run visual"
   },
