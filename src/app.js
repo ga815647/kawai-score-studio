@@ -195,7 +195,9 @@ async function start() {
     }
     globalThis.VexFlow.setFonts('Bravura', 'Academico');
 
-    renderLibrary();
+    const parameters = new URLSearchParams(location.search);
+    if (!parameters.has('fixture')) renderLibrary();
+
     let initialDraft = structuredClone(fixtureBook.fixtures[0]);
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -204,7 +206,6 @@ async function start() {
     setEditorScore(initialDraft);
     renderDraft(initialDraft);
 
-    const parameters = new URLSearchParams(location.search);
     setMode(parameters.has('studio') || parameters.has('fixture') ? 'studio' : 'library');
     const version = document.querySelector('meta[name="scorebook-version"]').content;
     const hash = document.querySelector('meta[name="scorebook-sha256"]').content.slice(0, 12);
