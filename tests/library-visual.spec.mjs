@@ -6,6 +6,8 @@ const minimumLyricGapPx = 8;
 const maximumHorizontalShiftPx = 24;
 
 const songs = [
+  { id: 'hickory-dickory-dock', title: 'Hickory Dickory Dock', notes: 30, lyrics: 28 },
+  { id: 'itsy-bitsy-spider', title: 'The Itsy Bitsy Spider', notes: 47, lyrics: 47 },
   { id: 'twinkle-twinkle-little-star-zh', title: '小星星', notes: 42, lyrics: 42 },
   { id: 'two-tigers-zh', title: '兩隻老虎', notes: 32, lyrics: 32 },
   { id: 'old-macdonald-zh', title: '王老先生有塊地', notes: 58, lyrics: 58 },
@@ -13,20 +15,28 @@ const songs = [
   { id: 'happy-birthday-zh', title: '生日快樂', notes: 25, lyrics: 24 },
 ];
 
-test('all five Traditional Chinese nursery songs render without lyric collisions or overflow', async ({ page }) => {
+test('library-only site renders all verified songs with controls and no public Studio', async ({ page }) => {
   test.setTimeout(120_000);
   await mkdir(reportDirectory, { recursive: true });
   await page.goto('/', { waitUntil: 'networkidle' });
 
   await expect(page.locator('.status--pass')).toBeVisible();
   await expect(page.locator('#library-view')).toBeVisible();
+  await expect(page.locator('#fixture-view')).toBeHidden();
+  await expect(page.locator('#studio-tab, #draft-editor')).toHaveCount(0);
+  await expect(page.locator('#studio-view')).toBeHidden();
   await expect(page.locator('main > .error-card')).toHaveCount(0);
+  await expect(page.locator('.library-song')).toHaveCount(7);
 
   const reports = [];
   for (const song of songs) {
     const card = page.locator(`.library-song[data-score-id="${song.id}"]`);
     await expect(card).toBeVisible();
-    await expect(card.locator('h3')).toContainText(song.title);
+    await expect(card.locator('.score-header h3')).toContainText(song.title);
+    await expect(card.locator('.song-controls button')).toHaveCount(3);
+    await expect(card.locator('button[data-action="play"]')).toHaveText('播放');
+    await expect(card.locator('button[data-action="stop"]')).toHaveText('停止');
+    await expect(card.locator('button[data-action="print"]')).toHaveText('列印');
     await expect(card.locator('.numbered-note')).toHaveCount(song.notes);
     await expect(card.locator('.score-lyric')).toHaveCount(song.lyrics);
 
@@ -83,46 +93,97 @@ test('all five Traditional Chinese nursery songs render without lyric collisions
     }));
     expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth + 1);
 
-    const screenshot = `${song.id}-library.png`;
-    await card.screenshot({
-      path: `${reportDirectory}/${screenshot}`,
-      animations: 'disabled',
-      caret: 'hide',
-    });
-
-    reports.push({
-      ...song,
-      systemCount,
-      lyricSpacing,
-      overflow,
-      screenshot,
-    });
+    reports.push({ ...song, systemCount, lyricSpacing, overflow });
   }
 
-  await page.emulateMedia({ media: 'print' });
-  for (const song of songs) {
-    const card = page.locator(`.library-song[data-score-id="${song.id}"]`);
-    const printGeometry = await card.evaluate((element) => {
-      const style = getComputedStyle(element);
-      return {
-        breakInside: style.breakInside,
-        pageBreakInside: style.pageBreakInside,
-        scrollWidth: element.scrollWidth,
-        clientWidth: element.clientWidth,
-      };
-    });
-    expect(printGeometry.scrollWidth).toBeLessThanOrEqual(printGeometry.clientWidth + 1);
-    expect(['avoid', 'auto']).toContain(printGeometry.breakInside);
-  }
+  const spider = page.locator('.library-song[data-score-id="itsy-bitsy-spider"]');
+  await spider.screenshot({
+    path: `${reportDirectory}/itsy-bitsy-spider-library.png`,
+    animations: 'disabled',
+    caret: 'hide',
+  });
 
   await writeFile(
-    `${reportDirectory}/chinese-nursery-five-library-report.json`,
+    `${reportDirectory}/verified-library-report.json`,
     `${JSON.stringify({
       pass: true,
       headSha: process.env.GITHUB_SHA ?? null,
       minimumLyricGapPx,
       maximumHorizontalShiftPx,
       songs: reports,
+      screenshot: 'itsy-bitsy-spider-library.png',
+    }, null, 2)}\n`,
+  );
+});
+
+test('selected-song print produces readable A4 output and never prints the fixture or other songs', async ({ page }) => {
+  test.setTimeout(120_000);
+  await mkdir(reportDirectory, { recursive: true });
+  await page.addInitScript(() => {
+    window.print = () => { window.__printCalled = true; };
+  });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await expect(page.locator('.status--pass')).toBeVisible();
+
+  const target = page.locator('.library-song[data-score-id="itsy-bitsy-spider"]');
+  await target.locator('button[data-action="print"]').click();
+  await expect.poll(() => page.evaluate(() => window.__printCalled === true)).toBe(true);
+  await expect(target).toHaveClass(/print-selected/);
+  await expect(page.locator('body')).toHaveClass(/printing-selected-song/);
+  await expect(page.locator('body')).toHaveAttribute('data-print-score-id', 'itsy-bitsy-spider');
+
+  await page.emulateMedia({ media: 'print' });
+  await expect(target).toBeVisible();
+  for (const song of songs.filter((song) => song.id !== 'itsy-bitsy-spider')) {
+    await expect(page.locator(`.library-song[data-score-id="${song.id}"]`)).toBeHidden();
+  }
+  await expect(page.locator('#fixture-view')).toBeHidden();
+  const hiddenPrintChrome = page.locator('.toolbar, .status, .view-heading, .song-controls');
+  expect(await hiddenPrintChrome.evaluateAll((elements) => elements.every(
+    (element) => getComputedStyle(element).display === 'none',
+  ))).toBe(true);
+
+  const printGeometry = await target.evaluate((element) => ({
+    scrollWidth: element.scrollWidth,
+    clientWidth: element.clientWidth,
+    cardDisplay: getComputedStyle(element).display,
+    pageWidth: getComputedStyle(element.querySelector('.score-page')).width,
+    systems: [...element.querySelectorAll('.score-system')].map((system) => ({
+      breakInside: getComputedStyle(system).breakInside,
+      pageBreakInside: getComputedStyle(system).pageBreakInside,
+      scrollWidth: system.scrollWidth,
+      clientWidth: system.clientWidth,
+    })),
+  }));
+  expect(printGeometry.cardDisplay).toBe('block');
+  expect(printGeometry.scrollWidth).toBeLessThanOrEqual(printGeometry.clientWidth + 1);
+  expect(printGeometry.systems.length).toBeGreaterThanOrEqual(2);
+  expect(printGeometry.systems.every((system) => ['avoid', 'avoid-page'].includes(system.breakInside))).toBe(true);
+  expect(printGeometry.systems.every((system) => system.pageBreakInside === 'avoid')).toBe(true);
+  expect(printGeometry.systems.every((system) => system.scrollWidth <= system.clientWidth + 1)).toBe(true);
+
+  await target.screenshot({
+    path: `${reportDirectory}/itsy-bitsy-spider-print-a4.png`,
+    animations: 'disabled',
+    caret: 'hide',
+  });
+  await page.pdf({
+    path: `${reportDirectory}/itsy-bitsy-spider-print-a4.pdf`,
+    format: 'A4',
+    printBackground: true,
+    preferCSSPageSize: true,
+  });
+
+  await writeFile(
+    `${reportDirectory}/selected-song-print-report.json`,
+    `${JSON.stringify({
+      pass: true,
+      headSha: process.env.GITHUB_SHA ?? null,
+      selectedSong: 'itsy-bitsy-spider',
+      fixtureVisible: false,
+      printGeometry,
+      screenshot: 'itsy-bitsy-spider-print-a4.png',
+      pdf: 'itsy-bitsy-spider-print-a4.pdf',
     }, null, 2)}\n`,
   );
 });
