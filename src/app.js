@@ -82,6 +82,7 @@ function renderDraft(score) {
   scorePage.dataset.synthetic = String(activeDraft.synthetic === true);
   renderScore(scoreRender, activeDraft, book.palette, {
     geometry: book.layout.system_geometry,
+    systemBreaking: book.layout.system_breaking,
   });
   status.textContent = `Studio READY · 本機預覽與播放不需要 GitHub · ${activeDraft.title}`;
   status.className = 'status status--pass';
@@ -114,6 +115,7 @@ function renderLibrary() {
       libraryContent.append(card);
       renderScore(score, song, book.palette, {
         geometry: book.layout.system_geometry,
+        systemBreaking: book.layout.system_breaking,
       });
     }
   }
