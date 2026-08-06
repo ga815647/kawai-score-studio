@@ -176,7 +176,9 @@ test('layout locks rows and uses separate notation and lyric collision clearance
     verified_song_width_budget_px: 600,
     synthetic_fixture_width_budget_px: 700,
     tie_connected_measures_share_system: true,
-    minimum_horizontal_lyric_gap_px: 1,
+    minimum_horizontal_lyric_gap_px: 8,
+    lyric_spacing_adjustment: 'minimal_recentered_tick_shift',
+    maximum_horizontal_shift_px: 24,
     width_inputs: [
       'staff_glyphs',
       'numbered_notation',
@@ -192,9 +194,10 @@ test('layout locks rows and uses separate notation and lyric collision clearance
     lyric_vertical_alignment_delta_px: { max: 1 },
     adjusted_numbered_glyph_clearance_px: { min: 0 },
     adjusted_lyric_glyph_clearance_px: { min: 2 },
-    horizontal_lyric_gap_px: { min: 1 },
+    horizontal_lyric_gap_px: { min: 8 },
     default_row_delta_across_systems_px: { max: 1 },
     maximum_individual_shift_px: { max: 32 },
+    maximum_horizontal_shift_px: { max: 24 },
   });
 });
 
@@ -345,6 +348,7 @@ test('build output uses pointer rectangles, locked rows, and separate thresholds
   assert.match(html, /本機 Studio/);
   assert.match(appSource, /geometry: book\.layout\.system_geometry/);
   assert.match(appSource, /systemBreaking: book\.layout\.system_breaking/);
+  assert.match(appSource, /typography: book\.layout\.typography/);
   assert.match(audioSource, /AudioContext/);
   assert.doesNotMatch(rendererSource, /new Annotation|lyricAnnotations|defaultNumberRect|defaultLyricRect|system\.getBoundingClientRect\(\)/);
   assert.match(rendererSource, /note\.getSVGElement\(\)/);
@@ -356,6 +360,9 @@ test('build output uses pointer rectangles, locked rows, and separate thresholds
   assert.match(rendererSource, /vexflow-stavenote-pointer-rect/);
   assert.match(rendererSource, /forbiddenTieBreaks/);
   assert.match(rendererSource, /verified_song_width_budget_px/);
+  assert.match(rendererSource, /applyHorizontalLyricSpacing/);
+  assert.match(rendererSource, /minimal-recentered-tick-shift/);
+  assert.match(rendererSource, /bar\.note\.setXShift/);
   assert.match(styles, /height:\s*var\(--numbered-note-height, 52px\)/);
   assert.match(visualSource, /synthetic-fixture-second-system\.png/);
   assert.match(visualSource, /clearanceThresholdPx/);
@@ -374,12 +381,15 @@ test('package versions and required clearance gates are pinned', async () => {
   assert.ok(book.gates.fixture.checks.includes('fixture_contains_instrument_highest_note'));
   assert.ok(book.gates.html.checks.includes('numbered_notation_and_lyrics_use_separate_clearance_thresholds'));
   assert.ok(book.gates.html.checks.includes('tie_connected_measures_are_not_split'));
+  assert.ok(book.gates.html.checks.includes('lyric_spacing_uses_minimal_recentered_tick_shift'));
+  assert.ok(book.gates.html.checks.includes('lyric_spacing_moves_notes_and_bar_boundaries_together'));
   assert.ok(book.gates.visual.checks.includes('numbered_notation_moves_only_for_actual_overlap'));
   assert.ok(book.gates.visual.checks.includes('lyrics_keep_two_pixel_clearance'));
   assert.ok(book.gates.visual.checks.includes('adjusted_elements_keep_label_specific_glyph_clearance'));
   assert.ok(book.gates.visual.checks.includes('extreme_event_may_remain_unshifted_when_clearance_is_sufficient'));
   assert.ok(book.gates.visual.checks.includes('verified_song_lyrics_do_not_overlap'));
   assert.ok(book.gates.visual.checks.includes('verified_song_cross_measure_ties_are_visible'));
+  assert.ok(book.gates.visual.checks.includes('verified_song_horizontal_shifts_stay_within_limit'));
   for (const gate of ['content', 'fixture', 'html', 'visual', 'print', 'release']) {
     assert.equal(book.gates[gate].required, true, `${gate} gate must be required`);
   }
