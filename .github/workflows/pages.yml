@@ -59,3 +59,7 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # GitHub Pages has repeatedly remained queued longer than the action's
+          # 10-minute default even though the build artifact and all Gates passed.
+          timeout: 1200000
