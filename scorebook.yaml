@@ -1,89 +1,97 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.10
+  version: 0.6.11
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
   goal: 由結構化音樂資料產生可閱讀、可播放、可列印、可驗證的兒童木琴琴譜。
-
 schema:
   version: 2
   duration_unit: eighth_note
   event_kinds:
-    - note
-    - rest
+  - note
+  - rest
   melody_and_lyrics_are_separate: true
   measures_are_explicit: true
   pickup_is_explicit: true
   ties_are_explicit: true
-
 interaction_entry:
   project_mode: single_chat_project
   project_name: Kawai Score Studio
   user_selects_work_type: false
   assistant_classifies_request: true
   handles:
-    - score_content
-    - generator_development
+  - score_content
+  - generator_development
   website_modes_remain_internal:
-    - library
-    - studio
-
+  - library
+  - studio
 instrument:
   id: kawai-xylophone-16
   name: KAWAI 16 音木琴
-  lowest_note: 4_
+  lowest_note: '4_'
   highest_note: 5^
   keys:
-    - 4_
-    - 5_
-    - 6_
-    - 7_
-    - "1"
-    - "2"
-    - "3"
-    - "4"
-    - "5"
-    - "6"
-    - "7"
-    - 1^
-    - 2^
-    - 3^
-    - 4^
-    - 5^
-
+  - '4_'
+  - '5_'
+  - '6_'
+  - '7_'
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  - '6'
+  - '7'
+  - 1^
+  - 2^
+  - 3^
+  - 4^
+  - 5^
 palette:
-  "1": { name: 紫色, hex: "#8E5ABD" }
-  "2": { name: 藍色, hex: "#2F95D3" }
-  "3": { name: 綠色, hex: "#28A96B" }
-  "4": { name: 金黃色, hex: "#D99A00" }
-  "5": { name: 粉紅色, hex: "#E94F7D" }
-  "6": { name: 黃綠色, hex: "#7E9F00" }
-  "7": { name: 橘色, hex: "#E96B0C" }
-
+  '1':
+    name: 紫色
+    hex: '#8E5ABD'
+  '2':
+    name: 藍色
+    hex: '#2F95D3'
+  '3':
+    name: 綠色
+    hex: '#28A96B'
+  '4':
+    name: 金黃色
+    hex: '#D99A00'
+  '5':
+    name: 粉紅色
+    hex: '#E94F7D'
+  '6':
+    name: 黃綠色
+    hex: '#7E9F00'
+  '7':
+    name: 橘色
+    hex: '#E96B0C'
 rendering:
   staff:
     engine: vexflow
-    version: "5.0.0"
+    version: 5.0.0
     delivery: local_build_artifact
     output: SVG
   playback:
     engine: web_audio
     runs_in_browser: true
     github_actions_required: false
-
 modes:
   library:
     purpose: 顯示已驗證並核准發佈的正式曲目。
     accepts_status:
-      - verified
+    - verified
     publication_requires:
-      - exact_source
-      - complete_music_verification
-      - user_approval
-      - pull_request
-      - exact_head_sha_ci
-      - required_gates_pass
+    - exact_source
+    - complete_music_verification
+    - user_approval
+    - pull_request
+    - exact_head_sha_ci
+    - required_gates_pass
   studio:
     purpose: 在瀏覽器本機載入、預覽與播放草稿，不寫入正式曲庫。
     github_required: false
@@ -91,7 +99,6 @@ modes:
     local_draft_input: JSON
     local_storage: true
     browser_playback: true
-
 content_policy:
   original_language_lyrics_are_default: true
   translation_is_optional: true
@@ -100,70 +107,69 @@ content_policy:
   source_acquisition:
     accepted_routes:
       user_provided:
-        - score_website
-        - score_image
-        - score_pdf
-        - musicxml
-        - other_static_score_file
+      - score_website
+      - score_image
+      - score_pdf
+      - musicxml
+      - other_static_score_file
       assistant_web_research:
-        - score_website
-        - score_image
-        - score_pdf
-        - musicxml
+      - score_website
+      - score_image
+      - score_pdf
+      - musicxml
     primary_source_must_be_inspectable_static_notation: true
     user_provided_source_has_variant_priority: true
     assistant_must_fix_exact_source_before_transcription: true
     stop_when_no_verifiable_static_source: true
     forbidden_transcription_or_verification_sources:
-      - youtube
-      - video
-      - audio_recording
-      - memory_only
+    - youtube
+    - video
+    - audio_recording
+    - memory_only
   source_types:
-    - score_website
-    - score_image
-    - score_pdf
-    - musicxml
-    - other_static_score_file
+  - score_website
+  - score_image
+  - score_pdf
+  - musicxml
+  - other_static_score_file
   source_providers:
-    - user
-    - assistant_web_research
+  - user
+  - assistant_web_research
   source_requirements:
-    - title
-    - source_type
-    - provided_by
-    - publisher_or_origin
-    - accessed_at
-    - selected_variant
-    - original_key
-    - original_meter
-    - pickup
-    - rights_status
+  - title
+  - source_type
+  - provided_by
+  - publisher_or_origin
+  - accessed_at
+  - selected_variant
+  - original_key
+  - original_meter
+  - pickup
+  - rights_status
   source_locator:
     at_least_one_of:
-      - url
-      - file_reference
+    - url
+    - file_reference
     url_scheme: https
     file_requires:
-      - content_sha256
+    - content_sha256
   verification_requirements:
-    - source_to_scorebook_checked
-    - melody_checked
-    - rhythm_checked
-    - rests_checked
-    - pickup_checked
-    - measures_checked
-    - ties_checked
-    - lyrics_checked
-    - user_approved
-
+  - source_to_scorebook_checked
+  - melody_checked
+  - rhythm_checked
+  - rests_checked
+  - pickup_checked
+  - measures_checked
+  - ties_checked
+  - lyrics_checked
+  - user_approved
 source_verification:
   version: 1
   canonical_data_remains: scorebook.yaml
   purpose: 以固定版本的獨立工具，將 MusicXML 來源正規化並逐顆比對 scorebook event，提供可重現的第二證據。
   input:
     format: MusicXML
-    version: "4.0"
+    version: '4.0'
     root: score-partwise
     score_shape: monophonic_single_part
     entity_declarations: forbidden
@@ -178,11 +184,11 @@ source_verification:
       xml.xsd:
         git_blob_sha: eeb9db56093d2382951cbcd1b61c2ccd9d674c92
   tools:
-    python: "3.13"
-    music21: "10.5.0"
-    verovio: "6.2.1"
-    xmlschema: "4.3.2"
-    pyyaml: "6.0.3"
+    python: '3.13'
+    music21: 10.5.0
+    verovio: 6.2.1
+    xmlschema: 4.3.2
+    pyyaml: 6.0.3
   synthetic_fixture:
     musicxml_file: fixtures/source-verification.musicxml
     scorebook_fixture_id: layout-rhythm-language
@@ -190,14 +196,14 @@ source_verification:
   comparison:
     position_source: measure_and_order
     exact_fields:
-      - measure
-      - event_index
-      - offset_eighth_units
-      - kind
-      - pitch_midi
-      - duration_eighth_units
-      - tie
-      - lyric
+    - measure
+    - event_index
+    - offset_eighth_units
+    - kind
+    - pitch_midi
+    - duration_eighth_units
+    - tie
+    - lyric
     source_to_scorebook: exact
     music21_roundtrip: exact
     source_xsd_validation: required
@@ -209,19 +215,18 @@ source_verification:
   reports:
     directory: reports/source
     required_files:
-      - musicxml-schema-report.json
-      - normalized-source-events.json
-      - normalized-scorebook-events.json
-      - event-diff.json
-      - roundtrip-diff.json
-      - roundtrip.musicxml
-      - verovio-reference.svg
-      - verovio-reference.mid
-      - source-verification-report.json
-      - source-verification-report.html
-
+    - musicxml-schema-report.json
+    - normalized-source-events.json
+    - normalized-scorebook-events.json
+    - event-diff.json
+    - roundtrip-diff.json
+    - roundtrip.musicxml
+    - verovio-reference.svg
+    - verovio-reference.mid
+    - source-verification-report.json
+    - source-verification-report.html
 notation:
-  token_pattern: "^[1-7](?:\\^|_)?$"
+  token_pattern: ^[1-7](?:\^|_)?$
   numbered_notation:
     style: unboxed_colored_number
     position: above_staff
@@ -240,7 +245,6 @@ notation:
     color: inherit
     upper_location: above_number
     lower_location: below_number
-
 layout:
   profile: a4_textbook
   page:
@@ -250,9 +254,9 @@ layout:
     height_mm: 297
     margin_mm: 12
   vertical_order:
-    - numbered_notation
-    - staff
-    - lyrics
+  - numbered_notation
+  - staff
+  - lyrics
   system_geometry:
     staff_width_px: 700
     staff_canvas_height_px: 170
@@ -283,14 +287,13 @@ layout:
     strategy: measure_and_required_width
     fixed_event_count_breaks: forbidden
     width_inputs:
-      - staff_glyphs
-      - numbered_notation
-      - lyric_text
-      - measure_boundaries
+    - staff_glyphs
+    - numbered_notation
+    - lyric_text
+    - measure_boundaries
   typography:
     note_number_px: 26
     lyric_px: 18
-
 fixtures:
   file: fixtures/engine-fixtures.yaml
   synthetic_only: true
@@ -299,107 +302,356 @@ fixtures:
   minimum_rendered_systems: 2
   must_cover_instrument_lowest_note: true
   must_cover_instrument_highest_note: true
-
 library:
-  songs: []
+  songs:
+  - id: hickory-dickory-dock
+    title: Hickory Dickory Dock
+    alias: 老鼠時鐘
+    status: verified
+    key: C major
+    meter: 6/8
+    pickup_eighth_units: 0
+    source:
+      title: Hickory Dickory Dock Sheet Music With Chords And Lyrics
+      source_type: score_pdf
+      provided_by: user
+      publisher_or_origin: Itsy Bitsy Kids Music
+      accessed_at: '2026-08-06'
+      selected_variant: 2018 PDF notated first verse
+      original_key: C major
+      original_meter: 6/8
+      pickup: 0
+      rights_status: traditional_song_sheet_music_copyright_2018
+      url: https://itsybitsykidsmusic.com/wp-content/uploads/2017/07/Hickory-Dickory-Dock-Sheet-Music-With-Chords-And-Lyrics.pdf
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 6
+      events:
+      - id: n01
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n02
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n03
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n04
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n05
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n06
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 2
+      capacity_eighth_units: 6
+      events:
+      - id: n07
+        kind: note
+        pitch: '3'
+        duration: 4
+      - id: r01
+        kind: rest
+        duration: 1
+      - id: n08
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 3
+      capacity_eighth_units: 6
+      events:
+      - id: n09
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n10
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n11
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n12
+        kind: note
+        pitch: '1'
+        duration: 1
+    - number: 4
+      capacity_eighth_units: 6
+      events:
+      - id: n13
+        kind: note
+        pitch: '3'
+        duration: 4
+      - id: r02
+        kind: rest
+        duration: 1
+      - id: n14
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 5
+      capacity_eighth_units: 6
+      events:
+      - id: n15
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n16
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n17
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n18
+        kind: note
+        pitch: '5'
+        duration: 1
+    - number: 6
+      capacity_eighth_units: 6
+      events:
+      - id: n19
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n20
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n21
+        kind: note
+        pitch: '6'
+        duration: 3
+    - number: 7
+      capacity_eighth_units: 6
+      events:
+      - id: n22
+        kind: note
+        pitch: '6'
+        duration: 6
+    - number: 8
+      capacity_eighth_units: 6
+      events:
+      - id: n23
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n24
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n25
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n26
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n27
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n28
+        kind: note
+        pitch: '2'
+        duration: 1
+    - number: 9
+      capacity_eighth_units: 6
+      events:
+      - id: n29
+        kind: note
+        pitch: '1'
+        duration: 6
+    - number: 10
+      capacity_eighth_units: 6
+      events:
+      - id: n30
+        kind: note
+        pitch: '1'
+        duration: 6
+    ties:
+    - id: t01
+      from: n21
+      to: n22
+    - id: t02
+      from: n29
+      to: n30
+    lyric_tracks:
+    - id: original-en
+      locale: en
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: Hick-
+      - event: n02
+        text: o-
+      - event: n03
+        text: ry
+      - event: n04
+        text: Dick-
+      - event: n05
+        text: o-
+      - event: n06
+        text: ry
+      - event: n07
+        text: Dock,
+      - event: n08
+        text: the
+      - event: n09
+        text: mouse
+      - event: n10
+        text: ran
+      - event: n11
+        text: up
+      - event: n12
+        text: the
+      - event: n13
+        text: clock.
+      - event: n14
+        text: The
+      - event: n15
+        text: clock
+      - event: n16
+        text: struck
+      - event: n17
+        text: one,
+      - event: n18
+        text: the
+      - event: n19
+        text: mouse
+      - event: n20
+        text: ran
+      - event: n21
+        text: down,
+      - event: n23
+        text: Hick-
+      - event: n24
+        text: o-
+      - event: n25
+        text: ry-
+      - event: n26
+        text: Dick-
+      - event: n27
+        text: o-
+      - event: n28
+        text: ry
+      - event: n29
+        text: Dock.
   quarantine:
-    - id: happy-birthday
-      title: 生日快樂
-      reason: legacy_content_not_verified_against_an_exact_source
-    - id: itsy-bitsy-spider
-      title: Itsy Bitsy Spider
-      reason: legacy_melody_and_chinese_lyrics_not_verified_against_an_exact_source
-    - id: hickory-dickory-dock
-      title: Hickory Dickory Dock
-      alias: 老鼠時鐘
-      reason: legacy_melody_differs_from_the_user_selected_source
-
+  - id: happy-birthday
+    title: 生日快樂
+    reason: legacy_content_not_verified_against_an_exact_source
+  - id: itsy-bitsy-spider
+    title: Itsy Bitsy Spider
+    reason: legacy_melody_and_chinese_lyrics_not_verified_against_an_exact_source
 workflow:
-  - read_scorebook
-  - classify_request_inside_single_project
-  - classify_requirement_change
-  - acquire_static_score_from_user_or_web_if_content_request
-  - stop_if_no_verifiable_static_score
-  - update_scorebook
-  - validate_schema_and_publication_policy
-  - validate_engine_fixtures
-  - validate_musicxml_source_against_pinned_xsd
-  - normalize_source_with_music21
-  - compare_source_events_to_scorebook_events
-  - verify_music21_roundtrip
-  - render_verovio_reference_svg_and_midi
-  - generate_html
-  - run_html_gate
-  - run_browser_visual_gate
-  - capture_visual_gate_screenshots
-  - run_print_gate
-  - publish_only_after_required_gates_pass
-
+- read_scorebook
+- classify_request_inside_single_project
+- classify_requirement_change
+- acquire_static_score_from_user_or_web_if_content_request
+- stop_if_no_verifiable_static_score
+- update_scorebook
+- validate_schema_and_publication_policy
+- validate_engine_fixtures
+- validate_musicxml_source_against_pinned_xsd
+- normalize_source_with_music21
+- compare_source_events_to_scorebook_events
+- verify_music21_roundtrip
+- render_verovio_reference_svg_and_midi
+- generate_html
+- run_html_gate
+- run_browser_visual_gate
+- capture_visual_gate_screenshots
+- run_print_gate
+- publish_only_after_required_gates_pass
 gates:
   content:
     required: true
     checks:
-      - single_chat_project_handles_content_and_development
-      - assistant_classifies_request_without_user_mode_selection
-      - public_library_contains_only_verified_songs
-      - exact_source_metadata_present
-      - source_route_is_user_provided_or_assistant_web_research
-      - primary_source_is_inspectable_static_notation
-      - source_locator_is_url_or_hashed_file_reference
-      - youtube_video_audio_and_memory_are_not_transcription_sources
-      - workflow_stops_without_verifiable_static_source
-      - source_to_scorebook_checked
-      - complete_music_verification_present
-      - original_language_track_is_default
-      - melody_events_do_not_embed_lyrics
-      - explicit_measures_rests_pickup_and_ties
-      - instrument_range
+    - single_chat_project_handles_content_and_development
+    - assistant_classifies_request_without_user_mode_selection
+    - public_library_contains_only_verified_songs
+    - exact_source_metadata_present
+    - source_route_is_user_provided_or_assistant_web_research
+    - primary_source_is_inspectable_static_notation
+    - source_locator_is_url_or_hashed_file_reference
+    - youtube_video_audio_and_memory_are_not_transcription_sources
+    - workflow_stops_without_verifiable_static_source
+    - source_to_scorebook_checked
+    - complete_music_verification_present
+    - original_language_track_is_default
+    - melody_events_do_not_embed_lyrics
+    - explicit_measures_rests_pickup_and_ties
+    - instrument_range
   fixture:
     required: true
     checks:
-      - fixtures_are_synthetic
-      - note_and_rest_events_supported
-      - measure_duration_is_valid
-      - pickup_measure_is_valid
-      - tie_references_are_valid
-      - lyric_event_references_are_valid
-      - long_english_syllables_participate_in_spacing
-      - fixture_renders_at_least_two_systems
-      - fixture_contains_instrument_lowest_note
-      - fixture_contains_instrument_highest_note
+    - fixtures_are_synthetic
+    - note_and_rest_events_supported
+    - measure_duration_is_valid
+    - pickup_measure_is_valid
+    - tie_references_are_valid
+    - lyric_event_references_are_valid
+    - long_english_syllables_participate_in_spacing
+    - fixture_renders_at_least_two_systems
+    - fixture_contains_instrument_lowest_note
+    - fixture_contains_instrument_highest_note
   source:
     required: true
     checks:
-      - source_fixture_is_synthetic
-      - source_is_musicxml_4_score_partwise
-      - entity_declarations_are_rejected
-      - official_schema_files_match_pinned_git_blob_shas
-      - source_musicxml_passes_xsd
-      - source_is_single_part_and_monophonic
-      - music21_normalized_events_match_scorebook_exactly
-      - music21_roundtrip_passes_xsd
-      - music21_roundtrip_events_match_source_exactly
-      - verovio_svg_is_created
-      - verovio_midi_is_created
-      - source_reports_are_complete
+    - source_fixture_is_synthetic
+    - source_is_musicxml_4_score_partwise
+    - entity_declarations_are_rejected
+    - official_schema_files_match_pinned_git_blob_shas
+    - source_musicxml_passes_xsd
+    - source_is_single_part_and_monophonic
+    - music21_normalized_events_match_scorebook_exactly
+    - music21_roundtrip_passes_xsd
+    - music21_roundtrip_events_match_source_exactly
+    - verovio_svg_is_created
+    - verovio_midi_is_created
+    - source_reports_are_complete
   html:
     required: true
     checks:
-      - numbered_notation_above_staff
-      - lyrics_below_staff
-      - lyrics_rendered_in_shared_html_row
-      - vexflow_annotations_not_used_for_lyrics
-      - song_standard_rows_used_by_default
-      - standard_label_positions_are_derived_from_scorebook_geometry
-      - locked_numbered_and_lyric_rows_are_preserved_when_staff_moves
-      - hidden_studio_rendering_does_not_depend_on_dom_rects
-      - per_event_adjustment_uses_vexflow_stavenote_pointer_rect
-      - numbered_notation_and_lyrics_use_separate_clearance_thresholds
-      - extreme_notes_use_the_same_collision_rule_as_all_other_notes
-      - one_event_source_for_numbered_notation_staff_and_playback
-      - lyric_track_is_separate_from_events
-      - local_studio_does_not_require_github
-      - no_generated_text_from_images
+    - numbered_notation_above_staff
+    - lyrics_below_staff
+    - lyrics_rendered_in_shared_html_row
+    - vexflow_annotations_not_used_for_lyrics
+    - song_standard_rows_used_by_default
+    - standard_label_positions_are_derived_from_scorebook_geometry
+    - locked_numbered_and_lyric_rows_are_preserved_when_staff_moves
+    - hidden_studio_rendering_does_not_depend_on_dom_rects
+    - per_event_adjustment_uses_vexflow_stavenote_pointer_rect
+    - numbered_notation_and_lyrics_use_separate_clearance_thresholds
+    - extreme_notes_use_the_same_collision_rule_as_all_other_notes
+    - one_event_source_for_numbered_notation_staff_and_playback
+    - lyric_track_is_separate_from_events
+    - local_studio_does_not_require_github
+    - no_generated_text_from_images
   visual:
     required: true
     measurements:
@@ -421,38 +673,38 @@ gates:
       maximum_individual_shift_px:
         max: 32
     checks:
-      - chromium_screenshot_created
-      - at_least_two_systems_are_screenshot_tested
-      - numbered_notation_staff_and_lyrics_do_not_overlap
-      - numbered_notation_to_staff_gap_within_spec
-      - lyrics_are_below_staff
-      - default_rows_match_across_entire_score
-      - staff_moves_up_without_moving_default_numbered_row
-      - staff_moves_up_without_moving_default_lyric_row
-      - uncollided_events_keep_zero_vertical_shift
-      - numbered_notation_moves_only_for_actual_overlap
-      - lyrics_keep_two_pixel_clearance
-      - colliding_numbered_notation_moves_up_only
-      - colliding_lyric_moves_down_only
-      - extreme_events_follow_the_same_minimal_shift_rule
-      - extreme_event_may_remain_unshifted_when_clearance_is_sufficient
-      - instrument_highest_note_is_exercised
-      - instrument_lowest_note_is_exercised
-      - adjusted_elements_keep_label_specific_glyph_clearance
-      - lyric_centers_match_notehead_centers
-      - long_english_syllables_do_not_collide
-      - no_horizontal_scroll
+    - chromium_screenshot_created
+    - at_least_two_systems_are_screenshot_tested
+    - numbered_notation_staff_and_lyrics_do_not_overlap
+    - numbered_notation_to_staff_gap_within_spec
+    - lyrics_are_below_staff
+    - default_rows_match_across_entire_score
+    - staff_moves_up_without_moving_default_numbered_row
+    - staff_moves_up_without_moving_default_lyric_row
+    - uncollided_events_keep_zero_vertical_shift
+    - numbered_notation_moves_only_for_actual_overlap
+    - lyrics_keep_two_pixel_clearance
+    - colliding_numbered_notation_moves_up_only
+    - colliding_lyric_moves_down_only
+    - extreme_events_follow_the_same_minimal_shift_rule
+    - extreme_event_may_remain_unshifted_when_clearance_is_sufficient
+    - instrument_highest_note_is_exercised
+    - instrument_lowest_note_is_exercised
+    - adjusted_elements_keep_label_specific_glyph_clearance
+    - lyric_centers_match_notehead_centers
+    - long_english_syllables_do_not_collide
+    - no_horizontal_scroll
   print:
     required: true
     checks:
-      - a4_portrait
-      - song_page_not_split
-      - no_horizontal_overflow
-      - numbered_notation_staff_and_lyrics_remain_readable
-      - locked_numbered_and_lyric_rows_survive_print
-      - song_standard_rows_survive_print
-      - per_event_extreme_note_adjustments_survive_print
+    - a4_portrait
+    - song_page_not_split
+    - no_horizontal_overflow
+    - numbered_notation_staff_and_lyrics_remain_readable
+    - locked_numbered_and_lyric_rows_survive_print
+    - song_standard_rows_survive_print
+    - per_event_extreme_note_adjustments_survive_print
   release:
     required: true
     pass_when:
-      - all_required_gates_pass
+    - all_required_gates_pass
