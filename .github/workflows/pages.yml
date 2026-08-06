@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -45,7 +45,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
@@ -58,8 +58,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
-        with:
-          # GitHub Pages has repeatedly remained queued longer than the action's
-          # 10-minute default even though the build artifact and all Gates passed.
-          timeout: 1200000
+        uses: actions/deploy-pages@v5
