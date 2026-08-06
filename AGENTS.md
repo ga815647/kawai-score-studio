@@ -28,6 +28,14 @@
 14. MusicXML、OMR、MIDI 或 AI 轉錄只屬來源證據或草稿，不得取代 `scorebook.yaml`。工具成功本身不等於內容已驗證。
 15. A4 列印不得水平裁切；長曲可分頁，但只能在完整譜行之間換頁，任何譜行不得被頁界切開，也不得為硬塞一頁而縮到不可讀。
 
+## 交付與部署
+
+- 除非使用者明確要求「先看、不要合併」，否則 PR exact head SHA 的必要 Gate 全部成功後，預設直接合併。
+- 合併後必須核對 `main` 的 exact SHA、`main` CI 與 GitHub Pages deployment；三者成功後才算完成交付。
+- PR 截圖、CI artifact、預覽 PNG 或列印 PDF 只能作驗證證據，不能取代已部署的正式網站。
+- Pages build 成功但 deploy 失敗時，不得宣稱網站已更新；必須保留 workflow run、job、錯誤訊息與重試結果。
+- 完整成果、規格、測試與交接留在 GitHub；Notion 只保存入口、穩定規則與流程，不保存動態 branch、PR、SHA、run 或 artifact 狀態。
+
 ## 琴譜來源
 
 正式內容只接受兩條來源路徑：
