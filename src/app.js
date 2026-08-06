@@ -103,6 +103,7 @@ function renderLibrary() {
     for (const song of songs) {
       const card = document.createElement('article');
       card.className = 'library-song';
+      card.dataset.scoreId = song.id;
       const heading = document.createElement('h3');
       heading.textContent = song.alias ? `${song.title}（${song.alias}）` : song.title;
       const meta = document.createElement('p');
@@ -110,10 +111,10 @@ function renderLibrary() {
       const score = document.createElement('div');
       score.className = 'score-render';
       card.append(heading, meta, score);
+      libraryContent.append(card);
       renderScore(score, song, book.palette, {
         geometry: book.layout.system_geometry,
       });
-      libraryContent.append(card);
     }
   }
 
