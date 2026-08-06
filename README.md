@@ -42,7 +42,7 @@ YouTube、影片、音訊錄音與記憶不作為旋律轉錄或正式驗證來�
 - 使用者批准
 - branch、PR、exact head SHA CI 與所有必要 Gate
 
-目前正式曲庫為空。舊有的〈生日快樂〉、Itsy Bitsy Spider 與 Hickory Dickory Dock 只保留隔離清單的名稱與原因。
+目前正式曲庫收錄使用者指定的 Itsy Bitsy Kids Music 2018 PDF 版本〈Hickory Dickory Dock〉，只收譜面標示的第一段歌詞。舊有〈生日快樂〉與 Itsy Bitsy Spider 仍只保留隔離清單的名稱與原因。
 
 ### 本機 Studio
 
