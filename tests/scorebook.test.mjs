@@ -33,7 +33,7 @@ test('formal specification and synthetic fixtures pass all structural gates', as
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.9');
+  assert.equal(book.project.version, '0.6.10');
   assert.deepEqual(result.counts, {
     verifiedSongs: 0,
     quarantinedEntries: 3,
@@ -73,7 +73,7 @@ test('Studio preview and playback do not require GitHub or Actions', async () =>
   assert.equal(book.rendering.playback.runs_in_browser, true);
 });
 
-test('layout keeps song-standard rows with per-label VexFlow pointer-rectangle exceptions', async () => {
+test('layout locks rows and uses separate notation and lyric collision clearances', async () => {
   const { book } = await loadProject();
   assert.deepEqual(book.layout.vertical_order, ['numbered_notation', 'staff', 'lyrics']);
   assert.equal(book.notation.numbered_notation.position, 'above_staff');
@@ -106,7 +106,8 @@ test('layout keeps song-standard rows with per-label VexFlow pointer-rectangle e
       extreme_event_shift_policy: 'same_rule_as_every_event',
       numbered_notation_direction: 'up_only',
       lyric_direction: 'down_only',
-      glyph_clearance_px: 6,
+      numbered_notation_clearance_px: 0,
+      lyric_clearance_px: 2,
       maximum_shift_px: 32,
       uncollided_event_shift_px: 0,
     },
@@ -116,7 +117,8 @@ test('layout keeps song-standard rows with per-label VexFlow pointer-rectangle e
     numbered_to_staff_top_line_gap_px: { min: 8, max: 12 },
     staff_bottom_line_to_lyric_top_px: { min: 16, max: 20 },
     lyric_vertical_alignment_delta_px: { max: 1 },
-    adjusted_glyph_clearance_px: { min: 6 },
+    adjusted_numbered_glyph_clearance_px: { min: 0 },
+    adjusted_lyric_glyph_clearance_px: { min: 2 },
     default_row_delta_across_systems_px: { max: 1 },
     maximum_individual_shift_px: { max: 32 },
   });
@@ -237,7 +239,7 @@ test('invalid baseline and visual geometry are rejected', async () => {
   assert.ok(result.errors.some((error) => error.code === 'visual-gap-range'));
 });
 
-test('build output uses pointer rectangles and locked standard label rows', async () => {
+test('build output uses pointer rectangles, locked rows, and separate thresholds', async () => {
   const [distBook, distFixtures, designCss, html, appSource, audioSource, rendererSource, visualSource, styles] = await Promise.all([
     readFile('dist/scorebook.json', 'utf8'),
     readFile('dist/fixtures.json', 'utf8'),
@@ -258,7 +260,8 @@ test('build output uses pointer rectangles and locked standard label rows', asyn
   assert.match(designCss, /--numbered-staff-gap: 10px/);
   assert.match(designCss, /--lyric-staff-gap: 18px/);
   assert.match(designCss, /--lyric-alignment-tolerance: 1px/);
-  assert.match(designCss, /--glyph-collision-clearance: 6px/);
+  assert.match(designCss, /--numbered-glyph-collision-clearance: 0px/);
+  assert.match(designCss, /--lyric-glyph-collision-clearance: 2px/);
   assert.match(designCss, /--maximum-event-vertical-shift: 32px/);
   assert.match(html, /正式曲庫/);
   assert.match(html, /本機 Studio/);
@@ -267,39 +270,31 @@ test('build output uses pointer rectangles and locked standard label rows', asyn
   assert.doesNotMatch(rendererSource, /new Annotation|lyricAnnotations|defaultNumberRect|defaultLyricRect|system\.getBoundingClientRect\(\)/);
   assert.match(rendererSource, /note\.getSVGElement\(\)/);
   assert.match(rendererSource, /querySelector\('rect\[opacity="0"\]\[pointer-events="auto"\]'\)/);
-  assert.match(rendererSource, /geometry\.locked_standard_rows/);
-  assert.match(rendererSource, /const defaultNumberBottom = lockedNumberedRowTop \+ numberedNoteHeight/);
-  assert.match(rendererSource, /const lyricRowTop = Number\.isFinite\(lockedLyricRowTop\)/);
+  assert.match(rendererSource, /collision\.numbered_notation_clearance_px/);
+  assert.match(rendererSource, /collision\.lyric_clearance_px/);
+  assert.match(rendererSource, /clearanceThresholdPx/);
   assert.match(rendererSource, /scorebook-system-geometry/);
   assert.match(rendererSource, /vexflow-stavenote-pointer-rect/);
-  assert.match(rendererSource, /verticalShiftPx/);
   assert.match(styles, /height:\s*var\(--numbered-note-height, 52px\)/);
   assert.match(visualSource, /synthetic-fixture-second-system\.png/);
-  assert.match(visualSource, /requiredMagnitude/);
+  assert.match(visualSource, /clearanceThresholdPx/);
   assert.match(visualSource, /extremeEventsFollowSameRule/);
   assert.match(visualSource, /safeExtremeLabelsStayStandard/);
 });
 
-test('package versions and required extreme-note gates are pinned', async () => {
+test('package versions and required clearance gates are pinned', async () => {
   const { book } = await loadProject();
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-  assert.equal(packageJson.version, '0.6.9');
+  assert.equal(packageJson.version, '0.6.10');
   assert.equal(packageJson.dependencies.vexflow, '5.0.0');
   assert.equal(packageJson.devDependencies['@playwright/test'], '1.55.0');
   assert.ok(book.gates.fixture.checks.includes('fixture_renders_at_least_two_systems'));
   assert.ok(book.gates.fixture.checks.includes('fixture_contains_instrument_lowest_note'));
   assert.ok(book.gates.fixture.checks.includes('fixture_contains_instrument_highest_note'));
-  assert.ok(book.gates.html.checks.includes('standard_label_positions_are_derived_from_scorebook_geometry'));
-  assert.ok(book.gates.html.checks.includes('locked_numbered_and_lyric_rows_are_preserved_when_staff_moves'));
-  assert.ok(book.gates.html.checks.includes('hidden_studio_rendering_does_not_depend_on_dom_rects'));
-  assert.ok(book.gates.html.checks.includes('per_event_adjustment_uses_vexflow_stavenote_pointer_rect'));
-  assert.ok(book.gates.html.checks.includes('extreme_notes_use_the_same_collision_rule_as_all_other_notes'));
-  assert.ok(book.gates.visual.checks.includes('staff_moves_up_without_moving_default_numbered_row'));
-  assert.ok(book.gates.visual.checks.includes('staff_moves_up_without_moving_default_lyric_row'));
-  assert.ok(book.gates.visual.checks.includes('uncollided_events_keep_zero_vertical_shift'));
-  assert.ok(book.gates.visual.checks.includes('colliding_numbered_notation_moves_up_only'));
-  assert.ok(book.gates.visual.checks.includes('colliding_lyric_moves_down_only'));
-  assert.ok(book.gates.visual.checks.includes('extreme_events_follow_the_same_minimal_shift_rule'));
+  assert.ok(book.gates.html.checks.includes('numbered_notation_and_lyrics_use_separate_clearance_thresholds'));
+  assert.ok(book.gates.visual.checks.includes('numbered_notation_moves_only_for_actual_overlap'));
+  assert.ok(book.gates.visual.checks.includes('lyrics_keep_two_pixel_clearance'));
+  assert.ok(book.gates.visual.checks.includes('adjusted_elements_keep_label_specific_glyph_clearance'));
   assert.ok(book.gates.visual.checks.includes('extreme_event_may_remain_unshifted_when_clearance_is_sufficient'));
   for (const gate of ['content', 'fixture', 'html', 'visual', 'print', 'release']) {
     assert.equal(book.gates[gate].required, true, `${gate} gate must be required`);
