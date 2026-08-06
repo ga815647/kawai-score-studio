@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 
 const reportDirectory = 'reports/visual';
+const minimumLyricGapPx = 1;
 
 test('verified Hickory Dickory Dock renders in the formal library', async ({ page }) => {
   await mkdir(reportDirectory, { recursive: true });
@@ -19,9 +20,40 @@ test('verified Hickory Dickory Dock renders in the formal library', async ({ pag
 
   const systems = card.locator('.score-system');
   const systemCount = await systems.count();
-  expect(systemCount).toBeGreaterThanOrEqual(2);
+  expect(systemCount).toBe(4);
   await expect(card.locator('.numbered-note')).toHaveCount(30);
   await expect(card.locator('.score-lyric')).toHaveCount(28);
+
+  const lyricSpacing = await systems.evaluateAll((elements, minimumGap) => elements.map((system) => {
+    const lyrics = [...system.querySelectorAll('.score-lyric')]
+      .map((element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          eventId: element.dataset.lyricEventId,
+          left: rect.left,
+          right: rect.right,
+        };
+      })
+      .sort((left, right) => left.left - right.left);
+    const gaps = lyrics.slice(1).map((lyric, index) => ({
+      leftEvent: lyrics[index].eventId,
+      rightEvent: lyric.eventId,
+      gapPx: lyric.left - lyrics[index].right,
+    }));
+    return {
+      system: Number(system.dataset.system),
+      gaps,
+      minimumGapPx: gaps.length > 0 ? Math.min(...gaps.map((gap) => gap.gapPx)) : null,
+      pass: gaps.every((gap) => gap.gapPx >= minimumGap - 0.01),
+    };
+  }), minimumLyricGapPx);
+  expect(lyricSpacing.every((system) => system.pass)).toBe(true);
+
+  const explicitTieCount = await systems.evaluateAll((elements) => elements.reduce(
+    (total, system) => total + Number(system.dataset.explicitTieCount ?? 0),
+    0,
+  ));
+  expect(explicitTieCount).toBe(2);
 
   const overflow = await card.evaluate((element) => ({
     scrollWidth: element.scrollWidth,
@@ -43,6 +75,9 @@ test('verified Hickory Dickory Dock renders in the formal library', async ({ pag
     systemCount,
     numberedNoteCount: 30,
     lyricCount: 28,
+    explicitTieCount,
+    minimumLyricGapPx,
+    lyricSpacing,
     overflow,
     screenshot,
   };
