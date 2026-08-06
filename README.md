@@ -44,6 +44,8 @@ YouTube、影片、音訊錄音與記憶不作為旋律轉錄或正式驗證來�
 
 目前正式曲庫收錄使用者指定的 Itsy Bitsy Kids Music 2018 PDF 版本〈Hickory Dickory Dock〉，只收譜面標示的第一段歌詞。舊有〈生日快樂〉與 Itsy Bitsy Spider 仍只保留隔離清單的名稱與原因。
 
+來源資料以 `publisher_or_origin` 為正式欄位；`publisher` 只保留給現有結構驗證的相容路徑，兩者必須記錄相同來源單位。
+
 ### 本機 Studio
 
 Studio 可直接在瀏覽器載入或貼上 JSON 草稿、預覽、播放、儲存到 localStorage 並列印 A4。草稿不會自動進入正式曲庫。
