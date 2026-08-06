@@ -4,10 +4,7 @@ import { loadFixtures, loadScorebook, validateProject } from '../scripts/lib.mjs
 import { adaptBookForLegacyValidation, validateSourcePolicy } from '../scripts/source-policy.mjs';
 
 async function loadProject() {
-  const [{ data: book }, { data: fixtures }] = await Promise.all([
-    loadScorebook(),
-    loadFixtures(),
-  ]);
+  const [{ data: book }, { data: fixtures }] = await Promise.all([loadScorebook(), loadFixtures()]);
   return { book, fixtures };
 }
 
@@ -43,7 +40,7 @@ function verifiedCandidate(fixtures, source) {
   return candidate;
 }
 
-test('one ChatGPT project handles score content and generator development', async () => {
+test('one ChatGPT project handles both work types while the public website remains library-only', async () => {
   const { book } = await loadProject();
   const result = validateSourcePolicy(book);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
@@ -51,21 +48,19 @@ test('one ChatGPT project handles score content and generator development', asyn
   assert.equal(book.interaction_entry.user_selects_work_type, false);
   assert.equal(book.interaction_entry.assistant_classifies_request, true);
   assert.deepEqual(book.interaction_entry.website_modes_remain_internal, ['library', 'studio']);
+  assert.equal(book.interaction_entry.public_website_mode, 'library_only');
+  assert.equal(book.modes.studio.public_navigation, false);
 });
 
-test('assistant-researched HTTPS sheet music passes both policy and structural gates', async () => {
+test('assistant-researched HTTPS notation passes policy and structural gates', async () => {
   const { book, fixtures } = await loadProject();
   const candidateBook = structuredClone(book);
   candidateBook.library.songs.push(verifiedCandidate(fixtures, {}));
-
-  const policy = validateSourcePolicy(candidateBook);
-  assert.equal(policy.pass, true, JSON.stringify(policy.errors, null, 2));
-
-  const structural = validateProject(adaptBookForLegacyValidation(candidateBook), fixtures);
-  assert.equal(structural.pass, true, JSON.stringify(structural.errors, null, 2));
+  assert.equal(validateSourcePolicy(candidateBook).pass, true);
+  assert.equal(validateProject(adaptBookForLegacyValidation(candidateBook), fixtures).pass, true);
 });
 
-test('user-provided image or PDF may use a hashed file reference instead of a URL', async () => {
+test('user-provided PDF may use a hashed file reference', async () => {
   const { book, fixtures } = await loadProject();
   const candidateBook = structuredClone(book);
   candidateBook.library.songs.push(verifiedCandidate(fixtures, {
@@ -75,17 +70,12 @@ test('user-provided image or PDF may use a hashed file reference instead of a UR
     file_reference: 'private/original-score.pdf',
     content_sha256: 'a'.repeat(64),
   }));
-
-  const policy = validateSourcePolicy(candidateBook);
-  assert.equal(policy.pass, true, JSON.stringify(policy.errors, null, 2));
-
-  const structural = validateProject(adaptBookForLegacyValidation(candidateBook), fixtures);
-  assert.equal(structural.pass, true, JSON.stringify(structural.errors, null, 2));
+  assert.equal(validateSourcePolicy(candidateBook).pass, true);
+  assert.equal(validateProject(adaptBookForLegacyValidation(candidateBook), fixtures).pass, true);
 });
 
 test('YouTube, audio, missing locators, and unhashed files are rejected', async () => {
   const { book, fixtures } = await loadProject();
-
   const youtubeBook = structuredClone(book);
   youtubeBook.library.songs.push(verifiedCandidate(fixtures, {
     source_type: 'youtube',
