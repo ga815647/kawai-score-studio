@@ -17,22 +17,45 @@ function estimateMeasureWidth(measure, lyricMap) {
   return 38 + eventWidth;
 }
 
+function forbiddenTieBreaks(score) {
+  const measureIndexByEvent = new Map();
+  score.measures.forEach((measure, measureIndex) => {
+    for (const event of measure.events) measureIndexByEvent.set(event.id, measureIndex);
+  });
+
+  const forbidden = new Set();
+  for (const tie of score.ties ?? []) {
+    const fromIndex = measureIndexByEvent.get(tie.from);
+    const toIndex = measureIndexByEvent.get(tie.to);
+    if (!Number.isInteger(fromIndex) || !Number.isInteger(toIndex) || fromIndex >= toIndex) continue;
+    for (let index = fromIndex; index < toIndex; index += 1) forbidden.add(index);
+  }
+  return forbidden;
+}
+
 export function splitMeasuresByRequiredWidth(score, track, maximumWidth = 700) {
   const lyricMap = new Map(track.syllables.map((syllable) => [syllable.event, syllable.text]));
+  const forbiddenBreaks = forbiddenTieBreaks(score);
   const systems = [];
   let current = [];
   let currentWidth = 0;
 
-  for (const measure of score.measures) {
+  score.measures.forEach((measure, measureIndex) => {
     const estimatedWidth = estimateMeasureWidth(measure, lyricMap);
-    if (current.length > 0 && currentWidth + estimatedWidth > maximumWidth) {
+    const previousMeasureIndex = measureIndex - 1;
+    const mayBreakBeforeMeasure = !forbiddenBreaks.has(previousMeasureIndex);
+    if (
+      current.length > 0
+      && currentWidth + estimatedWidth > maximumWidth
+      && mayBreakBeforeMeasure
+    ) {
       systems.push(current);
       current = [];
       currentWidth = 0;
     }
     current.push(measure);
     currentWidth += estimatedWidth;
-  }
+  });
   if (current.length > 0) systems.push(current);
   return systems;
 }
@@ -324,6 +347,7 @@ function renderSystem(container, score, palette, options) {
   system.dataset.numberedGlyphClearance = numberedGlyphClearance.toFixed(3);
   system.dataset.lyricGlyphClearance = lyricGlyphClearance.toFixed(3);
   system.dataset.boundingSource = 'vexflow-stavenote-pointer-rect';
+  system.dataset.explicitTieCount = String(score.ties?.length ?? 0);
   system.dataset.eventCenters = JSON.stringify(Object.fromEntries(eventCenters));
   system.dataset.verticalAdjustments = JSON.stringify(adjustments);
   return { system, model, eventCenters, adjustments };
@@ -335,7 +359,12 @@ export function renderScore(container, score, palette, options = {}) {
     options.trackId ? candidate.id === options.trackId : candidate.default === true
   ));
   if (!track) throw new Error('找不到預設歌詞 track');
-  const maximumWidth = options.geometry?.staff_width_px ?? 700;
+  const staffWidth = options.geometry?.staff_width_px ?? 700;
+  const systemBreaking = options.systemBreaking ?? {};
+  const configuredBudget = score.synthetic === true
+    ? systemBreaking.synthetic_fixture_width_budget_px
+    : systemBreaking.verified_song_width_budget_px;
+  const maximumWidth = Math.min(staffWidth, configuredBudget ?? staffWidth);
   const systems = splitMeasuresByRequiredWidth(score, track, maximumWidth);
   return systems.map((measures, index) => renderSystem(
     container,
