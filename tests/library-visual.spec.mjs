@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 
 const reportDirectory = 'reports/visual';
@@ -15,28 +15,47 @@ const songs = [
   { id: 'happy-birthday-zh', title: '生日快樂', notes: 25, lyrics: 24 },
 ];
 
-test('library-only site renders all verified songs with controls and no public Studio', async ({ page }) => {
+test('library-only site renders directory, all verified songs, explicit A4 controls, and no public Studio or quarantine panel', async ({ page }) => {
   test.setTimeout(120_000);
   await mkdir(reportDirectory, { recursive: true });
   await page.goto('/', { waitUntil: 'networkidle' });
 
   await expect(page.locator('.status--pass')).toBeVisible();
+  await expect(page.locator('.status--pass')).toContainText('規格 0.6.15');
+  await expect(page.locator('.status--pass')).not.toContainText('隔離');
+  await expect(page.locator('#song-directory')).toBeVisible();
   await expect(page.locator('#library-view')).toBeVisible();
+  await expect(page.locator('#studio-view')).toBeHidden();
   await expect(page.locator('#fixture-view')).toBeHidden();
   await expect(page.locator('#studio-tab, #draft-editor')).toHaveCount(0);
-  await expect(page.locator('#studio-view')).toBeHidden();
+  await expect(page.locator('#quarantine-panel, #quarantine-list')).toHaveCount(0);
   await expect(page.locator('main > .error-card')).toHaveCount(0);
   await expect(page.locator('.library-song')).toHaveCount(7);
+  await expect(page.locator('#song-directory-list > li')).toHaveCount(7);
+
+  const assetUrls = await page.evaluate(() => ({
+    scripts: [...document.scripts].map((script) => script.getAttribute('src')).filter(Boolean),
+    styles: [...document.querySelectorAll('link[rel="stylesheet"]')]
+      .map((link) => link.getAttribute('href')),
+  }));
+  expect(assetUrls.scripts.every((url) => url.includes('?v=0.6.15-'))).toBe(true);
+  expect(assetUrls.styles.every((url) => url.includes('?v=0.6.15-'))).toBe(true);
 
   const reports = [];
   for (const song of songs) {
+    const anchor = `#song-${song.id}`;
+    const directoryLink = page.locator(`#song-directory-list a[href="${anchor}"]`);
     const card = page.locator(`.library-song[data-score-id="${song.id}"]`);
+
+    await expect(directoryLink).toBeVisible();
+    await expect(directoryLink).toContainText(song.title);
     await expect(card).toBeVisible();
+    await expect(card).toHaveAttribute('id', `song-${song.id}`);
     await expect(card.locator('.score-header h3')).toContainText(song.title);
     await expect(card.locator('.song-controls button')).toHaveCount(3);
     await expect(card.locator('button[data-action="play"]')).toHaveText('播放');
     await expect(card.locator('button[data-action="stop"]')).toHaveText('停止');
-    await expect(card.locator('button[data-action="print"]')).toHaveText('列印');
+    await expect(card.locator('button[data-action="print"]')).toHaveText('A4 列印');
     await expect(card.locator('.numbered-note')).toHaveCount(song.notes);
     await expect(card.locator('.score-lyric')).toHaveCount(song.lyrics);
 
@@ -96,6 +115,18 @@ test('library-only site renders all verified songs with controls and no public S
     reports.push({ ...song, systemCount, lyricSpacing, overflow });
   }
 
+  const lastSong = songs.at(-1);
+  const lastLink = page.locator(`#song-directory-list a[href="#song-${lastSong.id}"]`);
+  await lastLink.click();
+  await expect(page).toHaveURL(new RegExp(`#song-${lastSong.id}$`));
+  await expect(page.locator(`#song-${lastSong.id}`)).toBeFocused();
+
+  await page.locator('#song-directory').screenshot({
+    path: `${reportDirectory}/song-directory.png`,
+    animations: 'disabled',
+    caret: 'hide',
+  });
+
   const spider = page.locator('.library-song[data-score-id="itsy-bitsy-spider"]');
   await spider.screenshot({
     path: `${reportDirectory}/itsy-bitsy-spider-library.png`,
@@ -110,13 +141,57 @@ test('library-only site renders all verified songs with controls and no public S
       headSha: process.env.GITHUB_SHA ?? null,
       minimumLyricGapPx,
       maximumHorizontalShiftPx,
+      directoryEntries: songs.map((song) => ({
+        id: song.id,
+        href: `#song-${song.id}`,
+      })),
+      assetUrls,
       songs: reports,
-      screenshot: 'itsy-bitsy-spider-library.png',
+      screenshots: ['song-directory.png', 'itsy-bitsy-spider-library.png'],
     }, null, 2)}\n`,
   );
 });
 
-test('selected-song print produces readable A4 output and never prints the fixture or other songs', async ({ page }) => {
+
+test('stale cached index automatically reloads with the current build hash', async ({ page }) => {
+  const [indexHtml, buildInfoText] = await Promise.all([
+    readFile('dist/index.html', 'utf8'),
+    readFile('dist/build-info.json', 'utf8'),
+  ]);
+  const buildInfo = JSON.parse(buildInfoText);
+  const buildKey = buildInfo.scorebook_sha256.slice(0, 12);
+  let staleDocumentServed = false;
+
+  await page.route('**/*', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (
+      request.resourceType() === 'document'
+      && !staleDocumentServed
+      && !url.searchParams.has('build')
+    ) {
+      staleDocumentServed = true;
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/html; charset=utf-8',
+        body: indexHtml.replace(
+          /(<meta name="scorebook-sha256" content=")[^"]+(">)/,
+          `$1${'0'.repeat(64)}$2`,
+        ),
+      });
+      return;
+    }
+    await route.continue();
+  });
+
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await expect(page.locator('.status--pass')).toBeVisible();
+  await expect(page.locator('.status--pass')).toContainText(`規格 ${buildInfo.version} (${buildKey})`);
+  expect(new URL(page.url()).searchParams.get('build')).toBe(buildKey);
+  expect(staleDocumentServed).toBe(true);
+});
+
+test('selected-song print produces readable A4 output and never prints the fixture, directory, or other songs', async ({ page }) => {
   test.setTimeout(120_000);
   await mkdir(reportDirectory, { recursive: true });
   await page.addInitScript(() => {
@@ -137,8 +212,9 @@ test('selected-song print produces readable A4 output and never prints the fixtu
   for (const song of songs.filter((song) => song.id !== 'itsy-bitsy-spider')) {
     await expect(page.locator(`.library-song[data-score-id="${song.id}"]`)).toBeHidden();
   }
+  await expect(page.locator('#studio-view')).toBeHidden();
   await expect(page.locator('#fixture-view')).toBeHidden();
-  const hiddenPrintChrome = page.locator('.toolbar, .status, .view-heading, .song-controls');
+  const hiddenPrintChrome = page.locator('.toolbar, .status, .song-directory, .view-heading, .song-controls');
   expect(await hiddenPrintChrome.evaluateAll((elements) => elements.every(
     (element) => getComputedStyle(element).display === 'none',
   ))).toBe(true);
@@ -180,6 +256,7 @@ test('selected-song print produces readable A4 output and never prints the fixtu
       pass: true,
       headSha: process.env.GITHUB_SHA ?? null,
       selectedSong: 'itsy-bitsy-spider',
+      directoryVisible: false,
       fixtureVisible: false,
       printGeometry,
       screenshot: 'itsy-bitsy-spider-print-a4.png',
