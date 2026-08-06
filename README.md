@@ -1,26 +1,28 @@
 # Kawai Score Studio
 
-由 `scorebook.yaml` 驅動的 KAWAI 16 音木琴琴譜工作室。簡譜、VexFlow 五線譜與 Web Audio 播放共用同一組 melody event；歌詞使用獨立 lyric track。
+由 `scorebook.yaml` 驅動的 KAWAI 16 音木琴正式曲庫。彩色簡譜、VexFlow 五線譜與 Web Audio 播放共用同一組 melody event；歌詞使用獨立 lyric track。
 
 ## 正式曲庫
 
-目前 branch 版本包含 6 首已驗證曲目：
+目前版本包含 7 首已驗證曲目：
 
 1. Hickory Dickory Dock（老鼠時鐘）
-2. 小星星
-3. 兩隻老虎
-4. 王老先生有塊地
-5. 瑪麗有隻小綿羊
-6. 生日快樂
+2. The Itsy Bitsy Spider（小小蜘蛛）
+3. 小星星
+4. 兩隻老虎
+5. 王老先生有塊地
+6. 瑪麗有隻小綿羊
+7. 生日快樂
 
-五首中文兒歌採使用者指定的通俗繁體中文版本。旋律與中文歌詞均固定到可檢視的靜態樂譜或 MusicXML；找不到確切來源時不得憑記憶補譜。舊 Itsy Bitsy Spider 仍留在隔離清單。
+正式網站只提供曲庫，不公開 JSON 草稿編輯器或本機 Studio。每首曲目都有播放、停止與單曲列印按鈕。列印採 A4 直式，只輸出選定歌曲；長曲可分頁，但任何完整譜行都不得被頁界切開。
 
 ## 工作入口
 
 - Repository 第一入口：`AGENTS.md`
 - 唯一正式規格：`scorebook.yaml`
 - 正式輸出：HTML
-- 正式發佈：branch、PR、exact head SHA CI、必要 Gate 全部成功後，另待使用者肉眼批准
+- 合成 fixture：只供 `?fixture=1` 內部 CI／Gate 路徑使用
+- 正式發佈：branch、PR、exact head SHA CI 與必要 Gate 全部成功後，另待使用者批准
 
 YouTube、影片、音訊錄音與記憶不得作為正式旋律來源。使用者提供的靜態來源優先決定版本。
 
@@ -44,6 +46,4 @@ npx playwright install chromium
 npm run check:visual
 ```
 
-`npm run check:visual` 依序執行來源政策、結構、MusicXML fixture、建置、單元測試、Chromium 視覺與列印 Gate。
-
-正式規則詳見 [`AGENTS.md`](./AGENTS.md)。
+`npm run check:visual` 依序執行來源政策、結構、MusicXML fixture、建置、單元測試、Chromium 視覺與 A4 列印 Gate。
