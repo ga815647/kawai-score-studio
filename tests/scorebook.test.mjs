@@ -33,29 +33,73 @@ test('formal specification and synthetic fixtures pass all structural gates', as
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.10');
+  assert.equal(book.project.version, '0.6.11');
   assert.deepEqual(result.counts, {
-    verifiedSongs: 0,
-    quarantinedEntries: 3,
+    verifiedSongs: 1,
+    quarantinedEntries: 2,
     fixtures: 1,
   });
 });
 
-test('public library remains empty until exact-source verification', async () => {
+test('public library contains the user-selected Hickory Dickory Dock variant', async () => {
   const { book } = await loadProject();
-  assert.deepEqual(book.library.songs, []);
   assert.deepEqual(book.modes.library.accepts_status, ['verified']);
   assert.ok(book.modes.library.publication_requires.includes('exact_source'));
   assert.ok(book.modes.library.publication_requires.includes('user_approval'));
   assert.ok(book.modes.library.publication_requires.includes('exact_head_sha_ci'));
+
+  assert.equal(book.library.songs.length, 1);
+  const song = book.library.songs[0];
+  assert.equal(song.id, 'hickory-dickory-dock');
+  assert.equal(song.status, 'verified');
+  assert.equal(song.key, 'C major');
+  assert.equal(song.meter, '6/8');
+  assert.equal(song.pickup_eighth_units, 0);
+  assert.equal(song.source.source_type, 'score_pdf');
+  assert.equal(song.source.provided_by, 'user');
+  assert.match(song.source.url, /Hickory-Dickory-Dock-Sheet-Music-With-Chords-And-Lyrics\.pdf$/);
+  assert.deepEqual(song.measures.map((measure) => measure.capacity_eighth_units), Array(10).fill(6));
+  assert.deepEqual(song.ties, [
+    { id: 't01', from: 'n21', to: 'n22' },
+    { id: 't02', from: 'n29', to: 'n30' },
+  ]);
+  const events = flattenEvents(song);
+  assert.deepEqual(events.map((event) => event.pitch ?? 'rest'), [
+    '3', '4', '5', '4', '2', '3',
+    '3', 'rest', '3',
+    '3', '5', '4', '1',
+    '3', 'rest', '3',
+    '3', '3', '5', '5',
+    '4', '4', '6',
+    '6',
+    '5', '6', '5', '4', '3', '2',
+    '1', '1',
+  ]);
+  assert.deepEqual(events.map((event) => event.duration), [
+    1, 1, 1, 1, 1, 1,
+    4, 1, 1,
+    2, 1, 2, 1,
+    4, 1, 1,
+    2, 1, 2, 1,
+    2, 1, 3,
+    6,
+    1, 1, 1, 1, 1, 1,
+    6, 6,
+  ]);
+  const track = song.lyric_tracks.find((candidate) => candidate.default);
+  assert.equal(track.id, 'original-en');
+  assert.equal(track.syllables.length, 28);
+  assert.deepEqual(track.syllables.slice(0, 7).map((syllable) => syllable.text), [
+    'Hick-', 'o-', 'ry', 'Dick-', 'o-', 'ry', 'Dock,',
+  ]);
+  assert.equal(track.syllables.at(-1).text, 'Dock.');
 });
 
-test('legacy songs remain metadata-only quarantine entries', async () => {
+test('unverified legacy songs remain metadata-only quarantine entries', async () => {
   const { book } = await loadProject();
   assert.deepEqual(book.library.quarantine.map((item) => item.id), [
     'happy-birthday',
     'itsy-bitsy-spider',
-    'hickory-dickory-dock',
   ]);
   for (const entry of book.library.quarantine) {
     for (const forbidden of ['measures', 'events', 'phrases', 'lyric_tracks']) {
@@ -251,7 +295,7 @@ test('build output uses pointer rectangles, locked rows, and separate thresholds
     readFile('tests/visual.spec.mjs', 'utf8'),
     readFile('dist/styles.css', 'utf8'),
   ]);
-  assert.equal(JSON.parse(distBook).library.songs.length, 0);
+  assert.equal(JSON.parse(distBook).library.songs.length, 1);
   assert.equal(JSON.parse(distFixtures).fixtures[0].synthetic, true);
   assert.match(designCss, /--staff-width: 700px/);
   assert.match(designCss, /--stave-top-line-y: 12px/);
@@ -285,7 +329,7 @@ test('build output uses pointer rectangles, locked rows, and separate thresholds
 test('package versions and required clearance gates are pinned', async () => {
   const { book } = await loadProject();
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-  assert.equal(packageJson.version, '0.6.10');
+  assert.equal(packageJson.version, '0.6.11');
   assert.equal(packageJson.dependencies.vexflow, '5.0.0');
   assert.equal(packageJson.devDependencies['@playwright/test'], '1.55.0');
   assert.ok(book.gates.fixture.checks.includes('fixture_renders_at_least_two_systems'));
