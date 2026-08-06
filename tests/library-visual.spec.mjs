@@ -138,7 +138,10 @@ test('selected-song print produces readable A4 output and never prints the fixtu
     await expect(page.locator(`.library-song[data-score-id="${song.id}"]`)).toBeHidden();
   }
   await expect(page.locator('#fixture-view')).toBeHidden();
-  await expect(page.locator('.toolbar, .status, .view-heading, .song-controls')).toBeHidden();
+  const hiddenPrintChrome = page.locator('.toolbar, .status, .view-heading, .song-controls');
+  expect(await hiddenPrintChrome.evaluateAll((elements) => elements.every(
+    (element) => getComputedStyle(element).display === 'none',
+  ))).toBe(true);
 
   const printGeometry = await target.evaluate((element) => ({
     scrollWidth: element.scrollWidth,
