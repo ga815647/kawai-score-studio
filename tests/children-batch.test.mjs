@@ -36,7 +36,7 @@ const specs = {
   },
 };
 
-test('five-song children batch exactly matches the fixed static-source event contracts', async () => {
+test('five children songs exactly match the fixed static-source event contracts', async () => {
   const { data: book } = await loadScorebook();
   for (const [id, spec] of Object.entries(specs)) {
     const song = book.library.songs.find((candidate) => candidate.id === id);
