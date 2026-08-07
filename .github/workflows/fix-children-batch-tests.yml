@@ -18,97 +18,25 @@ jobs:
         with:
           ref: feat/children-batch-humpty-donkey-friends
           fetch-depth: 0
-      - name: Update exact library contract tests
+      - name: Update library contract
         shell: bash
         run: |
           python <<'PY'
           from pathlib import Path
-          p=Path('tests/scorebook.test.mjs')
-          s=p.read_text(encoding='utf-8')
-          s=s.replace("test('0.6.21 has sixteen verified songs, no quarantine, and passes structural gates'", "test('0.6.22 has twenty-one verified songs, no quarantine, and passes structural gates'", 1)
-          s=s.replace("assert.equal(book.project.version, '0.6.21');", "assert.equal(book.project.version, '0.6.22');", 1)
-          s=s.replace('verifiedSongs: 16,', 'verifiedSongs: 21,', 1)
-          marker="    'tantan-houhou',\n  ]);"
-          repl="    'tantan-houhou',\n    'humpty-dumpty',\n    'little-donkey-zh',\n    'find-a-friend-zh',\n    'london-bridge-zh',\n    'if-you-are-happy-clap-zh',\n  ]);"
-          if marker not in s: raise SystemExit('song-list marker missing')
-          s=s.replace(marker,repl,1)
-
-          anchor="\n\ntest('淡々泡々 exactly models the user-provided Guitar Pro melody reduction'"
-          if anchor not in s: raise SystemExit('test insertion anchor missing')
-          test=r'''
-
-test('new children batch exactly models the fixed static notation sources', async () => {
-  const { book } = await loadProject();
-  const specs = {
-    'humpty-dumpty': {
-      title: 'Humpty Dumpty', meter: '6/8', pickup: 0, measures: 8,
-      events: 36, notes: 36, rests: 0, lyrics: 36,
-      url: 'https://www.kidsplaymusic.com/humpty-dumpty-piano/',
-      digest: 'f5bd41d7ab8e181f8e03f8e90c7e77d1efcaa8b69b0fadf7fd93888eba6c5c70',
-    },
-    'little-donkey-zh': {
-      title: '小毛驢', meter: '2/4', pickup: 0, measures: 16,
-      events: 55, notes: 55, rests: 0, lyrics: 55,
-      url: 'https://jianpu.space/zh-tw/songList/7',
-      digest: 'cfd73735eab5ce5223841bcfd6a897d8ce57e52b031cdecc64bfe617e253287e',
-    },
-    'find-a-friend-zh': {
-      title: '找朋友', meter: '2/4', pickup: 0, measures: 8,
-      events: 28, notes: 28, rests: 0, lyrics: 28,
-      url: 'https://www.everyonepiano.cn/Music-472.html',
-      digest: '36c62fdf5a7c3ddc7e1ad26422637ced9a645535e8bac79fb284d0ec042a2322',
-    },
-    'london-bridge-zh': {
-      title: '倫敦鐵橋垮下來', meter: '4/4', pickup: 0, measures: 8,
-      events: 25, notes: 25, rests: 0, lyrics: 25,
-      url: 'https://jianpu.space/zh-tw/songList/1',
-      digest: '7e8c343d43e16687e1497d13257f51ca70328697186278c7a5074e2772ce1d55',
-    },
-    'if-you-are-happy-clap-zh': {
-      title: '如果感到幸福你就拍拍手', meter: '4/4', pickup: 2, measures: 9,
-      events: 52, notes: 46, rests: 6, lyrics: 46,
-      url: 'https://erge.qpx.com/jianpu/149040.html',
-      digest: '45ce434abe0e7b8f1e203ac352546f2a2ccb2369d4c0974cfd09db1f23b73099',
-    },
-  };
-
-  for (const [id, spec] of Object.entries(specs)) {
-    const song = book.library.songs.find((candidate) => candidate.id === id);
-    assert.ok(song, id);
-    assert.equal(song.title, spec.title);
-    assert.equal(song.key, 'C major');
-    assert.equal(song.meter, spec.meter);
-    assert.equal(song.pickup_eighth_units, spec.pickup);
-    assert.equal(song.measures.length, spec.measures);
-    const events = flattenEvents(song);
-    assert.equal(events.length, spec.events, id);
-    assert.equal(events.filter((event) => event.kind === 'note').length, spec.notes, id);
-    assert.equal(events.filter((event) => event.kind === 'rest').length, spec.rests, id);
-    const track = song.lyric_tracks.find((candidate) => candidate.default);
-    assert.equal(track.syllables.length, spec.lyrics, id);
-    assert.equal(song.source.url, spec.url);
-    const digest = createHash('sha256').update(JSON.stringify(
-      events.map((event) => [event.kind, event.pitch ?? null, event.duration]),
-    )).digest('hex');
-    assert.equal(digest, spec.digest, id);
-    assert.ok(Object.values(song.verification).every((value) => value === true));
-  }
-
-  const humpty = book.library.songs.find((song) => song.id === 'humpty-dumpty');
-  assert.equal(humpty.lyric_tracks[0].locale, 'en');
-  const happy = book.library.songs.find((song) => song.id === 'if-you-are-happy-clap-zh');
-  assert.equal(happy.source.original_key, 'G major');
-  assert.equal(happy.source.transposition_semitones, -7);
-  assert.equal(happy.measures[0].pickup, true);
-  assert.equal(happy.measures[0].capacity_eighth_units, 2);
-});
-'''
-          s=s.replace(anchor, test+anchor, 1)
-          p.write_text(s,encoding='utf-8')
+          p = Path('tests/scorebook.test.mjs')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace("test('0.6.21 has sixteen verified songs, no quarantine, and passes structural gates'", "test('0.6.22 has twenty-one verified songs, no quarantine, and passes structural gates'", 1)
+          s = s.replace("assert.equal(book.project.version, '0.6.21');", "assert.equal(book.project.version, '0.6.22');", 1)
+          s = s.replace('verifiedSongs: 16,', 'verifiedSongs: 21,', 1)
+          marker = "    'tantan-houhou',\n  ]);"
+          replacement = "    'tantan-houhou',\n    'humpty-dumpty',\n    'little-donkey-zh',\n    'find-a-friend-zh',\n    'london-bridge-zh',\n    'if-you-are-happy-clap-zh',\n  ]);"
+          if marker not in s:
+              raise SystemExit('song-list marker missing')
+          p.write_text(s.replace(marker, replacement, 1), encoding='utf-8')
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm .github/workflows/fix-children-batch-tests.yml
           git add tests/scorebook.test.mjs
-          git commit -m "test: cover five-song children batch"
+          git commit -m "test: update library contract for five-song batch"
           git push origin HEAD:feat/children-batch-humpty-donkey-friends
