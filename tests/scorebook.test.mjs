@@ -169,11 +169,15 @@ test('public HTML source has directory, explicit A4 controls, cache versioning, 
   assert.match(build, /build-info\.json/);
   assert.match(build, /replaceAll\('\{\{ASSET_VERSION\}\}', assetVersion\)/);
   assert.match(build, /score-engine\.js\?v=\$\{assetVersion\}/);
+  assert.match(build, /assetSourcePaths/);
+  assert.match(build, /'src\/styles\.css'/);
+  assert.match(build, /asset_source_sha256/);
 
   assert.match(css, /@page \{ size: A4 portrait; margin: 12mm; \}/);
   assert.match(css, /\.song-directory/);
   assert.match(css, /\.library-song \{ display: none !important; \}/);
   assert.match(css, /\.library-song\.print-selected/);
+  assert.match(css, /\.print-selected \.score-header \{[\s\S]*width: var\(--staff-width, 700px\);[\s\S]*margin-inline: auto;/);
   assert.match(css, /page-break-inside: avoid/);
   assert.match(css, /#studio-view/);
   assert.doesNotMatch(css, /quarantine-panel/);
