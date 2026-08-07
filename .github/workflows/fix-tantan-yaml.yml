@@ -1,0 +1,48 @@
+name: Fix Tantan Houhou YAML indentation
+
+on:
+  push:
+    branches:
+      - content/tantan-houhou-2026-08-07
+    paths:
+      - .github/workflows/fix-tantan-yaml.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: content/tantan-houhou-2026-08-07
+      - name: Fix song list indentation
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('scorebook.yaml')
+          s = p.read_text(encoding='utf-8')
+          start_marker = '  id: tantan-houhou\n'
+          end_marker = '  quarantine: []\n'
+          if s.count(start_marker) != 1 or s.count(end_marker) != 1:
+              raise SystemExit('unexpected scorebook markers')
+          start = s.index(start_marker)
+          end = s.index(end_marker, start)
+          block = s[start:end]
+          lines = block.splitlines(keepends=True)
+          fixed = '  - id: tantan-houhou\n' + ''.join('  ' + line for line in lines[1:])
+          s = s[:start] + fixed + s[end:]
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Remove helper and commit fix
+        run: |
+          rm .github/workflows/fix-tantan-yaml.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scorebook.yaml
+          git add -u .github/workflows/fix-tantan-yaml.yml
+          git diff --cached --check
+          git commit -m "Fix 淡々泡々 scorebook list indentation"
+          git push origin HEAD:content/tantan-houhou-2026-08-07
