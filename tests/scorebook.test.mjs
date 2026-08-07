@@ -141,7 +141,7 @@ test('Row, Row, Row Your Boat exactly models the selected C-major 3/4 PDF', asyn
   assert.equal(track.locale, 'en');
   assert.equal(track.role, 'original');
   assert.equal(track.syllables.map((item) => item.text).join(' '),
-    'Row, row, row your boat. Gent- ly down the stream. Mer- ri- ly, mer- ri- ly, mer- ri- ly mer- ri- ly. Life is but a dream.');
+    'Row, row, row your boat. Gent- ly down the stream. Mer- ri- ly, mer- ri- ly, mer- ri- ly, mer- ri- ly. Life is but a dream.');
   assert.deepEqual(track.continuations, [
     { from: 'n10', through: 'n11' },
     { from: 'n28', through: 'n29' },
