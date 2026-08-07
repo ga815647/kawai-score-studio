@@ -38,8 +38,9 @@ p=Path("tests/library-visual.spec.mjs"); s=p.read_text(encoding="utf-8")
 s=rep(s,"  { id: 'build-an-airplane-zh', title: '造飛機', notes: 55, lyrics: 55 },\n];",
       "  { id: 'build-an-airplane-zh', title: '造飛機', notes: 55, lyrics: 55 },\n  { id: 'tantan-houhou', title: '淡々泡々', notes: 124, lyrics: 0 },\n];","visual song")
 s=rep(s,"規格 0.6.20","規格 0.6.21","visual version")
-s=rep(s,"toHaveCount(15);","toHaveCount(16);","library count")
-s=rep(s,"toHaveCount(15);","toHaveCount(16);","directory count")
+if s.count("toHaveCount(15);") != 2:
+    raise SystemExit(f"visual counts: expected 2 matches, got {s.count('toHaveCount(15);')}")
+s=s.replace("toHaveCount(15);","toHaveCount(16);")
 s=s.replace("?v=0.6.20-","?v=0.6.21-")
 if "?v=0.6.20-" in s: raise SystemExit("stale visual version")
 p.write_text(s,encoding="utf-8")
