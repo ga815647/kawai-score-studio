@@ -18,15 +18,15 @@ async function loadProject() {
   return { book, fixtures };
 }
 
-test('0.6.20 has fifteen verified songs, no quarantine, and passes structural gates', async () => {
+test('0.6.21 has sixteen verified songs, no quarantine, and passes structural gates', async () => {
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.20');
+  assert.equal(book.project.version, '0.6.21');
   assert.equal(book.schema.duration_quantum_eighth_units, 0.5);
   assert.equal(book.schema.smallest_supported_duration, 'sixteenth_note');
   assert.deepEqual(result.counts, {
-    verifiedSongs: 15,
+    verifiedSongs: 16,
     quarantinedEntries: 0,
     fixtures: 1,
   });
@@ -46,6 +46,7 @@ test('0.6.20 has fifteen verified songs, no quarantine, and passes structural ga
     'fast-train-zh',
     'pull-the-radish-zh',
     'build-an-airplane-zh',
+    'tantan-houhou',
   ]);
 });
 
@@ -311,6 +312,62 @@ test('five Chinese nursery songs exactly model the selected Jianpu Space sources
     assert.equal(digest, spec.digest, id);
     assert.ok(Object.values(song.verification).every((value) => value === true));
   }
+});
+
+
+test('淡々泡々 exactly models the user-provided Guitar Pro melody reduction', async () => {
+  const { book } = await loadProject();
+  const song = book.library.songs.find((candidate) => candidate.id === 'tantan-houhou');
+  assert.ok(song);
+  assert.equal(song.title, '淡々泡々');
+  assert.equal(song.key, 'C major');
+  assert.equal(song.meter, '4/4');
+  assert.equal(song.pickup_eighth_units, 0);
+  assert.equal(song.measures.length, 21);
+
+  const events = flattenEvents(song);
+  assert.equal(events.length, 146);
+  assert.equal(events.filter((event) => event.kind === 'note').length, 124);
+  assert.equal(events.filter((event) => event.kind === 'rest').length, 22);
+  assert.ok(song.measures.every(
+    (measure) => measure.events.reduce((sum, event) => sum + event.duration, 0) === 8,
+  ));
+  const digest = createHash('sha256').update(JSON.stringify(
+    events.map((event) => [event.kind, event.pitch ?? null, event.duration]),
+  )).digest('hex');
+  assert.equal(digest, 'a7067066c542894031632c34ec394cb8a83aadf80f65a2c1712dfcb3632c018e');
+
+  assert.deepEqual(song.ties, [
+    { id: 't01', from: 'n061', to: 'n062' },
+    { id: 't02', from: 'n066', to: 'n067' },
+    { id: 't03', from: 'n077', to: 'n078' },
+    { id: 't04', from: 'n082', to: 'n083' },
+    { id: 't05', from: 'n119', to: 'n120' },
+    { id: 't06', from: 'n123', to: 'n124' },
+  ]);
+  const track = song.lyric_tracks.find((candidate) => candidate.default);
+  assert.equal(track.id, 'instrumental');
+  assert.equal(track.locale, 'zxx');
+  assert.equal(track.role, 'original');
+  assert.deepEqual(track.syllables, []);
+
+  assert.equal(song.source.source_type, 'other_static_score_file');
+  assert.equal(song.source.provided_by, 'user');
+  assert.equal(song.source.file_reference, 'Desire Drive Light SOLO.gp');
+  assert.equal(song.source.content_sha256, 'f5f93450a28afe535b643a63084169e2b129a904909128074af0146be9948af9');
+  assert.equal(song.source.original_key, 'F# major');
+  assert.equal(song.source.original_meter, '4/4');
+  assert.equal(song.source.selected_source_measures, '2-22');
+  assert.equal(song.source.transposition_semitones, -6);
+  assert.equal(song.source.octave_folding, false);
+  assert.match(song.source.melody_reduction, /strings 4 and 5/);
+  assert.match(song.source.selected_variant, /omit leading all-rest source measure 1/);
+  assert.match(song.source.selected_variant, /no octave folding/);
+  assert.equal(
+    song.source.supporting_sources[0].content_sha256,
+    'd442f3aae5b3bcf52d3c06c94b704eac3b16287deb571dc449d4362af5bb6bac',
+  );
+  assert.ok(Object.values(song.verification).every((value) => value === true));
 });
 
 test('A4 print contract selects one verified song and permits page breaks only between systems', async () => {
