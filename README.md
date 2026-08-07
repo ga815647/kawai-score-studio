@@ -4,7 +4,7 @@
 
 ## 正式曲庫
 
-目前版本包含 7 首已驗證曲目：
+目前版本包含 15 首已驗證曲目：
 
 1. Hickory Dickory Dock（老鼠時鐘）
 2. The Itsy Bitsy Spider（小小蜘蛛）
@@ -13,6 +13,14 @@
 5. 王老先生有塊地
 6. 瑪麗有隻小綿羊
 7. 生日快樂
+8. Row, Row, Row Your Boat
+9. The Wheels on the Bus
+10. Canon in D（卡農主題）
+11. 依比呀呀（一比一比鴨鴨鴨）
+12. 小蜜蜂
+13. 火車快飛
+14. 拔蘿蔔
+15. 造飛機
 
 正式網站開頭提供曲目目錄，點選曲名可跳到該首琴譜。公開頁面不提供 JSON 草稿編輯器、本機 Studio 或隔離曲目面板；合成 fixture 只保留在 `?fixture=1` 內部 Gate 路徑。
 
