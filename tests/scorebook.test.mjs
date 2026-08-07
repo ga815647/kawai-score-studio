@@ -16,11 +16,11 @@ async function loadProject() {
   return { book, fixtures };
 }
 
-test('0.6.16 has nine verified songs, no quarantine, and passes structural gates', async () => {
+test('0.6.17 has nine verified songs, no quarantine, and passes structural gates', async () => {
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.16');
+  assert.equal(book.project.version, '0.6.17');
   assert.deepEqual(result.counts, {
     verifiedSongs: 9,
     quarantinedEntries: 0,
@@ -168,7 +168,7 @@ test('The Wheels on the Bus exactly models the selected C-major 2/4 PDF', async 
     ['5', 2],
     ['1^', 2], ['1^', 1], ['1^', 1], ['1^', 2], ['3^', 2],
     ['5^', 2], ['3^', 2], ['1^', 4], ['2^', 2], ['7', 2], ['5', 4],
-    ['4^', 2], ['2^', 2], ['1^', 2], ['5', 2],
+    ['5^', 2], ['3^', 2], ['1^', 2], ['5', 2],
     ['1^', 2], ['1^', 1], ['1^', 1], ['1^', 2], ['3^', 2],
     ['5^', 2], ['3^', 2], ['1^', 4], ['2^', 4], ['5', 3], ['5', 1], ['1^', 4],
   ]);

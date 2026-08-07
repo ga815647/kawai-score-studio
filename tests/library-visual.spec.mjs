@@ -23,7 +23,7 @@ test('library-only site renders directory, all verified songs, explicit A4 contr
   await page.goto('/', { waitUntil: 'networkidle' });
 
   await expect(page.locator('.status--pass')).toBeVisible();
-  await expect(page.locator('.status--pass')).toContainText('規格 0.6.16');
+  await expect(page.locator('.status--pass')).toContainText('規格 0.6.17');
   await expect(page.locator('.status--pass')).not.toContainText('隔離');
   await expect(page.locator('#song-directory')).toBeVisible();
   await expect(page.locator('#library-view')).toBeVisible();
@@ -40,8 +40,8 @@ test('library-only site renders directory, all verified songs, explicit A4 contr
     styles: [...document.querySelectorAll('link[rel="stylesheet"]')]
       .map((link) => link.getAttribute('href')),
   }));
-  expect(assetUrls.scripts.every((url) => url.includes('?v=0.6.16-'))).toBe(true);
-  expect(assetUrls.styles.every((url) => url.includes('?v=0.6.16-'))).toBe(true);
+  expect(assetUrls.scripts.every((url) => url.includes('?v=0.6.17-'))).toBe(true);
+  expect(assetUrls.styles.every((url) => url.includes('?v=0.6.17-'))).toBe(true);
 
   const reports = [];
   for (const song of songs) {
