@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.17
+  version: 0.6.18
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -2982,6 +2982,146 @@ library:
         text: the
       - event: n28
         text: town.
+  - id: canon-in-d
+    title: Canon in D
+    alias: 卡農主題
+    status: verified
+    key: C major
+    meter: 4/4
+    pickup_eighth_units: 0
+    source:
+      title: Canon in D
+      source_type: score_pdf
+      provided_by: assistant_web_research
+      publisher_or_origin: MuseScore / lemontart
+      publisher: MuseScore / lemontart
+      accessed_at: '2026-08-07'
+      selected_variant: lemontart piano arrangement measures 5-12, right-hand staff 1 voice 1 canon line; measures 9-12 reduced to the middle chord tone at each onset; whole line transposed down 2 semitones from D major to C major for KAWAI 16-note xylophone
+      original_key: D major
+      original_meter: 4/4
+      pickup: 0
+      rights_status: public_domain_composition_with_user_provided_musescore_arrangement_source
+      url: https://musescore.org/sites/musescore.org/files/2020-09/Canon_in_D.pdf
+      selected_part: P1
+      selected_staff: 1
+      selected_voice: '1'
+      selected_source_measures: 5-12
+      chord_reduction: measures 9-12 use the middle right-hand chord tone at each onset
+      transposition_semitones: -2
+      supporting_sources:
+      - title: Canon_in_D.mxl
+        source_type: musicxml
+        provided_by: user
+        file_reference: Canon_in_D.mxl
+        content_sha256: 23762273abf1d6bd7001c89dc620bee6accf0045573078e2865e086df2f1bb14
+        purpose: Exact machine-readable cross-check of title, arranger, source measures, pitches, durations, staves, voices, and chord membership
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 8
+      events:
+      - id: n01
+        kind: note
+        pitch: 3^
+        duration: 4
+      - id: n02
+        kind: note
+        pitch: 2^
+        duration: 4
+    - number: 2
+      capacity_eighth_units: 8
+      events:
+      - id: n03
+        kind: note
+        pitch: 1^
+        duration: 4
+      - id: n04
+        kind: note
+        pitch: '7'
+        duration: 4
+    - number: 3
+      capacity_eighth_units: 8
+      events:
+      - id: n05
+        kind: note
+        pitch: '6'
+        duration: 4
+      - id: n06
+        kind: note
+        pitch: '5'
+        duration: 4
+    - number: 4
+      capacity_eighth_units: 8
+      events:
+      - id: n07
+        kind: note
+        pitch: '6'
+        duration: 4
+      - id: n08
+        kind: note
+        pitch: '7'
+        duration: 4
+    - number: 5
+      capacity_eighth_units: 8
+      events:
+      - id: n09
+        kind: note
+        pitch: 1^
+        duration: 4
+      - id: n10
+        kind: note
+        pitch: '7'
+        duration: 4
+    - number: 6
+      capacity_eighth_units: 8
+      events:
+      - id: n11
+        kind: note
+        pitch: '6'
+        duration: 4
+      - id: n12
+        kind: note
+        pitch: '5'
+        duration: 4
+    - number: 7
+      capacity_eighth_units: 8
+      events:
+      - id: n13
+        kind: note
+        pitch: '4'
+        duration: 4
+      - id: n14
+        kind: note
+        pitch: '3'
+        duration: 4
+    - number: 8
+      capacity_eighth_units: 8
+      events:
+      - id: n15
+        kind: note
+        pitch: '4'
+        duration: 4
+      - id: n16
+        kind: note
+        pitch: '5'
+        duration: 4
+    ties: []
+    lyric_tracks:
+    - id: instrumental
+      locale: zxx
+      role: original
+      status: verified
+      default: true
+      syllables: []
   quarantine: []
 workflow:
 - read_scorebook

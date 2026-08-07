@@ -16,13 +16,13 @@ async function loadProject() {
   return { book, fixtures };
 }
 
-test('0.6.17 has nine verified songs, no quarantine, and passes structural gates', async () => {
+test('0.6.18 has ten verified songs, no quarantine, and passes structural gates', async () => {
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.17');
+  assert.equal(book.project.version, '0.6.18');
   assert.deepEqual(result.counts, {
-    verifiedSongs: 9,
+    verifiedSongs: 10,
     quarantinedEntries: 0,
     fixtures: 1,
   });
@@ -36,6 +36,7 @@ test('0.6.17 has nine verified songs, no quarantine, and passes structural gates
     'happy-birthday-zh',
     'row-row-row-your-boat',
     'the-wheels-on-the-bus',
+    'canon-in-d',
   ]);
 });
 
@@ -179,6 +180,44 @@ test('The Wheels on the Bus exactly models the selected C-major 2/4 PDF', async 
   assert.equal(track.syllables.map((item) => item.text).join(' '),
     'The wheels on the bus go round and round, round and round, round and round. The wheels on the bus go round and round, all around the town.');
   assert.equal(song.source.url, 'https://www.kidsplaymusic.com/wp-content/uploads/2024/06/Wheels-on-the-Bus-Piano-Sheet-Music.pdf');
+  assert.ok(Object.values(song.verification).every((value) => value === true));
+});
+
+test('Canon in D exactly models the selected and transposed xylophone theme', async () => {
+  const { book } = await loadProject();
+  const song = book.library.songs.find((candidate) => candidate.id === 'canon-in-d');
+  assert.ok(song);
+  assert.equal(song.title, 'Canon in D');
+  assert.equal(song.alias, '卡農主題');
+  assert.equal(song.key, 'C major');
+  assert.equal(song.meter, '4/4');
+  assert.equal(song.pickup_eighth_units, 0);
+  assert.equal(song.measures.length, 8);
+  assert.deepEqual(flattenEvents(song).map((event) => [event.pitch, event.duration]), [
+    ['3^', 4], ['2^', 4],
+    ['1^', 4], ['7', 4],
+    ['6', 4], ['5', 4],
+    ['6', 4], ['7', 4],
+    ['1^', 4], ['7', 4],
+    ['6', 4], ['5', 4],
+    ['4', 4], ['3', 4],
+    ['4', 4], ['5', 4],
+  ]);
+  assert.deepEqual(song.ties, []);
+  const track = song.lyric_tracks.find((candidate) => candidate.default);
+  assert.equal(track.id, 'instrumental');
+  assert.equal(track.locale, 'zxx');
+  assert.equal(track.role, 'original');
+  assert.deepEqual(track.syllables, []);
+  assert.equal(song.source.original_key, 'D major');
+  assert.equal(song.source.selected_source_measures, '5-12');
+  assert.equal(song.source.transposition_semitones, -2);
+  assert.equal(song.source.url, 'https://musescore.org/sites/musescore.org/files/2020-09/Canon_in_D.pdf');
+  assert.equal(song.source.supporting_sources[0].file_reference, 'Canon_in_D.mxl');
+  assert.equal(
+    song.source.supporting_sources[0].content_sha256,
+    '23762273abf1d6bd7001c89dc620bee6accf0045573078e2865e086df2f1bb14',
+  );
   assert.ok(Object.values(song.verification).every((value) => value === true));
 });
 
