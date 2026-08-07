@@ -270,6 +270,9 @@ main { width: min(calc(100% - 1rem), 980px); margin: 1rem auto 3rem; }
     page-break-after: auto;
   }
   .print-selected .score-header {
+    width: var(--staff-width, 700px);
+    max-width: 100%;
+    margin-inline: auto;
     break-after: avoid-page;
     page-break-after: avoid;
   }
