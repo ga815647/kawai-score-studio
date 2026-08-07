@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.20
+  version: 0.6.21
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -6030,6 +6030,702 @@ library:
             text: 雲
           - event: n55
             text: 裡
+  id: tantan-houhou
+  title: 淡々泡々
+  status: verified
+  key: C major
+  meter: 4/4
+  pickup_eighth_units: 0
+  source:
+    title: Desire Drive Light SOLO
+    source_type: other_static_score_file
+    provided_by: user
+    publisher_or_origin: User-provided Guitar Pro score attachment
+    publisher: User-provided Guitar Pro score attachment
+    accessed_at: '2026-08-07'
+    selected_variant: Steel Guitar track 0, source measures 2-22; at each notated beat select the highest concert-pitch note on Guitar Pro strings 4-5, otherwise a rest; preserve source beat rhythm and selected-note ties; omit leading all-rest source measure 1; transpose the extracted F#-major line down 6 semitones to C major with no octave folding
+    original_key: F# major
+    original_meter: 4/4
+    pickup: 0
+    rights_status: user_provided_arrangement_file_rights_not_asserted
+    url: https://www.jitashe.org/thread/1349597/
+    file_reference: Desire Drive Light SOLO.gp
+    content_sha256: f5f93450a28afe535b643a63084169e2b129a904909128074af0146be9948af9
+    selected_track: 0
+    selected_track_name: Steel Guitar
+    selected_source_measures: 2-22
+    melody_reduction: Highest concert-pitch note on Guitar Pro strings 4 and 5 at each notated beat; if neither upper string has a note, emit a rest
+    transposition_semitones: -6
+    octave_folding: false
+    supporting_sources:
+    - title: Desire Drive Light SOLO.gpx
+      source_type: other_static_score_file
+      provided_by: user
+      file_reference: Desire Drive Light SOLO.gpx
+      content_sha256: d442f3aae5b3bcf52d3c06c94b704eac3b16287deb571dc449d4362af5bb6bac
+      purpose: User-provided companion Guitar Pro file for source identity cross-check
+  verification:
+    source_to_scorebook_checked: true
+    melody_checked: true
+    rhythm_checked: true
+    rests_checked: true
+    pickup_checked: true
+    measures_checked: true
+    ties_checked: true
+    lyrics_checked: true
+    user_approved: true
+  measures:
+  - number: 1
+    capacity_eighth_units: 8
+    events:
+    - id: n001
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n002
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n003
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n004
+      kind: note
+      pitch: '1'
+      duration: 1
+    - id: n005
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n006
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n007
+      kind: note
+      pitch: '3'
+      duration: 1
+    - id: n008
+      kind: note
+      pitch: '1'
+      duration: 1
+  - number: 2
+    capacity_eighth_units: 8
+    events:
+    - id: r001
+      kind: rest
+      duration: 1
+    - id: n009
+      kind: note
+      pitch: '1'
+      duration: 1
+    - id: n010
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n011
+      kind: note
+      pitch: 1^
+      duration: 1
+    - id: n012
+      kind: note
+      pitch: '7'
+      duration: 1
+    - id: n013
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: r002
+      kind: rest
+      duration: 1
+    - id: n014
+      kind: note
+      pitch: '3'
+      duration: 1
+  - number: 3
+    capacity_eighth_units: 8
+    events:
+    - id: n015
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n016
+      kind: note
+      pitch: '3'
+      duration: 1
+    - id: n017
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n018
+      kind: note
+      pitch: 1^
+      duration: 1
+    - id: n019
+      kind: note
+      pitch: 2^
+      duration: 1
+    - id: n020
+      kind: note
+      pitch: '7'
+      duration: 1
+    - id: n021
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n022
+      kind: note
+      pitch: 1^
+      duration: 1
+  - number: 4
+    capacity_eighth_units: 8
+    events:
+    - id: n023
+      kind: note
+      pitch: '7'
+      duration: 1
+    - id: n024
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n025
+      kind: note
+      pitch: '3'
+      duration: 1
+    - id: n026
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n027
+      kind: note
+      pitch: '1'
+      duration: 1
+    - id: n028
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n029
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: r003
+      kind: rest
+      duration: 1
+  - number: 5
+    capacity_eighth_units: 8
+    events:
+    - id: n030
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n031
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n032
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n033
+      kind: note
+      pitch: '1'
+      duration: 1
+    - id: n034
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n035
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n036
+      kind: note
+      pitch: '3'
+      duration: 1
+    - id: n037
+      kind: note
+      pitch: '1'
+      duration: 1
+  - number: 6
+    capacity_eighth_units: 8
+    events:
+    - id: r004
+      kind: rest
+      duration: 1
+    - id: n038
+      kind: note
+      pitch: '1'
+      duration: 1
+    - id: n039
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n040
+      kind: note
+      pitch: 1^
+      duration: 1
+    - id: n041
+      kind: note
+      pitch: '7'
+      duration: 1
+    - id: n042
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: r005
+      kind: rest
+      duration: 1
+    - id: n043
+      kind: note
+      pitch: '3'
+      duration: 1
+  - number: 7
+    capacity_eighth_units: 8
+    events:
+    - id: n044
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n045
+      kind: note
+      pitch: '3'
+      duration: 1
+    - id: n046
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n047
+      kind: note
+      pitch: 1^
+      duration: 1
+    - id: n048
+      kind: note
+      pitch: 2^
+      duration: 1
+    - id: n049
+      kind: note
+      pitch: '7'
+      duration: 1
+    - id: n050
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n051
+      kind: note
+      pitch: 1^
+      duration: 1
+  - number: 8
+    capacity_eighth_units: 8
+    events:
+    - id: n052
+      kind: note
+      pitch: '7'
+      duration: 1
+    - id: n053
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n054
+      kind: note
+      pitch: '3'
+      duration: 1
+    - id: n055
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n056
+      kind: note
+      pitch: '1'
+      duration: 1
+    - id: n057
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n058
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: r006
+      kind: rest
+      duration: 1
+  - number: 9
+    capacity_eighth_units: 8
+    events:
+    - id: n059
+      kind: note
+      pitch: '7_'
+      duration: 1.5
+    - id: n060
+      kind: note
+      pitch: '1'
+      duration: 1.5
+    - id: n061
+      kind: note
+      pitch: '5'
+      duration: 2
+    - id: n062
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n063
+      kind: note
+      pitch: '1'
+      duration: 1
+    - id: r007
+      kind: rest
+      duration: 1
+  - number: 10
+    capacity_eighth_units: 8
+    events:
+    - id: n064
+      kind: note
+      pitch: '7_'
+      duration: 1.5
+    - id: n065
+      kind: note
+      pitch: '1'
+      duration: 1.5
+    - id: n066
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n067
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: r008
+      kind: rest
+      duration: 1
+    - id: n068
+      kind: note
+      pitch: '1'
+      duration: 1
+    - id: n069
+      kind: note
+      pitch: '6'
+      duration: 1
+  - number: 11
+    capacity_eighth_units: 8
+    events:
+    - id: n070
+      kind: note
+      pitch: '5'
+      duration: 2
+    - id: n071
+      kind: note
+      pitch: '1'
+      duration: 2
+    - id: r009
+      kind: rest
+      duration: 2
+    - id: n072
+      kind: note
+      pitch: '4'
+      duration: 2
+  - number: 12
+    capacity_eighth_units: 8
+    events:
+    - id: n073
+      kind: note
+      pitch: '3'
+      duration: 2
+    - id: r010
+      kind: rest
+      duration: 2
+    - id: n074
+      kind: note
+      pitch: '2'
+      duration: 2
+    - id: r011
+      kind: rest
+      duration: 2
+  - number: 13
+    capacity_eighth_units: 8
+    events:
+    - id: n075
+      kind: note
+      pitch: '7_'
+      duration: 1.5
+    - id: n076
+      kind: note
+      pitch: '1'
+      duration: 1.5
+    - id: n077
+      kind: note
+      pitch: '5'
+      duration: 2
+    - id: n078
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n079
+      kind: note
+      pitch: '1'
+      duration: 1
+    - id: r012
+      kind: rest
+      duration: 1
+  - number: 14
+    capacity_eighth_units: 8
+    events:
+    - id: n080
+      kind: note
+      pitch: '7_'
+      duration: 1.5
+    - id: n081
+      kind: note
+      pitch: '1'
+      duration: 1.5
+    - id: n082
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n083
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: r013
+      kind: rest
+      duration: 1
+    - id: n084
+      kind: note
+      pitch: '1'
+      duration: 1
+    - id: n085
+      kind: note
+      pitch: '6'
+      duration: 1
+  - number: 15
+    capacity_eighth_units: 8
+    events:
+    - id: n086
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: r014
+      kind: rest
+      duration: 1
+    - id: n087
+      kind: note
+      pitch: '1'
+      duration: 1
+    - id: r015
+      kind: rest
+      duration: 1
+    - id: r016
+      kind: rest
+      duration: 1
+    - id: r017
+      kind: rest
+      duration: 1
+    - id: n088
+      kind: note
+      pitch: '1'
+      duration: 1
+    - id: r018
+      kind: rest
+      duration: 1
+  - number: 16
+    capacity_eighth_units: 8
+    events:
+    - id: n089
+      kind: note
+      pitch: '3'
+      duration: 2
+    - id: r019
+      kind: rest
+      duration: 2
+    - id: n090
+      kind: note
+      pitch: '2'
+      duration: 2
+    - id: r020
+      kind: rest
+      duration: 2
+  - number: 17
+    capacity_eighth_units: 8
+    events:
+    - id: n091
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n092
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n093
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n094
+      kind: note
+      pitch: '1'
+      duration: 1
+    - id: n095
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n096
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n097
+      kind: note
+      pitch: '3'
+      duration: 1
+    - id: n098
+      kind: note
+      pitch: '1'
+      duration: 1
+  - number: 18
+    capacity_eighth_units: 8
+    events:
+    - id: r021
+      kind: rest
+      duration: 1
+    - id: n099
+      kind: note
+      pitch: '1'
+      duration: 1
+    - id: n100
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n101
+      kind: note
+      pitch: 1^
+      duration: 1
+    - id: n102
+      kind: note
+      pitch: '7'
+      duration: 1
+    - id: n103
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: r022
+      kind: rest
+      duration: 1
+    - id: n104
+      kind: note
+      pitch: '3'
+      duration: 1
+  - number: 19
+    capacity_eighth_units: 8
+    events:
+    - id: n105
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n106
+      kind: note
+      pitch: '3'
+      duration: 1
+    - id: n107
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n108
+      kind: note
+      pitch: 1^
+      duration: 1
+    - id: n109
+      kind: note
+      pitch: 2^
+      duration: 1
+    - id: n110
+      kind: note
+      pitch: '7'
+      duration: 1
+    - id: n111
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n112
+      kind: note
+      pitch: 1^
+      duration: 1
+  - number: 20
+    capacity_eighth_units: 8
+    events:
+    - id: n113
+      kind: note
+      pitch: '7'
+      duration: 1
+    - id: n114
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n115
+      kind: note
+      pitch: '3'
+      duration: 1
+    - id: n116
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n117
+      kind: note
+      pitch: '1'
+      duration: 1
+    - id: n118
+      kind: note
+      pitch: '2'
+      duration: 1
+    - id: n119
+      kind: note
+      pitch: '5'
+      duration: 1
+    - id: n120
+      kind: note
+      pitch: '5'
+      duration: 1
+  - number: 21
+    capacity_eighth_units: 8
+    events:
+    - id: n121
+      kind: note
+      pitch: '7_'
+      duration: 2
+    - id: n122
+      kind: note
+      pitch: '1'
+      duration: 2
+    - id: n123
+      kind: note
+      pitch: '5'
+      duration: 2
+    - id: n124
+      kind: note
+      pitch: '5'
+      duration: 2
+  ties:
+  - id: t01
+    from: n061
+    to: n062
+  - id: t02
+    from: n066
+    to: n067
+  - id: t03
+    from: n077
+    to: n078
+  - id: t04
+    from: n082
+    to: n083
+  - id: t05
+    from: n119
+    to: n120
+  - id: t06
+    from: n123
+    to: n124
+  lyric_tracks:
+  - id: instrumental
+    locale: zxx
+    role: original
+    status: verified
+    default: true
+    syllables: []
   quarantine: []
 workflow:
 - read_scorebook
