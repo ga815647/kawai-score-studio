@@ -18,15 +18,15 @@ async function loadProject() {
   return { book, fixtures };
 }
 
-test('0.6.19 has ten verified songs, no quarantine, and passes structural gates', async () => {
+test('0.6.20 has fifteen verified songs, no quarantine, and passes structural gates', async () => {
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.19');
+  assert.equal(book.project.version, '0.6.20');
   assert.equal(book.schema.duration_quantum_eighth_units, 0.5);
   assert.equal(book.schema.smallest_supported_duration, 'sixteenth_note');
   assert.deepEqual(result.counts, {
-    verifiedSongs: 10,
+    verifiedSongs: 15,
     quarantinedEntries: 0,
     fixtures: 1,
   });
@@ -41,6 +41,11 @@ test('0.6.19 has ten verified songs, no quarantine, and passes structural gates'
     'row-row-row-your-boat',
     'the-wheels-on-the-bus',
     'canon-in-d',
+    'yi-bi-ya-ya-zh',
+    'little-bee-zh',
+    'fast-train-zh',
+    'pull-the-radish-zh',
+    'build-an-airplane-zh',
   ]);
 });
 
@@ -222,6 +227,90 @@ test('Canon in D exactly models the selected 32-measure xylophone excerpt', asyn
   assert.equal(song.source.supporting_sources[0].file_reference, 'Canon_in_D.mxl');
   assert.equal(song.source.supporting_sources[0].content_sha256, '23762273abf1d6bd7001c89dc620bee6accf0045573078e2865e086df2f1bb14');
   assert.ok(Object.values(song.verification).every((value) => value === true));
+});
+
+
+test('five Chinese nursery songs exactly model the selected Jianpu Space sources', async () => {
+  const { book } = await loadProject();
+  const specs = {
+  "yi-bi-ya-ya-zh": {
+    "title": "依比呀呀",
+    "meter": "2/4",
+    "pickup": 2,
+    "measures": 17,
+    "notes": 42,
+    "lyrics": 39,
+    "ties": 3,
+    "url": "https://jianpu.space/zh-tw/songList/65c3bad62cce837239c1fba6",
+    "digest": "7239ca889456acee0d278afa5eb9ec0165f260477249f02210055608aba3422d"
+  },
+  "little-bee-zh": {
+    "title": "小蜜蜂",
+    "meter": "4/4",
+    "pickup": 0,
+    "measures": 16,
+    "notes": 49,
+    "lyrics": 49,
+    "ties": 0,
+    "url": "https://jianpu.space/zh-tw/songList/2",
+    "digest": "6e33d73908fc551f8c8353a95e386c87cbeabfc11ee1b50d5b138177386e51e9"
+  },
+  "fast-train-zh": {
+    "title": "火車快飛",
+    "meter": "2/4",
+    "pickup": 0,
+    "measures": 10,
+    "notes": 38,
+    "lyrics": 38,
+    "ties": 0,
+    "url": "https://jianpu.space/zh-tw/songList/10",
+    "digest": "9e6cf957eab6d26f1676d1fd23d4a5261cf543ef24277c6e623f99548a8f549c"
+  },
+  "pull-the-radish-zh": {
+    "title": "拔蘿蔔",
+    "meter": "2/4",
+    "pickup": 0,
+    "measures": 10,
+    "notes": 34,
+    "lyrics": 34,
+    "ties": 0,
+    "url": "https://jianpu.space/zh-tw/songList/66f8bf9618d7fae816dd13da",
+    "digest": "69421e86c9de87ba1be52230a9fe189446b1b7d1a6d029c2754ebba2dbefe00a"
+  },
+  "build-an-airplane-zh": {
+    "title": "造飛機",
+    "meter": "2/4",
+    "pickup": 0,
+    "measures": 20,
+    "notes": 55,
+    "lyrics": 55,
+    "ties": 0,
+    "url": "https://jianpu.space/zh-tw/songList/66f94b2d18d7fae816dd13de",
+    "digest": "0af3691fe4a0e10aa1690c01d93944d71ada1f2bb2891a4751db8e7e9eccf0ab"
+  }
+};
+  for (const [id, spec] of Object.entries(specs)) {
+    const song = book.library.songs.find((candidate) => candidate.id === id);
+    assert.ok(song, id);
+    assert.equal(song.title, spec.title);
+    assert.equal(song.key, 'C major');
+    assert.equal(song.meter, spec.meter);
+    assert.equal(song.pickup_eighth_units, spec.pickup);
+    assert.equal(song.measures.length, spec.measures);
+    const events = flattenEvents(song);
+    assert.equal(events.length, spec.notes);
+    const track = song.lyric_tracks.find((candidate) => candidate.default);
+    assert.equal(track.locale, 'zh-TW');
+    assert.equal(track.role, 'original');
+    assert.equal(track.syllables.length, spec.lyrics);
+    assert.equal(song.ties.length, spec.ties);
+    assert.equal(song.source.url, spec.url);
+    const digest = createHash('sha256').update(JSON.stringify(
+      events.map((event) => [event.kind, event.pitch ?? null, event.duration]),
+    )).digest('hex');
+    assert.equal(digest, spec.digest, id);
+    assert.ok(Object.values(song.verification).every((value) => value === true));
+  }
 });
 
 test('A4 print contract selects one verified song and permits page breaks only between systems', async () => {

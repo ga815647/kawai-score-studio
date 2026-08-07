@@ -16,6 +16,11 @@ const songs = [
   { id: 'row-row-row-your-boat', title: 'Row, Row, Row Your Boat', notes: 29, lyrics: 27 },
   { id: 'the-wheels-on-the-bus', title: 'The Wheels on the Bus', notes: 28, lyrics: 28 },
   { id: 'canon-in-d', title: 'Canon in D', notes: 292, lyrics: 0 },
+  { id: 'yi-bi-ya-ya-zh', title: '依比呀呀', notes: 42, lyrics: 39 },
+  { id: 'little-bee-zh', title: '小蜜蜂', notes: 49, lyrics: 49 },
+  { id: 'fast-train-zh', title: '火車快飛', notes: 38, lyrics: 38 },
+  { id: 'pull-the-radish-zh', title: '拔蘿蔔', notes: 34, lyrics: 34 },
+  { id: 'build-an-airplane-zh', title: '造飛機', notes: 55, lyrics: 55 },
 ];
 
 test('library-only site renders directory, all verified songs, explicit A4 controls, and no public Studio or quarantine panel', async ({ page }) => {
@@ -24,7 +29,7 @@ test('library-only site renders directory, all verified songs, explicit A4 contr
   await page.goto('/', { waitUntil: 'networkidle' });
 
   await expect(page.locator('.status--pass')).toBeVisible();
-  await expect(page.locator('.status--pass')).toContainText('規格 0.6.19');
+  await expect(page.locator('.status--pass')).toContainText('規格 0.6.20');
   await expect(page.locator('.status--pass')).not.toContainText('隔離');
   await expect(page.locator('#song-directory')).toBeVisible();
   await expect(page.locator('#library-view')).toBeVisible();
@@ -33,16 +38,16 @@ test('library-only site renders directory, all verified songs, explicit A4 contr
   await expect(page.locator('#studio-tab, #draft-editor')).toHaveCount(0);
   await expect(page.locator('#quarantine-panel, #quarantine-list')).toHaveCount(0);
   await expect(page.locator('main > .error-card')).toHaveCount(0);
-  await expect(page.locator('.library-song')).toHaveCount(10);
-  await expect(page.locator('#song-directory-list > li')).toHaveCount(10);
+  await expect(page.locator('.library-song')).toHaveCount(15);
+  await expect(page.locator('#song-directory-list > li')).toHaveCount(15);
 
   const assetUrls = await page.evaluate(() => ({
     scripts: [...document.scripts].map((script) => script.getAttribute('src')).filter(Boolean),
     styles: [...document.querySelectorAll('link[rel="stylesheet"]')]
       .map((link) => link.getAttribute('href')),
   }));
-  expect(assetUrls.scripts.every((url) => url.includes('?v=0.6.19-'))).toBe(true);
-  expect(assetUrls.styles.every((url) => url.includes('?v=0.6.19-'))).toBe(true);
+  expect(assetUrls.scripts.every((url) => url.includes('?v=0.6.20-'))).toBe(true);
+  expect(assetUrls.styles.every((url) => url.includes('?v=0.6.20-'))).toBe(true);
 
   const reports = [];
   for (const song of songs) {
