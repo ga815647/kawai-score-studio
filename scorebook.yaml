@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.15
+  version: 0.6.16
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -2459,6 +2459,529 @@ library:
       continuations:
       - from: n18
         through: n19
+  - id: row-row-row-your-boat
+    title: Row, Row, Row Your Boat
+    status: verified
+    key: C major
+    meter: 3/4
+    pickup_eighth_units: 0
+    source:
+      title: Row, Row, Row, Your Boat
+      source_type: score_pdf
+      provided_by: assistant_web_research
+      publisher_or_origin: PianoSongDownload.com
+      publisher: PianoSongDownload.com
+      accessed_at: '2026-08-07'
+      selected_variant: 2013 C-major 3/4 lead-sheet arrangement with one English verse
+      original_key: C major
+      original_meter: 3/4
+      pickup: 0
+      rights_status: traditional_song_arrangement_copyright_2013_pianosongdownload
+      url: https://pianosongdownload.com/Row%20Row%20Row%20Your%20Boat.pdf
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 6
+      events:
+      - id: n01
+        kind: note
+        pitch: '1'
+        duration: 6
+    - number: 2
+      capacity_eighth_units: 6
+      events:
+      - id: n02
+        kind: note
+        pitch: '1'
+        duration: 6
+    - number: 3
+      capacity_eighth_units: 6
+      events:
+      - id: n03
+        kind: note
+        pitch: '1'
+        duration: 4
+      - id: n04
+        kind: note
+        pitch: '2'
+        duration: 2
+    - number: 4
+      capacity_eighth_units: 6
+      events:
+      - id: n05
+        kind: note
+        pitch: '3'
+        duration: 6
+    - number: 5
+      capacity_eighth_units: 6
+      events:
+      - id: n06
+        kind: note
+        pitch: '3'
+        duration: 4
+      - id: n07
+        kind: note
+        pitch: '2'
+        duration: 2
+    - number: 6
+      capacity_eighth_units: 6
+      events:
+      - id: n08
+        kind: note
+        pitch: '3'
+        duration: 4
+      - id: n09
+        kind: note
+        pitch: '4'
+        duration: 2
+    - number: 7
+      capacity_eighth_units: 6
+      events:
+      - id: n10
+        kind: note
+        pitch: '5'
+        duration: 6
+    - number: 8
+      capacity_eighth_units: 6
+      events:
+      - id: n11
+        kind: note
+        pitch: '5'
+        duration: 6
+    - number: 9
+      capacity_eighth_units: 6
+      events:
+      - id: n12
+        kind: note
+        pitch: 1^
+        duration: 2
+      - id: n13
+        kind: note
+        pitch: 1^
+        duration: 2
+      - id: n14
+        kind: note
+        pitch: 1^
+        duration: 2
+    - number: 10
+      capacity_eighth_units: 6
+      events:
+      - id: n15
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n16
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n17
+        kind: note
+        pitch: '5'
+        duration: 2
+    - number: 11
+      capacity_eighth_units: 6
+      events:
+      - id: n18
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n19
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n20
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 12
+      capacity_eighth_units: 6
+      events:
+      - id: n21
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n22
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n23
+        kind: note
+        pitch: '1'
+        duration: 2
+    - number: 13
+      capacity_eighth_units: 6
+      events:
+      - id: n24
+        kind: note
+        pitch: '5'
+        duration: 4
+      - id: n25
+        kind: note
+        pitch: '4'
+        duration: 2
+    - number: 14
+      capacity_eighth_units: 6
+      events:
+      - id: n26
+        kind: note
+        pitch: '3'
+        duration: 4
+      - id: n27
+        kind: note
+        pitch: '2'
+        duration: 2
+    - number: 15
+      capacity_eighth_units: 6
+      events:
+      - id: n28
+        kind: note
+        pitch: '1'
+        duration: 6
+    - number: 16
+      capacity_eighth_units: 6
+      events:
+      - id: n29
+        kind: note
+        pitch: '1'
+        duration: 6
+    ties:
+    - id: t01
+      from: n10
+      to: n11
+    - id: t02
+      from: n28
+      to: n29
+    lyric_tracks:
+    - id: original-en
+      locale: en
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: Row,
+      - event: n02
+        text: row,
+      - event: n03
+        text: row
+      - event: n04
+        text: your
+      - event: n05
+        text: boat.
+      - event: n06
+        text: Gent-
+      - event: n07
+        text: ly
+      - event: n08
+        text: down
+      - event: n09
+        text: the
+      - event: n10
+        text: stream.
+      - event: n12
+        text: Mer-
+      - event: n13
+        text: ri-
+      - event: n14
+        text: ly,
+      - event: n15
+        text: mer-
+      - event: n16
+        text: ri-
+      - event: n17
+        text: ly,
+      - event: n18
+        text: mer-
+      - event: n19
+        text: ri-
+      - event: n20
+        text: ly,
+      - event: n21
+        text: mer-
+      - event: n22
+        text: ri-
+      - event: n23
+        text: ly.
+      - event: n24
+        text: Life
+      - event: n25
+        text: is
+      - event: n26
+        text: but
+      - event: n27
+        text: a
+      - event: n28
+        text: dream.
+      continuations:
+      - from: n10
+        through: n11
+      - from: n28
+        through: n29
+  - id: the-wheels-on-the-bus
+    title: The Wheels on the Bus
+    alias: Wheels on the Bus
+    status: verified
+    key: C major
+    meter: 2/4
+    pickup_eighth_units: 2
+    source:
+      title: Wheels on the Bus - Piano
+      source_type: score_pdf
+      provided_by: assistant_web_research
+      publisher_or_origin: KidsPlayMusic
+      publisher: KidsPlayMusic
+      accessed_at: '2026-08-07'
+      selected_variant: KidsPlayMusic C-major 2/4 sheet-music verse with quarter-note pickup
+      original_key: C major
+      original_meter: 2/4
+      pickup: 2
+      rights_status: traditional_children_song_free_pdf_sheet_music
+      url: https://www.kidsplaymusic.com/wp-content/uploads/2024/06/Wheels-on-the-Bus-Piano-Sheet-Music.pdf
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 0
+      capacity_eighth_units: 2
+      events:
+      - id: n01
+        kind: note
+        pitch: '5'
+        duration: 2
+      pickup: true
+    - number: 1
+      capacity_eighth_units: 4
+      events:
+      - id: n02
+        kind: note
+        pitch: 1^
+        duration: 2
+      - id: n03
+        kind: note
+        pitch: 1^
+        duration: 1
+      - id: n04
+        kind: note
+        pitch: 1^
+        duration: 1
+    - number: 2
+      capacity_eighth_units: 4
+      events:
+      - id: n05
+        kind: note
+        pitch: 1^
+        duration: 2
+      - id: n06
+        kind: note
+        pitch: 3^
+        duration: 2
+    - number: 3
+      capacity_eighth_units: 4
+      events:
+      - id: n07
+        kind: note
+        pitch: 5^
+        duration: 2
+      - id: n08
+        kind: note
+        pitch: 3^
+        duration: 2
+    - number: 4
+      capacity_eighth_units: 4
+      events:
+      - id: n09
+        kind: note
+        pitch: 1^
+        duration: 4
+    - number: 5
+      capacity_eighth_units: 4
+      events:
+      - id: n10
+        kind: note
+        pitch: 2^
+        duration: 2
+      - id: n11
+        kind: note
+        pitch: '7'
+        duration: 2
+    - number: 6
+      capacity_eighth_units: 4
+      events:
+      - id: n12
+        kind: note
+        pitch: '5'
+        duration: 4
+    - number: 7
+      capacity_eighth_units: 4
+      events:
+      - id: n13
+        kind: note
+        pitch: 4^
+        duration: 2
+      - id: n14
+        kind: note
+        pitch: 2^
+        duration: 2
+    - number: 8
+      capacity_eighth_units: 4
+      events:
+      - id: n15
+        kind: note
+        pitch: 1^
+        duration: 2
+      - id: n16
+        kind: note
+        pitch: '5'
+        duration: 2
+    - number: 9
+      capacity_eighth_units: 4
+      events:
+      - id: n17
+        kind: note
+        pitch: 1^
+        duration: 2
+      - id: n18
+        kind: note
+        pitch: 1^
+        duration: 1
+      - id: n19
+        kind: note
+        pitch: 1^
+        duration: 1
+    - number: 10
+      capacity_eighth_units: 4
+      events:
+      - id: n20
+        kind: note
+        pitch: 1^
+        duration: 2
+      - id: n21
+        kind: note
+        pitch: 3^
+        duration: 2
+    - number: 11
+      capacity_eighth_units: 4
+      events:
+      - id: n22
+        kind: note
+        pitch: 5^
+        duration: 2
+      - id: n23
+        kind: note
+        pitch: 3^
+        duration: 2
+    - number: 12
+      capacity_eighth_units: 4
+      events:
+      - id: n24
+        kind: note
+        pitch: 1^
+        duration: 4
+    - number: 13
+      capacity_eighth_units: 4
+      events:
+      - id: n25
+        kind: note
+        pitch: 2^
+        duration: 4
+    - number: 14
+      capacity_eighth_units: 4
+      events:
+      - id: n26
+        kind: note
+        pitch: '5'
+        duration: 3
+      - id: n27
+        kind: note
+        pitch: '5'
+        duration: 1
+    - number: 15
+      capacity_eighth_units: 4
+      events:
+      - id: n28
+        kind: note
+        pitch: 1^
+        duration: 4
+    ties: []
+    lyric_tracks:
+    - id: original-en
+      locale: en
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: The
+      - event: n02
+        text: wheels
+      - event: n03
+        text: on
+      - event: n04
+        text: the
+      - event: n05
+        text: bus
+      - event: n06
+        text: go
+      - event: n07
+        text: round
+      - event: n08
+        text: and
+      - event: n09
+        text: round,
+      - event: n10
+        text: round
+      - event: n11
+        text: and
+      - event: n12
+        text: round,
+      - event: n13
+        text: round
+      - event: n14
+        text: and
+      - event: n15
+        text: round.
+      - event: n16
+        text: The
+      - event: n17
+        text: wheels
+      - event: n18
+        text: on
+      - event: n19
+        text: the
+      - event: n20
+        text: bus
+      - event: n21
+        text: go
+      - event: n22
+        text: round
+      - event: n23
+        text: and
+      - event: n24
+        text: round,
+      - event: n25
+        text: all
+      - event: n26
+        text: around
+      - event: n27
+        text: the
+      - event: n28
+        text: town.
   quarantine: []
 workflow:
 - read_scorebook
