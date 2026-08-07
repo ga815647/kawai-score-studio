@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.21
+  version: 0.6.22
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -6726,6 +6726,1536 @@ library:
       status: verified
       default: true
       syllables: []
+  - id: humpty-dumpty
+    title: Humpty Dumpty
+    status: verified
+    key: C major
+    meter: 6/8
+    pickup_eighth_units: 0
+    source:
+      title: Humpty Dumpty – Easy Piano Notes and Sheet Music
+      source_type: score_website
+      provided_by: assistant_web_research
+      publisher_or_origin: KidsPlayMusic
+      publisher: KidsPlayMusic
+      accessed_at: '2026-08-08'
+      selected_variant: KidsPlayMusic C-major 6/8 static piano sheet, eight measures, English rhyme
+      original_key: C major
+      original_meter: 6/8
+      pickup: 0
+      rights_status: traditional_nursery_rhyme_with_free_beginner_sheet_music
+      url: https://www.kidsplaymusic.com/humpty-dumpty-piano/
+      supporting_sources:
+      - title: Humpty Dumpty Piano sheet music image
+        publisher_or_origin: KidsPlayMusic
+        url: https://www.kidsplaymusic.com/wp-content/uploads/2024/06/Humpty-Dumpty-Piano-sheet-music.png
+        purpose: Exact static staff-notation and lyric-alignment cross-check
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 6
+      events:
+      - id: n01
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n02
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n03
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n04
+        kind: note
+        pitch: '4'
+        duration: 1
+    - number: 2
+      capacity_eighth_units: 6
+      events:
+      - id: n05
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n06
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n07
+        kind: note
+        pitch: '7'
+        duration: 1
+      - id: n08
+        kind: note
+        pitch: 1^
+        duration: 3
+    - number: 3
+      capacity_eighth_units: 6
+      events:
+      - id: n09
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n10
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n11
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n12
+        kind: note
+        pitch: '6'
+        duration: 1
+    - number: 4
+      capacity_eighth_units: 6
+      events:
+      - id: n13
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n14
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n15
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n16
+        kind: note
+        pitch: '2'
+        duration: 3
+    - number: 5
+      capacity_eighth_units: 6
+      events:
+      - id: n17
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n18
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n19
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n20
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n21
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n22
+        kind: note
+        pitch: '5'
+        duration: 1
+    - number: 6
+      capacity_eighth_units: 6
+      events:
+      - id: n23
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n24
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n25
+        kind: note
+        pitch: '7'
+        duration: 1
+      - id: n26
+        kind: note
+        pitch: 1^
+        duration: 3
+    - number: 7
+      capacity_eighth_units: 6
+      events:
+      - id: n27
+        kind: note
+        pitch: 4^
+        duration: 1
+      - id: n28
+        kind: note
+        pitch: 4^
+        duration: 1
+      - id: n29
+        kind: note
+        pitch: 1^
+        duration: 1
+      - id: n30
+        kind: note
+        pitch: 4^
+        duration: 1
+      - id: n31
+        kind: note
+        pitch: 4^
+        duration: 1
+      - id: n32
+        kind: note
+        pitch: 3^
+        duration: 1
+    - number: 8
+      capacity_eighth_units: 6
+      events:
+      - id: n33
+        kind: note
+        pitch: 2^
+        duration: 1
+      - id: n34
+        kind: note
+        pitch: 1^
+        duration: 1
+      - id: n35
+        kind: note
+        pitch: '7'
+        duration: 1
+      - id: n36
+        kind: note
+        pitch: 1^
+        duration: 3
+    ties: []
+    lyric_tracks:
+    - id: original-en
+      locale: en
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: Hump-
+      - event: n02
+        text: ty
+      - event: n03
+        text: Dump-
+      - event: n04
+        text: ty
+      - event: n05
+        text: sat
+      - event: n06
+        text: 'on'
+      - event: n07
+        text: a
+      - event: n08
+        text: wall,
+      - event: n09
+        text: Hump-
+      - event: n10
+        text: ty
+      - event: n11
+        text: Dump-
+      - event: n12
+        text: ty
+      - event: n13
+        text: had
+      - event: n14
+        text: a
+      - event: n15
+        text: great
+      - event: n16
+        text: fall.
+      - event: n17
+        text: All
+      - event: n18
+        text: the
+      - event: n19
+        text: king's
+      - event: n20
+        text: hors-
+      - event: n21
+        text: es
+      - event: n22
+        text: and
+      - event: n23
+        text: all
+      - event: n24
+        text: the
+      - event: n25
+        text: king's
+      - event: n26
+        text: men
+      - event: n27
+        text: could-
+      - event: n28
+        text: n't
+      - event: n29
+        text: put
+      - event: n30
+        text: Hump-
+      - event: n31
+        text: ty
+      - event: n32
+        text: to-
+      - event: n33
+        text: geth-
+      - event: n34
+        text: er
+      - event: n35
+        text: a-
+      - event: n36
+        text: gain.
+  - id: little-donkey-zh
+    title: 小毛驢
+    status: verified
+    key: C major
+    meter: 2/4
+    pickup_eighth_units: 0
+    source:
+      title: 小毛驢
+      source_type: score_website
+      provided_by: assistant_web_research
+      publisher_or_origin: Jianpu Space
+      publisher: Jianpu Space
+      accessed_at: '2026-08-08'
+      selected_variant: Traditional Chinese Jianpu Space melody and lyrics in C major, 2/4; exact measure boundaries and short-note
+        grouping cross-checked against QPX static score image
+      original_key: C major
+      original_meter: 2/4
+      pickup: 0
+      rights_status: published_children_song_static_notation
+      url: https://jianpu.space/zh-tw/songList/7
+      supporting_sources:
+      - title: 小毛驢歌譜
+        publisher_or_origin: 起跑線兒歌網 (QPX)
+        url: https://erge.qpx.com/jianpu/61753.html
+        purpose: Static score-image cross-check of 2/4 measure boundaries, durations, and lyric alignment
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 4
+      events:
+      - id: n01
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n02
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n03
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n04
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 2
+      capacity_eighth_units: 4
+      events:
+      - id: n05
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n06
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n07
+        kind: note
+        pitch: '5'
+        duration: 1.5
+      - id: n08
+        kind: note
+        pitch: '5'
+        duration: 0.5
+    - number: 3
+      capacity_eighth_units: 4
+      events:
+      - id: n09
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n10
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n11
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n12
+        kind: note
+        pitch: 1^
+        duration: 1
+    - number: 4
+      capacity_eighth_units: 4
+      events:
+      - id: n13
+        kind: note
+        pitch: '5'
+        duration: 4
+    - number: 5
+      capacity_eighth_units: 4
+      events:
+      - id: n14
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n15
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n16
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n17
+        kind: note
+        pitch: '6'
+        duration: 1
+    - number: 6
+      capacity_eighth_units: 4
+      events:
+      - id: n18
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n19
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n20
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n21
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 7
+      capacity_eighth_units: 4
+      events:
+      - id: n22
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n23
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n24
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n25
+        kind: note
+        pitch: '2'
+        duration: 1
+    - number: 8
+      capacity_eighth_units: 4
+      events:
+      - id: n26
+        kind: note
+        pitch: '5'
+        duration: 3
+      - id: n27
+        kind: note
+        pitch: '5'
+        duration: 1
+    - number: 9
+      capacity_eighth_units: 4
+      events:
+      - id: n28
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n29
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n30
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n31
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 10
+      capacity_eighth_units: 4
+      events:
+      - id: n32
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n33
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n34
+        kind: note
+        pitch: '5'
+        duration: 1.5
+      - id: n35
+        kind: note
+        pitch: '5'
+        duration: 0.5
+    - number: 11
+      capacity_eighth_units: 4
+      events:
+      - id: n36
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n37
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n38
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n39
+        kind: note
+        pitch: 1^
+        duration: 1
+    - number: 12
+      capacity_eighth_units: 4
+      events:
+      - id: n40
+        kind: note
+        pitch: '5'
+        duration: 4
+    - number: 13
+      capacity_eighth_units: 4
+      events:
+      - id: n41
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n42
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n43
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n44
+        kind: note
+        pitch: '6'
+        duration: 1
+    - number: 14
+      capacity_eighth_units: 4
+      events:
+      - id: n45
+        kind: note
+        pitch: '3'
+        duration: 0.5
+      - id: n46
+        kind: note
+        pitch: '3'
+        duration: 0.5
+      - id: n47
+        kind: note
+        pitch: '3'
+        duration: 0.5
+      - id: n48
+        kind: note
+        pitch: '3'
+        duration: 0.5
+      - id: n49
+        kind: note
+        pitch: '3'
+        duration: 1.5
+      - id: n50
+        kind: note
+        pitch: '3'
+        duration: 0.5
+    - number: 15
+      capacity_eighth_units: 4
+      events:
+      - id: n51
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n52
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n53
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n54
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 16
+      capacity_eighth_units: 4
+      events:
+      - id: n55
+        kind: note
+        pitch: '1'
+        duration: 4
+    ties: []
+    lyric_tracks:
+    - id: zh-tw
+      locale: zh-TW
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: 我
+      - event: n02
+        text: 有
+      - event: n03
+        text: 一
+      - event: n04
+        text: 隻
+      - event: n05
+        text: 小
+      - event: n06
+        text: 毛
+      - event: n07
+        text: 驢
+      - event: n08
+        text: 我
+      - event: n09
+        text: 從
+      - event: n10
+        text: 來
+      - event: n11
+        text: 也
+      - event: n12
+        text: 不
+      - event: n13
+        text: 騎
+      - event: n14
+        text: 有
+      - event: n15
+        text: 一
+      - event: n16
+        text: 天
+      - event: n17
+        text: 我
+      - event: n18
+        text: 心
+      - event: n19
+        text: 血
+      - event: n20
+        text: 來
+      - event: n21
+        text: 潮
+      - event: n22
+        text: 騎
+      - event: n23
+        text: 著
+      - event: n24
+        text: 去
+      - event: n25
+        text: 趕
+      - event: n26
+        text: 集
+      - event: n27
+        text: 我
+      - event: n28
+        text: 手
+      - event: n29
+        text: 裡
+      - event: n30
+        text: 拿
+      - event: n31
+        text: 著
+      - event: n32
+        text: 小
+      - event: n33
+        text: 皮
+      - event: n34
+        text: 鞭
+      - event: n35
+        text: 我
+      - event: n36
+        text: 心
+      - event: n37
+        text: 裡
+      - event: n38
+        text: 正
+      - event: n39
+        text: 得
+      - event: n40
+        text: 意
+      - event: n41
+        text: 不
+      - event: n42
+        text: 知
+      - event: n43
+        text: 怎
+      - event: n44
+        text: 麼
+      - event: n45
+        text: 嘩
+      - event: n46
+        text: 啦
+      - event: n47
+        text: 啦
+      - event: n48
+        text: 啦
+      - event: n49
+        text: 啦
+      - event: n50
+        text: 我
+      - event: n51
+        text: 摔
+      - event: n52
+        text: 了
+      - event: n53
+        text: 一
+      - event: n54
+        text: 身
+      - event: n55
+        text: 泥
+  - id: find-a-friend-zh
+    title: 找朋友
+    status: verified
+    key: C major
+    meter: 2/4
+    pickup_eighth_units: 0
+    source:
+      title: 找朋友
+      source_type: score_website
+      provided_by: assistant_web_research
+      publisher_or_origin: EveryonePiano
+      publisher: EveryonePiano
+      accessed_at: '2026-08-08'
+      selected_variant: EveryonePiano no. 0000472 C-major 2/4 right-hand numbered-score melody; four sung lines only, excluding
+        the unnotated spoken 再見; Traditional Chinese orthography follows a Taiwan school static lyric source
+      original_key: C major
+      original_meter: 2/4
+      pickup: 0
+      rights_status: published_children_song_free_score_preview
+      url: https://www.everyonepiano.cn/Music-472.html
+      supporting_sources:
+      - title: 找朋友雙手簡譜預覽1
+        publisher_or_origin: EveryonePiano
+        url: https://www.everyonepiano.cn/Number-472.html
+        purpose: Exact static numbered-score cross-check of right-hand melody and rhythm
+      - title: 富山國際教育實驗小學附設幼兒園 112 學年(上) 防震教育
+        publisher_or_origin: 臺東縣教育處 / 富山國際教育實驗小學附設幼兒園
+        url: https://w01.boe.ttct.edu.tw/ttcdpedu/upload/4-2-3-112%E5%B9%BC%E5%85%92%E5%9C%92%E9%98%B2%E9%9C%87%E6%95%99%E8%82%B2.pdf
+        purpose: Traditional Chinese wording cross-check for the four sung lines
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 4
+      events:
+      - id: n01
+        kind: note
+        pitch: '5_'
+        duration: 1
+      - id: n02
+        kind: note
+        pitch: '6_'
+        duration: 1
+      - id: n03
+        kind: note
+        pitch: '5_'
+        duration: 1
+      - id: n04
+        kind: note
+        pitch: '6_'
+        duration: 1
+    - number: 2
+      capacity_eighth_units: 4
+      events:
+      - id: n05
+        kind: note
+        pitch: '5_'
+        duration: 1
+      - id: n06
+        kind: note
+        pitch: '6_'
+        duration: 1
+      - id: n07
+        kind: note
+        pitch: '5'
+        duration: 2
+    - number: 3
+      capacity_eighth_units: 4
+      events:
+      - id: n08
+        kind: note
+        pitch: '5_'
+        duration: 1
+      - id: n09
+        kind: note
+        pitch: 1^
+        duration: 1
+      - id: n10
+        kind: note
+        pitch: '7'
+        duration: 1
+      - id: n11
+        kind: note
+        pitch: '6'
+        duration: 1
+    - number: 4
+      capacity_eighth_units: 4
+      events:
+      - id: n12
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n13
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n14
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 5
+      capacity_eighth_units: 4
+      events:
+      - id: n15
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n16
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n17
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n18
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 6
+      capacity_eighth_units: 4
+      events:
+      - id: n19
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n20
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n21
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 7
+      capacity_eighth_units: 4
+      events:
+      - id: n22
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n23
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n24
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n25
+        kind: note
+        pitch: '2'
+        duration: 1
+    - number: 8
+      capacity_eighth_units: 4
+      events:
+      - id: n26
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n27
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n28
+        kind: note
+        pitch: '1'
+        duration: 2
+    ties: []
+    lyric_tracks:
+    - id: zh-tw
+      locale: zh-TW
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: 找
+      - event: n02
+        text: 呀
+      - event: n03
+        text: 找
+      - event: n04
+        text: 呀
+      - event: n05
+        text: 找
+      - event: n06
+        text: 朋
+      - event: n07
+        text: 友
+      - event: n08
+        text: 找
+      - event: n09
+        text: 到
+      - event: n10
+        text: 一
+      - event: n11
+        text: 個
+      - event: n12
+        text: 好
+      - event: n13
+        text: 朋
+      - event: n14
+        text: 友
+      - event: n15
+        text: 敬
+      - event: n16
+        text: 個
+      - event: n17
+        text: 禮
+      - event: n18
+        text: 呀
+      - event: n19
+        text: 握
+      - event: n20
+        text: 握
+      - event: n21
+        text: 手
+      - event: n22
+        text: 你
+      - event: n23
+        text: 是
+      - event: n24
+        text: 我
+      - event: n25
+        text: 的
+      - event: n26
+        text: 好
+      - event: n27
+        text: 朋
+      - event: n28
+        text: 友
+  - id: london-bridge-zh
+    title: 倫敦鐵橋垮下來
+    alias: London Bridge Is Falling Down
+    status: verified
+    key: C major
+    meter: 4/4
+    pickup_eighth_units: 0
+    source:
+      title: 倫敦鐵橋垮下來
+      source_type: score_website
+      provided_by: assistant_web_research
+      publisher_or_origin: Jianpu Space
+      publisher: Jianpu Space
+      accessed_at: '2026-08-08'
+      selected_variant: Traditional Chinese Jianpu Space version in C major, 4/4, eight measures
+      original_key: C major
+      original_meter: 4/4
+      pickup: 0
+      rights_status: traditional_song_with_published_traditional_chinese_lyrics
+      url: https://jianpu.space/zh-tw/songList/1
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 8
+      events:
+      - id: n01
+        kind: note
+        pitch: '5'
+        duration: 3
+      - id: n02
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n03
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n04
+        kind: note
+        pitch: '4'
+        duration: 2
+    - number: 2
+      capacity_eighth_units: 8
+      events:
+      - id: n05
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n06
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n07
+        kind: note
+        pitch: '5'
+        duration: 4
+    - number: 3
+      capacity_eighth_units: 8
+      events:
+      - id: n08
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n09
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n10
+        kind: note
+        pitch: '4'
+        duration: 4
+    - number: 4
+      capacity_eighth_units: 8
+      events:
+      - id: n11
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n12
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n13
+        kind: note
+        pitch: '5'
+        duration: 4
+    - number: 5
+      capacity_eighth_units: 8
+      events:
+      - id: n14
+        kind: note
+        pitch: '5'
+        duration: 3
+      - id: n15
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n16
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n17
+        kind: note
+        pitch: '4'
+        duration: 2
+    - number: 6
+      capacity_eighth_units: 8
+      events:
+      - id: n18
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n19
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n20
+        kind: note
+        pitch: '5'
+        duration: 4
+    - number: 7
+      capacity_eighth_units: 8
+      events:
+      - id: n21
+        kind: note
+        pitch: '2'
+        duration: 4
+      - id: n22
+        kind: note
+        pitch: '5'
+        duration: 4
+    - number: 8
+      capacity_eighth_units: 8
+      events:
+      - id: n23
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n24
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n25
+        kind: note
+        pitch: '1'
+        duration: 4
+    ties: []
+    lyric_tracks:
+    - id: zh-tw
+      locale: zh-TW
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: 倫
+      - event: n02
+        text: 敦
+      - event: n03
+        text: 鐵
+      - event: n04
+        text: 橋
+      - event: n05
+        text: 垮
+      - event: n06
+        text: 下
+      - event: n07
+        text: 來
+      - event: n08
+        text: 垮
+      - event: n09
+        text: 下
+      - event: n10
+        text: 來
+      - event: n11
+        text: 垮
+      - event: n12
+        text: 下
+      - event: n13
+        text: 來
+      - event: n14
+        text: 倫
+      - event: n15
+        text: 敦
+      - event: n16
+        text: 鐵
+      - event: n17
+        text: 橋
+      - event: n18
+        text: 垮
+      - event: n19
+        text: 下
+      - event: n20
+        text: 來
+      - event: n21
+        text: 就
+      - event: n22
+        text: 要
+      - event: n23
+        text: 垮
+      - event: n24
+        text: 下
+      - event: n25
+        text: 來
+  - id: if-you-are-happy-clap-zh
+    title: 如果感到幸福你就拍拍手
+    alias: 幸福拍手歌
+    status: verified
+    key: C major
+    meter: 4/4
+    pickup_eighth_units: 2
+    source:
+      title: 幸福拍手歌
+      source_type: score_website
+      provided_by: assistant_web_research
+      publisher_or_origin: 起跑線兒歌網 (QPX)
+      publisher: 起跑線兒歌網 (QPX)
+      accessed_at: '2026-08-08'
+      selected_variant: QPX static 1=G, 4/4 lyric-aligned score image, first clapping verse; transposed by scale degree to C
+        major for the KAWAI 16-note instrument; Traditional Chinese orthography retained in scorebook
+      original_key: G major
+      original_meter: 4/4
+      pickup: 2
+      rights_status: published_children_song_static_notation
+      url: https://erge.qpx.com/jianpu/149040.html
+      transposition_semitones: -7
+      supporting_sources:
+      - title: 幸福拍手歌歌曲簡譜
+        publisher_or_origin: 曲譜圖網
+        url: https://www.quputu.com/qiyuequpu/dixiao/3530.html
+        purpose: Independent static jianpu cross-check of melody, 4/4 rhythm, action rests, and pickup
+      - title: 拍手歌
+        publisher_or_origin: 中文百科全書
+        url: https://www.newton.com.tw/wiki/%E6%8B%8D%E6%89%8B%E6%AD%8C
+        purpose: Traditional Chinese wording cross-check for the common Chinese clapping verse
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 0
+      capacity_eighth_units: 2
+      pickup: true
+      events:
+      - id: n01
+        kind: note
+        pitch: '5_'
+        duration: 1
+      - id: n02
+        kind: note
+        pitch: '5_'
+        duration: 1
+    - number: 1
+      capacity_eighth_units: 8
+      events:
+      - id: n03
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n04
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n05
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n06
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n07
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n08
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n09
+        kind: note
+        pitch: '7_'
+        duration: 1
+      - id: n10
+        kind: note
+        pitch: '1'
+        duration: 1
+    - number: 2
+      capacity_eighth_units: 8
+      events:
+      - id: n11
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: r01
+        kind: rest
+        duration: 2
+      - id: r02
+        kind: rest
+        duration: 2
+      - id: n12
+        kind: note
+        pitch: '5_'
+        duration: 1
+      - id: n13
+        kind: note
+        pitch: '5_'
+        duration: 1
+    - number: 3
+      capacity_eighth_units: 8
+      events:
+      - id: n14
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n15
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n16
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n17
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n18
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n19
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n20
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n21
+        kind: note
+        pitch: '2'
+        duration: 1
+    - number: 4
+      capacity_eighth_units: 8
+      events:
+      - id: n22
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: r03
+        kind: rest
+        duration: 2
+      - id: r04
+        kind: rest
+        duration: 2
+      - id: n23
+        kind: note
+        pitch: '5_'
+        duration: 1
+      - id: n24
+        kind: note
+        pitch: '5_'
+        duration: 1
+    - number: 5
+      capacity_eighth_units: 8
+      events:
+      - id: n25
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n26
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n27
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n28
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n29
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n30
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n31
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n32
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 6
+      capacity_eighth_units: 8
+      events:
+      - id: n33
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n34
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n35
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n36
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n37
+        kind: note
+        pitch: '7_'
+        duration: 1
+      - id: n38
+        kind: note
+        pitch: '1'
+        duration: 1
+    - number: 7
+      capacity_eighth_units: 8
+      events:
+      - id: n39
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n40
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n41
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n42
+        kind: note
+        pitch: '7_'
+        duration: 1
+      - id: n43
+        kind: note
+        pitch: '5_'
+        duration: 1
+      - id: n44
+        kind: note
+        pitch: '6_'
+        duration: 1
+      - id: n45
+        kind: note
+        pitch: '7_'
+        duration: 1
+    - number: 8
+      capacity_eighth_units: 8
+      events:
+      - id: n46
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: r05
+        kind: rest
+        duration: 2
+      - id: r06
+        kind: rest
+        duration: 4
+    ties: []
+    lyric_tracks:
+    - id: zh-tw
+      locale: zh-TW
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: 如
+      - event: n02
+        text: 果
+      - event: n03
+        text: 感
+      - event: n04
+        text: 到
+      - event: n05
+        text: 幸
+      - event: n06
+        text: 福
+      - event: n07
+        text: 你
+      - event: n08
+        text: 就
+      - event: n09
+        text: 拍
+      - event: n10
+        text: 拍
+      - event: n11
+        text: 手
+      - event: n12
+        text: 如
+      - event: n13
+        text: 果
+      - event: n14
+        text: 感
+      - event: n15
+        text: 到
+      - event: n16
+        text: 幸
+      - event: n17
+        text: 福
+      - event: n18
+        text: 你
+      - event: n19
+        text: 就
+      - event: n20
+        text: 拍
+      - event: n21
+        text: 拍
+      - event: n22
+        text: 手
+      - event: n23
+        text: 如
+      - event: n24
+        text: 果
+      - event: n25
+        text: 感
+      - event: n26
+        text: 到
+      - event: n27
+        text: 幸
+      - event: n28
+        text: 福
+      - event: n29
+        text: 你
+      - event: n30
+        text: 就
+      - event: n31
+        text: 快
+      - event: n32
+        text: 快
+      - event: n33
+        text: 拍
+      - event: n34
+        text: 拍
+      - event: n35
+        text: 手
+      - event: n36
+        text: 呦
+      - event: n37
+        text: 看
+      - event: n38
+        text: 哪
+      - event: n39
+        text: 大
+      - event: n40
+        text: 家
+      - event: n41
+        text: 都
+      - event: n42
+        text: 一
+      - event: n43
+        text: 齊
+      - event: n44
+        text: 拍
+      - event: n45
+        text: 拍
+      - event: n46
+        text: 手
   quarantine: []
 workflow:
 - read_scorebook
