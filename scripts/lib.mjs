@@ -46,6 +46,10 @@ function isPositiveInteger(value) {
   return Number.isInteger(value) && value > 0;
 }
 
+function isSupportedDuration(value) {
+  return Number.isFinite(value) && value > 0 && Number.isInteger(value * 2);
+}
+
 function isPositiveNumber(value) {
   return Number.isFinite(value) && value > 0;
 }
@@ -170,8 +174,8 @@ function validateScoreData(score, options) {
       if (!['note', 'rest'].includes(event?.kind)) {
         fail('event-kind', 'event kind 只能是 note 或 rest', `${eventPath}.kind`);
       }
-      if (!isPositiveInteger(event?.duration)) {
-        fail('event-duration', 'event duration 必須是正整數', `${eventPath}.duration`);
+      if (!isSupportedDuration(event?.duration)) {
+        fail('event-duration', 'event duration 必須是 0.5 個八分音符單位的正倍數', `${eventPath}.duration`);
       } else {
         durationSum += event.duration;
       }
@@ -265,6 +269,9 @@ export function validateProject(book, fixtureBook) {
   if (!isObject(book)) return { pass: false, errors: [{ code: 'invalid-root', message: 'scorebook 必須是物件', path: '' }], warnings };
   if (book?.project?.canonical_file !== 'scorebook.yaml') fail('canonical-file', 'canonical_file 必須是 scorebook.yaml', 'project.canonical_file');
   if (book?.schema?.version !== 2) fail('schema-version', 'schema.version 必須是 2', 'schema.version');
+  if (book?.schema?.duration_unit !== 'eighth_note' || book?.schema?.duration_quantum_eighth_units !== 0.5 || book?.schema?.smallest_supported_duration !== 'sixteenth_note') {
+    fail('schema-duration', '時值規格必須以八分音符為單位並支援 0.5 單位的十六分音符', 'schema');
+  }
   if (book?.schema?.melody_and_lyrics_are_separate !== true) fail('schema-lyrics', '旋律與歌詞必須分離', 'schema');
   if (book?.schema?.measures_are_explicit !== true || book?.schema?.pickup_is_explicit !== true || book?.schema?.ties_are_explicit !== true) {
     fail('schema-music-structure', '小節、弱起與連結線必須明確建模', 'schema');
