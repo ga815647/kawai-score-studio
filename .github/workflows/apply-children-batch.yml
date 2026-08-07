@@ -1,0 +1,212 @@
+name: Apply children score batch
+
+on:
+  push:
+    branches:
+      - feat/children-batch-humpty-donkey-friends
+    paths:
+      - .github/workflows/apply-children-batch.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/children-batch-humpty-donkey-friends
+          fetch-depth: 0
+
+      - name: Apply verified score batch
+        shell: bash
+        run: |
+          python -m pip install --quiet pyyaml
+          python <<'PY'
+          from pathlib import Path
+          import copy, yaml
+
+          def N(i,p,d): return {"id":f"n{i:02d}","kind":"note","pitch":p,"duration":d}
+          def R(i,d): return {"id":f"r{i:02d}","kind":"rest","duration":d}
+          V={k:True for k in ("source_to_scorebook_checked","melody_checked","rhythm_checked","rests_checked","pickup_checked","measures_checked","ties_checked","lyrics_checked","user_approved")}
+
+          def measures(spec, cap):
+              out=[]; n=1
+              for number,row in enumerate(spec,1):
+                  ev=[]
+                  for p,d in row:
+                      ev.append(N(n,p,d)); n+=1
+                  out.append({"number":number,"capacity_eighth_units":cap,"events":ev})
+              return out
+
+          def track(locale, text):
+              return [{"id":"original-en" if locale=="en" else "zh-tw","locale":locale,"role":"original","status":"verified","default":True,
+                       "syllables":[{"event":f"n{i:02d}","text":ch} for i,ch in enumerate(text,1)]}]
+
+          songs=[]
+
+          hspec=[
+            [("3",2),("3",1),("4",2),("4",1)],
+            [("5",1),("6",1),("7",1),("1^",3)],
+            [("3",2),("5",1),("4",2),("6",1)],
+            [("5",1),("3",1),("1",1),("2",3)],
+            [("3",1),("3",1),("5",1),("4",1),("4",1),("5",1)],
+            [("5",1),("6",1),("7",1),("1^",3)],
+            [("4^",1),("4^",1),("1^",1),("4^",1),("4^",1),("3^",1)],
+            [("2^",1),("1^",1),("7",1),("1^",3)],
+          ]
+          hlyrics=["Hump-","ty","Dump-","ty","sat","on","a","wall,","Hump-","ty","Dump-","ty","had","a","great","fall.",
+                   "All","the","king's","hors-","es","and","all","the","king's","men","could-","n't","put","Hump-","ty","to-","geth-","er","a-","gain."]
+          songs.append({
+            "id":"humpty-dumpty","title":"Humpty Dumpty","status":"verified","key":"C major","meter":"6/8","pickup_eighth_units":0,
+            "source":{"title":"Humpty Dumpty – Easy Piano Notes and Sheet Music","source_type":"score_website","provided_by":"assistant_web_research",
+              "publisher_or_origin":"KidsPlayMusic","publisher":"KidsPlayMusic","accessed_at":"2026-08-08",
+              "selected_variant":"KidsPlayMusic C-major 6/8 static piano sheet, eight measures, English rhyme",
+              "original_key":"C major","original_meter":"6/8","pickup":0,"rights_status":"traditional_nursery_rhyme_with_free_beginner_sheet_music",
+              "url":"https://www.kidsplaymusic.com/humpty-dumpty-piano/",
+              "supporting_sources":[{"title":"Humpty Dumpty Piano sheet music image","publisher_or_origin":"KidsPlayMusic",
+                "url":"https://www.kidsplaymusic.com/wp-content/uploads/2024/06/Humpty-Dumpty-Piano-sheet-music.png",
+                "purpose":"Exact static staff-notation and lyric-alignment cross-check"}]},
+            "verification":copy.deepcopy(V),"measures":measures(hspec,6),"ties":[],
+            "lyric_tracks":[{"id":"original-en","locale":"en","role":"original","status":"verified","default":True,
+              "syllables":[{"event":f"n{i:02d}","text":x} for i,x in enumerate(hlyrics,1)]}]
+          })
+
+          dspec=[
+            [("1",1),("1",1),("1",1),("3",1)],[("5",1),("5",1),("5",1.5),("5",.5)],
+            [("6",1),("6",1),("6",1),("1^",1)],[("5",4)],
+            [("4",1),("4",1),("4",1),("6",1)],[("3",1),("3",1),("3",1),("3",1)],
+            [("2",1),("2",1),("2",1),("2",1)],[("5",3),("5",1)],
+            [("1",1),("1",1),("1",1),("3",1)],[("5",1),("5",1),("5",1.5),("5",.5)],
+            [("6",1),("6",1),("6",1),("1^",1)],[("5",4)],
+            [("4",1),("4",1),("4",1),("6",1)],[("3",.5),("3",.5),("3",.5),("3",.5),("3",1.5),("3",.5)],
+            [("2",1),("2",1),("2",1),("3",1)],[("1",4)]
+          ]
+          dtext=list("我有一隻小毛驢我從來也不騎有一天我心血來潮騎著去趕集我手裡拿著小皮鞭我心裡正得意不知怎麼嘩啦啦啦啦我摔了一身泥")
+          songs.append({
+            "id":"little-donkey-zh","title":"小毛驢","status":"verified","key":"C major","meter":"2/4","pickup_eighth_units":0,
+            "source":{"title":"小毛驢","source_type":"score_website","provided_by":"assistant_web_research",
+              "publisher_or_origin":"Jianpu Space","publisher":"Jianpu Space","accessed_at":"2026-08-08",
+              "selected_variant":"Traditional Chinese Jianpu Space melody and lyrics in C major, 2/4; exact measure boundaries and short-note grouping cross-checked against QPX static score image",
+              "original_key":"C major","original_meter":"2/4","pickup":0,"rights_status":"published_children_song_static_notation",
+              "url":"https://jianpu.space/zh-tw/songList/7",
+              "supporting_sources":[{"title":"小毛驢歌譜","publisher_or_origin":"起跑線兒歌網 (QPX)","url":"https://erge.qpx.com/jianpu/61753.html",
+                "purpose":"Static score-image cross-check of 2/4 measure boundaries, durations, and lyric alignment"}]},
+            "verification":copy.deepcopy(V),"measures":measures(dspec,4),"ties":[],"lyric_tracks":track("zh-TW",dtext)
+          })
+
+          fspec=[
+            [("5_",1),("6_",1),("5_",1),("6_",1)],[("5_",1),("6_",1),("5",2)],
+            [("5_",1),("1^",1),("7",1),("6",1)],[("5",1),("5",1),("3",2)],
+            [("5",1),("5",1),("3",1),("3",1)],[("5",1),("5",1),("3",2)],
+            [("2",1),("4",1),("3",1),("2",1)],[("1",1),("2",1),("1",2)]
+          ]
+          ftext=list("找呀找呀找朋友找到一個好朋友敬個禮呀握握手你是我的好朋友")
+          songs.append({
+            "id":"find-a-friend-zh","title":"找朋友","status":"verified","key":"C major","meter":"2/4","pickup_eighth_units":0,
+            "source":{"title":"找朋友","source_type":"score_website","provided_by":"assistant_web_research",
+              "publisher_or_origin":"EveryonePiano","publisher":"EveryonePiano","accessed_at":"2026-08-08",
+              "selected_variant":"EveryonePiano no. 0000472 C-major 2/4 right-hand numbered-score melody; four sung lines only, excluding the unnotated spoken 再見; Traditional Chinese orthography follows a Taiwan school static lyric source",
+              "original_key":"C major","original_meter":"2/4","pickup":0,"rights_status":"published_children_song_free_score_preview",
+              "url":"https://www.everyonepiano.cn/Music-472.html",
+              "supporting_sources":[
+                {"title":"找朋友雙手簡譜預覽1","publisher_or_origin":"EveryonePiano","url":"https://www.everyonepiano.cn/Number-472.html",
+                 "purpose":"Exact static numbered-score cross-check of right-hand melody and rhythm"},
+                {"title":"富山國際教育實驗小學附設幼兒園 112 學年(上) 防震教育","publisher_or_origin":"臺東縣教育處 / 富山國際教育實驗小學附設幼兒園",
+                 "url":"https://w01.boe.ttct.edu.tw/ttcdpedu/upload/4-2-3-112%E5%B9%BC%E5%85%92%E5%9C%92%E9%98%B2%E9%9C%87%E6%95%99%E8%82%B2.pdf",
+                 "purpose":"Traditional Chinese wording cross-check for the four sung lines"}]},
+            "verification":copy.deepcopy(V),"measures":measures(fspec,4),"ties":[],"lyric_tracks":track("zh-TW",ftext)
+          })
+
+          lspec=[
+            [("5",3),("6",1),("5",2),("4",2)],[("3",2),("4",2),("5",4)],
+            [("2",2),("3",2),("4",4)],[("3",2),("4",2),("5",4)],
+            [("5",3),("6",1),("5",2),("4",2)],[("3",2),("4",2),("5",4)],
+            [("2",4),("5",4)],[("3",2),("2",2),("1",4)]
+          ]
+          ltext=list("倫敦鐵橋垮下來垮下來垮下來倫敦鐵橋垮下來就要垮下來")
+          songs.append({
+            "id":"london-bridge-zh","title":"倫敦鐵橋垮下來","alias":"London Bridge Is Falling Down","status":"verified",
+            "key":"C major","meter":"4/4","pickup_eighth_units":0,
+            "source":{"title":"倫敦鐵橋垮下來","source_type":"score_website","provided_by":"assistant_web_research",
+              "publisher_or_origin":"Jianpu Space","publisher":"Jianpu Space","accessed_at":"2026-08-08",
+              "selected_variant":"Traditional Chinese Jianpu Space version in C major, 4/4, eight measures",
+              "original_key":"C major","original_meter":"4/4","pickup":0,"rights_status":"traditional_song_with_published_traditional_chinese_lyrics",
+              "url":"https://jianpu.space/zh-tw/songList/1"},
+            "verification":copy.deepcopy(V),"measures":measures(lspec,8),"ties":[],"lyric_tracks":track("zh-TW",ltext)
+          })
+
+          hm=[]; n=1; r=1
+          hm.append({"number":0,"capacity_eighth_units":2,"pickup":True,"events":[N(1,"5_",1),N(2,"5_",1)]}); n=3
+          rows = [
+            [("n","1",1),("n","1",1),("n","1",1),("n","1",1),("n","1",1),("n","1",1),("n","7_",1),("n","1",1)],
+            [("n","2",2),("r",None,2),("r",None,2),("n","5_",1),("n","5_",1)],
+            [("n","2",1),("n","2",1),("n","2",1),("n","2",1),("n","2",1),("n","2",1),("n","1",1),("n","2",1)],
+            [("n","3",2),("r",None,2),("r",None,2),("n","5_",1),("n","5_",1)],
+            [("n","3",1),("n","3",1),("n","3",1),("n","3",1),("n","3",1),("n","3",1),("n","2",1),("n","3",1)],
+            [("n","4",2),("n","3",1),("n","2",1),("n","1",2),("n","7_",1),("n","1",1)],
+            [("n","2",2),("n","2",1),("n","1",1),("n","7_",1),("n","5_",1),("n","6_",1),("n","7_",1)],
+            [("n","1",2),("r",None,2),("r",None,4)]
+          ]
+          for number,row in enumerate(rows,1):
+              ev=[]
+              for kind,p,d in row:
+                  if kind=="n":
+                      ev.append(N(n,p,d)); n+=1
+                  else:
+                      ev.append(R(r,d)); r+=1
+              hm.append({"number":number,"capacity_eighth_units":8,"events":ev})
+          happy=list("如果感到幸福你就拍拍手如果感到幸福你就拍拍手如果感到幸福你就快快拍拍手呦看哪大家都一齊拍拍手")
+          songs.append({
+            "id":"if-you-are-happy-clap-zh","title":"如果感到幸福你就拍拍手","alias":"幸福拍手歌","status":"verified",
+            "key":"C major","meter":"4/4","pickup_eighth_units":2,
+            "source":{"title":"幸福拍手歌","source_type":"score_website","provided_by":"assistant_web_research",
+              "publisher_or_origin":"起跑線兒歌網 (QPX)","publisher":"起跑線兒歌網 (QPX)","accessed_at":"2026-08-08",
+              "selected_variant":"QPX static 1=G, 4/4 lyric-aligned score image, first clapping verse; transposed by scale degree to C major for the KAWAI 16-note instrument; Traditional Chinese orthography retained in scorebook",
+              "original_key":"G major","original_meter":"4/4","pickup":2,"rights_status":"published_children_song_static_notation",
+              "url":"https://erge.qpx.com/jianpu/149040.html","transposition_semitones":-7,
+              "supporting_sources":[
+                {"title":"幸福拍手歌歌曲簡譜","publisher_or_origin":"曲譜圖網","url":"https://www.quputu.com/qiyuequpu/dixiao/3530.html",
+                 "purpose":"Independent static jianpu cross-check of melody, 4/4 rhythm, action rests, and pickup"},
+                {"title":"拍手歌","publisher_or_origin":"中文百科全書","url":"https://www.newton.com.tw/wiki/%E6%8B%8D%E6%89%8B%E6%AD%8C",
+                 "purpose":"Traditional Chinese wording cross-check for the common Chinese clapping verse"}]},
+            "verification":copy.deepcopy(V),"measures":hm,"ties":[],"lyric_tracks":track("zh-TW",happy)
+          })
+
+          for s in songs:
+              note_ids={e["id"] for m in s["measures"] for e in m["events"] if e["kind"]=="note"}
+              for m in s["measures"]:
+                  if sum(e["duration"] for e in m["events"]) != m["capacity_eighth_units"]:
+                      raise SystemExit(f"duration mismatch: {s['id']} m{m['number']}")
+              if any(x["event"] not in note_ids for x in s["lyric_tracks"][0]["syllables"]):
+                  raise SystemExit(f"bad lyric ref: {s['id']}")
+
+          fragment=yaml.safe_dump(songs,allow_unicode=True,sort_keys=False,width=120,default_flow_style=False)
+          fragment="\n".join("  "+line if line else line for line in fragment.splitlines())+"\n"
+
+          score=Path("scorebook.yaml")
+          text=score.read_text(encoding="utf-8")
+          ids=[s["id"] for s in songs]
+          if any(f"  - id: {i}\n" in text for i in ids):
+              raise SystemExit("batch id already exists")
+          marker="  quarantine: []\nworkflow:"
+          if marker not in text:
+              raise SystemExit("scorebook insertion marker not found")
+          text=text.replace(marker,fragment+marker,1)
+          text=text.replace("  version: 0.6.21\n","  version: 0.6.22\n",1)
+          score.write_text(text,encoding="utf-8")
+
+          package=Path("package.json")
+          p=package.read_text(encoding="utf-8")
+          if '"version": "0.6.21"' not in p:
+              raise SystemExit("package version marker not found")
+          package.write_text(p.replace('"version": "0.6.21"','"version": "0.6.22"',1),encoding="utf-8")
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/apply-children-batch.yml
+          git add scorebook.yaml package.json
+          git commit -m "feat: add five children songs"
+          git push origin HEAD:feat/children-batch-humpty-donkey-friends
