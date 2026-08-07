@@ -21,8 +21,25 @@ if (vexflowPackage.version !== book.rendering.staff.version) {
 }
 
 const hash = createHash('sha256').update(source).digest('hex');
-const assetVersion = `${book.project.version}-${hash.slice(0, 12)}`;
-const template = await readFile('src/index.template.html', 'utf8');
+const assetSourcePaths = [
+  'src/index.template.html',
+  'src/styles.css',
+  'src/app.js',
+  'src/audio.js',
+  'src/score-engine.js',
+  'src/staff-renderer.js',
+];
+const assetSources = new Map(await Promise.all(assetSourcePaths.map(async (path) => [
+  path,
+  await readFile(path, 'utf8'),
+])));
+const assetHasher = createHash('sha256').update(source);
+for (const path of assetSourcePaths) {
+  assetHasher.update('\0').update(path).update('\0').update(assetSources.get(path));
+}
+const assetHash = assetHasher.digest('hex');
+const assetVersion = `${book.project.version}-${hash.slice(0, 12)}-${assetHash.slice(0, 12)}`;
+const template = assetSources.get('src/index.template.html');
 const html = template
   .replaceAll('{{SCOREBOOK_VERSION}}', book.project.version)
   .replaceAll('{{SCOREBOOK_SHA256}}', hash)
@@ -57,6 +74,7 @@ const designCss = `:root {
 const buildInfo = {
   version: book.project.version,
   scorebook_sha256: hash,
+  asset_source_sha256: assetHash,
   asset_version: assetVersion,
   commit_sha: process.env.GITHUB_SHA ?? null,
 };
@@ -71,7 +89,7 @@ await writeFile('dist/fixtures.json', `${JSON.stringify(fixtureBook, null, 2)}\n
 await writeFile('dist/gate-report.json', `${JSON.stringify(validation, null, 2)}\n`);
 
 for (const file of ['app.js', 'audio.js', 'score-engine.js', 'staff-renderer.js']) {
-  let content = await readFile(`src/${file}`, 'utf8');
+  let content = assetSources.get(`src/${file}`);
   content = content.replaceAll('{{ASSET_VERSION}}', assetVersion);
   if (file === 'staff-renderer.js') {
     content = content.replace(
@@ -81,7 +99,7 @@ for (const file of ['app.js', 'audio.js', 'score-engine.js', 'staff-renderer.js'
   }
   await writeFile(`dist/${file}`, content);
 }
-await cp('src/styles.css', 'dist/styles.css');
+await writeFile('dist/styles.css', assetSources.get('src/styles.css'));
 await cp('node_modules/vexflow/build/cjs/vexflow.js', 'dist/vendor/vexflow.js');
 
 console.log(
