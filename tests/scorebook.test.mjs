@@ -16,13 +16,13 @@ async function loadProject() {
   return { book, fixtures };
 }
 
-test('0.6.15 has seven verified songs, no quarantine, and passes structural gates', async () => {
+test('0.6.16 has nine verified songs, no quarantine, and passes structural gates', async () => {
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.15');
+  assert.equal(book.project.version, '0.6.16');
   assert.deepEqual(result.counts, {
-    verifiedSongs: 7,
+    verifiedSongs: 9,
     quarantinedEntries: 0,
     fixtures: 1,
   });
@@ -34,6 +34,8 @@ test('0.6.15 has seven verified songs, no quarantine, and passes structural gate
     'old-macdonald-zh',
     'mary-had-a-little-lamb-zh',
     'happy-birthday-zh',
+    'row-row-row-your-boat',
+    'the-wheels-on-the-bus',
   ]);
 });
 
@@ -113,6 +115,70 @@ test('The Itsy Bitsy Spider exactly models the selected F-major 6/8 PDF', async 
   assert.equal(song.source.content_sha256, '180ad5ac50ea5c057abe74632e798057406cace2aeb31d652e24f2505c476ded');
   assert.equal(song.source.publisher, 'Michael Kravchuk');
   assert.equal(song.source.selected_variant, 'F-major 6/8 complete classic English verse');
+  assert.ok(Object.values(song.verification).every((value) => value === true));
+});
+
+test('Row, Row, Row Your Boat exactly models the selected C-major 3/4 PDF', async () => {
+  const { book } = await loadProject();
+  const song = book.library.songs.find((candidate) => candidate.id === 'row-row-row-your-boat');
+  assert.ok(song);
+  assert.equal(song.key, 'C major');
+  assert.equal(song.meter, '3/4');
+  assert.equal(song.pickup_eighth_units, 0);
+  assert.equal(song.measures.length, 16);
+  assert.deepEqual(flattenEvents(song).map((event) => [event.pitch, event.duration]), [
+    ['1', 6], ['1', 6], ['1', 4], ['2', 2], ['3', 6],
+    ['3', 4], ['2', 2], ['3', 4], ['4', 2], ['5', 6], ['5', 6],
+    ['1^', 2], ['1^', 2], ['1^', 2], ['5', 2], ['5', 2], ['5', 2],
+    ['3', 2], ['3', 2], ['3', 2], ['1', 2], ['1', 2], ['1', 2],
+    ['5', 4], ['4', 2], ['3', 4], ['2', 2], ['1', 6], ['1', 6],
+  ]);
+  assert.deepEqual(song.ties, [
+    { id: 't01', from: 'n10', to: 'n11' },
+    { id: 't02', from: 'n28', to: 'n29' },
+  ]);
+  const track = song.lyric_tracks.find((candidate) => candidate.default);
+  assert.equal(track.locale, 'en');
+  assert.equal(track.role, 'original');
+  assert.equal(track.syllables.map((item) => item.text).join(' '),
+    'Row, row, row your boat. Gent- ly down the stream. Mer- ri- ly, mer- ri- ly, mer- ri- ly mer- ri- ly. Life is but a dream.');
+  assert.deepEqual(track.continuations, [
+    { from: 'n10', through: 'n11' },
+    { from: 'n28', through: 'n29' },
+  ]);
+  assert.equal(song.source.url, 'https://pianosongdownload.com/Row%20Row%20Row%20Your%20Boat.pdf');
+  assert.ok(Object.values(song.verification).every((value) => value === true));
+});
+
+test('The Wheels on the Bus exactly models the selected C-major 2/4 PDF', async () => {
+  const { book } = await loadProject();
+  const song = book.library.songs.find((candidate) => candidate.id === 'the-wheels-on-the-bus');
+  assert.ok(song);
+  assert.equal(song.key, 'C major');
+  assert.equal(song.meter, '2/4');
+  assert.equal(song.pickup_eighth_units, 2);
+  assert.equal(song.measures.length, 16);
+  assert.deepEqual(song.measures[0], {
+    number: 0,
+    capacity_eighth_units: 2,
+    events: [{ id: 'n01', kind: 'note', pitch: '5', duration: 2 }],
+    pickup: true,
+  });
+  assert.deepEqual(flattenEvents(song).map((event) => [event.pitch, event.duration]), [
+    ['5', 2],
+    ['1^', 2], ['1^', 1], ['1^', 1], ['1^', 2], ['3^', 2],
+    ['5^', 2], ['3^', 2], ['1^', 4], ['2^', 2], ['7', 2], ['5', 4],
+    ['4^', 2], ['2^', 2], ['1^', 2], ['5', 2],
+    ['1^', 2], ['1^', 1], ['1^', 1], ['1^', 2], ['3^', 2],
+    ['5^', 2], ['3^', 2], ['1^', 4], ['2^', 4], ['5', 3], ['5', 1], ['1^', 4],
+  ]);
+  assert.deepEqual(song.ties, []);
+  const track = song.lyric_tracks.find((candidate) => candidate.default);
+  assert.equal(track.locale, 'en');
+  assert.equal(track.role, 'original');
+  assert.equal(track.syllables.map((item) => item.text).join(' '),
+    'The wheels on the bus go round and round, round and round, round and round. The wheels on the bus go round and round, all around the town.');
+  assert.equal(song.source.url, 'https://www.kidsplaymusic.com/wp-content/uploads/2024/06/Wheels-on-the-Bus-Piano-Sheet-Music.pdf');
   assert.ok(Object.values(song.verification).every((value) => value === true));
 });
 
