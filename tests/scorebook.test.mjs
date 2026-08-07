@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { decomposeDuration } from '../src/score-engine.js';
 import {
   flattenEvents,
   loadFixtures,
@@ -16,11 +18,13 @@ async function loadProject() {
   return { book, fixtures };
 }
 
-test('0.6.18 has ten verified songs, no quarantine, and passes structural gates', async () => {
+test('0.6.19 has ten verified songs, no quarantine, and passes structural gates', async () => {
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.18');
+  assert.equal(book.project.version, '0.6.19');
+  assert.equal(book.schema.duration_quantum_eighth_units, 0.5);
+  assert.equal(book.schema.smallest_supported_duration, 'sixteenth_note');
   assert.deepEqual(result.counts, {
     verifiedSongs: 10,
     quarantinedEntries: 0,
@@ -183,7 +187,7 @@ test('The Wheels on the Bus exactly models the selected C-major 2/4 PDF', async 
   assert.ok(Object.values(song.verification).every((value) => value === true));
 });
 
-test('Canon in D exactly models the selected and transposed xylophone theme', async () => {
+test('Canon in D exactly models the selected 32-measure xylophone excerpt', async () => {
   const { book } = await loadProject();
   const song = book.library.songs.find((candidate) => candidate.id === 'canon-in-d');
   assert.ok(song);
@@ -192,17 +196,18 @@ test('Canon in D exactly models the selected and transposed xylophone theme', as
   assert.equal(song.key, 'C major');
   assert.equal(song.meter, '4/4');
   assert.equal(song.pickup_eighth_units, 0);
-  assert.equal(song.measures.length, 8);
-  assert.deepEqual(flattenEvents(song).map((event) => [event.pitch, event.duration]), [
-    ['3^', 4], ['2^', 4],
-    ['1^', 4], ['7', 4],
-    ['6', 4], ['5', 4],
-    ['6', 4], ['7', 4],
-    ['1^', 4], ['7', 4],
-    ['6', 4], ['5', 4],
-    ['4', 4], ['3', 4],
-    ['4', 4], ['5', 4],
-  ]);
+  assert.equal(song.measures.length, 32);
+
+  const events = flattenEvents(song);
+  assert.equal(events.length, 292);
+  assert.equal(events.filter((event) => event.duration === 0.5).length, 172);
+  assert.ok(song.measures.every((measure) => measure.events.reduce((sum, event) => sum + event.duration, 0) === 8));
+  const compactMeasures = song.measures.map((measure) => measure.events.map((event) => [event.pitch, event.duration]));
+  const digest = createHash('sha256').update(JSON.stringify(compactMeasures)).digest('hex');
+  assert.equal(digest, 'f0f4fb50337b01533001b537db981283084b75dea6f00910665a90694e639271');
+  assert.deepEqual(decomposeDuration(0.5), [{ units: 0.5, duration: '16', dots: 0 }]);
+  assert.deepEqual(decomposeDuration(1.5), [{ units: 1.5, duration: '8d', dots: 1 }]);
+
   assert.deepEqual(song.ties, []);
   const track = song.lyric_tracks.find((candidate) => candidate.default);
   assert.equal(track.id, 'instrumental');
@@ -210,14 +215,12 @@ test('Canon in D exactly models the selected and transposed xylophone theme', as
   assert.equal(track.role, 'original');
   assert.deepEqual(track.syllables, []);
   assert.equal(song.source.original_key, 'D major');
-  assert.equal(song.source.selected_source_measures, '5-12');
+  assert.equal(song.source.selected_source_measures, '5-12, 35-50, 61-68');
   assert.equal(song.source.transposition_semitones, -2);
+  assert.match(song.source.selected_variant, /no octave folding/);
   assert.equal(song.source.url, 'https://musescore.org/sites/musescore.org/files/2020-09/Canon_in_D.pdf');
   assert.equal(song.source.supporting_sources[0].file_reference, 'Canon_in_D.mxl');
-  assert.equal(
-    song.source.supporting_sources[0].content_sha256,
-    '23762273abf1d6bd7001c89dc620bee6accf0045573078e2865e086df2f1bb14',
-  );
+  assert.equal(song.source.supporting_sources[0].content_sha256, '23762273abf1d6bd7001c89dc620bee6accf0045573078e2865e086df2f1bb14');
   assert.ok(Object.values(song.verification).every((value) => value === true));
 });
 

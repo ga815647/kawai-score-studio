@@ -15,7 +15,7 @@ const songs = [
   { id: 'happy-birthday-zh', title: '生日快樂', notes: 25, lyrics: 24 },
   { id: 'row-row-row-your-boat', title: 'Row, Row, Row Your Boat', notes: 29, lyrics: 27 },
   { id: 'the-wheels-on-the-bus', title: 'The Wheels on the Bus', notes: 28, lyrics: 28 },
-  { id: 'canon-in-d', title: 'Canon in D', notes: 16, lyrics: 0 },
+  { id: 'canon-in-d', title: 'Canon in D', notes: 292, lyrics: 0 },
 ];
 
 test('library-only site renders directory, all verified songs, explicit A4 controls, and no public Studio or quarantine panel', async ({ page }) => {
@@ -24,7 +24,7 @@ test('library-only site renders directory, all verified songs, explicit A4 contr
   await page.goto('/', { waitUntil: 'networkidle' });
 
   await expect(page.locator('.status--pass')).toBeVisible();
-  await expect(page.locator('.status--pass')).toContainText('規格 0.6.18');
+  await expect(page.locator('.status--pass')).toContainText('規格 0.6.19');
   await expect(page.locator('.status--pass')).not.toContainText('隔離');
   await expect(page.locator('#song-directory')).toBeVisible();
   await expect(page.locator('#library-view')).toBeVisible();
@@ -41,8 +41,8 @@ test('library-only site renders directory, all verified songs, explicit A4 contr
     styles: [...document.querySelectorAll('link[rel="stylesheet"]')]
       .map((link) => link.getAttribute('href')),
   }));
-  expect(assetUrls.scripts.every((url) => url.includes('?v=0.6.18-'))).toBe(true);
-  expect(assetUrls.styles.every((url) => url.includes('?v=0.6.18-'))).toBe(true);
+  expect(assetUrls.scripts.every((url) => url.includes('?v=0.6.19-'))).toBe(true);
+  expect(assetUrls.styles.every((url) => url.includes('?v=0.6.19-'))).toBe(true);
 
   const reports = [];
   for (const song of songs) {

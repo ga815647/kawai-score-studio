@@ -5,7 +5,9 @@ const DURATION_PARTS = [
   { units: 4, duration: 'h', dots: 0 },
   { units: 3, duration: 'qd', dots: 1 },
   { units: 2, duration: 'q', dots: 0 },
+  { units: 1.5, duration: '8d', dots: 1 },
   { units: 1, duration: '8', dots: 0 },
+  { units: 0.5, duration: '16', dots: 0 },
 ];
 
 export function parsePitch(token) {
@@ -38,16 +40,19 @@ export function pitchToVexKey(token, keyName, tonicOctave = 4) {
 }
 
 export function decomposeDuration(units) {
-  if (!Number.isInteger(units) || units <= 0) throw new Error(`非法時值：${units}`);
+  if (!Number.isFinite(units) || units <= 0 || !Number.isInteger(units * 2)) {
+    throw new Error(`非法時值：${units}`);
+  }
   const parts = [];
-  let remaining = units;
+  let remainingHalfUnits = Math.round(units * 2);
   for (const part of DURATION_PARTS) {
-    while (remaining >= part.units) {
+    const partHalfUnits = Math.round(part.units * 2);
+    while (remainingHalfUnits >= partHalfUnits) {
       parts.push({ ...part });
-      remaining -= part.units;
+      remainingHalfUnits -= partHalfUnits;
     }
   }
-  if (remaining !== 0) throw new Error(`無法拆解時值：${units}`);
+  if (remainingHalfUnits !== 0) throw new Error(`無法拆解時值：${units}`);
   return parts;
 }
 
