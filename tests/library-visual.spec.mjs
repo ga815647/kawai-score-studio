@@ -219,24 +219,43 @@ test('selected-song print produces readable A4 output and never prints the fixtu
     (element) => getComputedStyle(element).display === 'none',
   ))).toBe(true);
 
-  const printGeometry = await target.evaluate((element) => ({
-    scrollWidth: element.scrollWidth,
-    clientWidth: element.clientWidth,
-    cardDisplay: getComputedStyle(element).display,
-    pageWidth: getComputedStyle(element.querySelector('.score-page')).width,
-    systems: [...element.querySelectorAll('.score-system')].map((system) => ({
-      breakInside: getComputedStyle(system).breakInside,
-      pageBreakInside: getComputedStyle(system).pageBreakInside,
-      scrollWidth: system.scrollWidth,
-      clientWidth: system.clientWidth,
-    })),
-  }));
+  const printGeometry = await target.evaluate((element) => {
+    const cardRect = element.getBoundingClientRect();
+    const headerRect = element.querySelector('.score-header').getBoundingClientRect();
+    const firstSystemRect = element.querySelector('.score-system').getBoundingClientRect();
+    return {
+      scrollWidth: element.scrollWidth,
+      clientWidth: element.clientWidth,
+      cardDisplay: getComputedStyle(element).display,
+      pageWidth: getComputedStyle(element.querySelector('.score-page')).width,
+      header: {
+        leftWithinCardPx: headerRect.left - cardRect.left,
+        widthPx: headerRect.width,
+      },
+      firstSystem: {
+        leftWithinCardPx: firstSystemRect.left - cardRect.left,
+        widthPx: firstSystemRect.width,
+      },
+      systems: [...element.querySelectorAll('.score-system')].map((system) => ({
+        breakInside: getComputedStyle(system).breakInside,
+        pageBreakInside: getComputedStyle(system).pageBreakInside,
+        scrollWidth: system.scrollWidth,
+        clientWidth: system.clientWidth,
+      })),
+    };
+  });
   expect(printGeometry.cardDisplay).toBe('block');
   expect(printGeometry.scrollWidth).toBeLessThanOrEqual(printGeometry.clientWidth + 1);
   expect(printGeometry.systems.length).toBeGreaterThanOrEqual(2);
   expect(printGeometry.systems.every((system) => ['avoid', 'avoid-page'].includes(system.breakInside))).toBe(true);
   expect(printGeometry.systems.every((system) => system.pageBreakInside === 'avoid')).toBe(true);
   expect(printGeometry.systems.every((system) => system.scrollWidth <= system.clientWidth + 1)).toBe(true);
+  expect(Math.abs(
+    printGeometry.header.leftWithinCardPx - printGeometry.firstSystem.leftWithinCardPx,
+  )).toBeLessThanOrEqual(1);
+  expect(Math.abs(
+    printGeometry.header.widthPx - printGeometry.firstSystem.widthPx,
+  )).toBeLessThanOrEqual(1);
 
   await target.screenshot({
     path: `${reportDirectory}/itsy-bitsy-spider-print-a4.png`,
