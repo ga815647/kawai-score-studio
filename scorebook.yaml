@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.16
+  version: 0.6.17
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -2832,11 +2832,11 @@ library:
       events:
       - id: n13
         kind: note
-        pitch: 4^
+        pitch: 5^
         duration: 2
       - id: n14
         kind: note
-        pitch: 2^
+        pitch: 3^
         duration: 2
     - number: 8
       capacity_eighth_units: 4
