@@ -18,15 +18,15 @@ async function loadProject() {
   return { book, fixtures };
 }
 
-test('0.6.22 has twenty-one verified songs, no quarantine, and passes structural gates', async () => {
+test('0.6.23 has twenty-six verified songs, no quarantine, and passes structural gates', async () => {
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.22');
+  assert.equal(book.project.version, '0.6.23');
   assert.equal(book.schema.duration_quantum_eighth_units, 0.5);
   assert.equal(book.schema.smallest_supported_duration, 'sixteenth_note');
   assert.deepEqual(result.counts, {
-    verifiedSongs: 21,
+    verifiedSongs: 26,
     quarantinedEntries: 0,
     fixtures: 1,
   });
@@ -52,6 +52,11 @@ test('0.6.22 has twenty-one verified songs, no quarantine, and passes structural
     'find-a-friend-zh',
     'london-bridge-zh',
     'if-you-are-happy-clap-zh',
+    'head-shoulders-knees-and-toes',
+    'five-little-ducks',
+    'i-am-a-painter-zh',
+    'counting-ducks-zh',
+    'little-rabbit-be-good-zh',
   ]);
 });
 

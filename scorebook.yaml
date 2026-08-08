@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.22
+  version: 0.6.23
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -8256,6 +8256,1660 @@ library:
         text: 拍
       - event: n46
         text: 手
+  - id: head-shoulders-knees-and-toes
+    title: Head, Shoulders, Knees and Toes
+    status: verified
+    key: C major
+    meter: 4/4
+    pickup_eighth_units: 0
+    source:
+      title: Head, Shoulders, Knees And Toes Free Sheet Music
+      source_type: score_website
+      provided_by: assistant_web_research
+      publisher_or_origin: Pianocoda
+      publisher: Pianocoda
+      accessed_at: '2026-08-08'
+      selected_variant: Pianocoda public-domain C-major 4/4 one-page beginner score; treble melody and English lyrics, eight
+        measures
+      original_key: C major
+      original_meter: 4/4
+      pickup: 0
+      rights_status: public_domain_traditional_children_song_free_sheet_music
+      url: https://pianocoda.com/kids-songs/head-shoulders-knees-and-toes/
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 8
+      events:
+      - id: n01
+        kind: note
+        pitch: '4'
+        duration: 3
+      - id: n02
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n03
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n04
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n05
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n06
+        kind: note
+        pitch: '4'
+        duration: 1
+    - number: 2
+      capacity_eighth_units: 8
+      events:
+      - id: n07
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n08
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n09
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n10
+        kind: note
+        pitch: '4'
+        duration: 4
+    - number: 3
+      capacity_eighth_units: 8
+      events:
+      - id: n11
+        kind: note
+        pitch: '4'
+        duration: 3
+      - id: n12
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n13
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n14
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n15
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n16
+        kind: note
+        pitch: '4'
+        duration: 1
+    - number: 4
+      capacity_eighth_units: 8
+      events:
+      - id: r01
+        kind: rest
+        duration: 2
+      - id: n17
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n18
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n19
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n20
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n21
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n22
+        kind: note
+        pitch: '1'
+        duration: 1
+    - number: 5
+      capacity_eighth_units: 8
+      events:
+      - id: r02
+        kind: rest
+        duration: 2
+      - id: n23
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n24
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n25
+        kind: note
+        pitch: '4'
+        duration: 2
+    - number: 6
+      capacity_eighth_units: 8
+      events:
+      - id: n26
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n27
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n28
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n29
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n30
+        kind: note
+        pitch: '2'
+        duration: 4
+    - number: 7
+      capacity_eighth_units: 8
+      events:
+      - id: n31
+        kind: note
+        pitch: '3'
+        duration: 3
+      - id: n32
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n33
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n34
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n35
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n36
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 8
+      capacity_eighth_units: 8
+      events:
+      - id: n37
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n38
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n39
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n40
+        kind: note
+        pitch: '4'
+        duration: 4
+    ties: []
+    lyric_tracks:
+    - id: en
+      locale: en
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: Head,
+      - event: n02
+        text: and
+      - event: n03
+        text: shoul-
+      - event: n04
+        text: ders,
+      - event: n05
+        text: knees
+      - event: n06
+        text: and
+      - event: n07
+        text: toes,
+      - event: n08
+        text: knees
+      - event: n09
+        text: and
+      - event: n10
+        text: toes.
+      - event: n11
+        text: Head,
+      - event: n12
+        text: and
+      - event: n13
+        text: shoul-
+      - event: n14
+        text: ders,
+      - event: n15
+        text: knees
+      - event: n16
+        text: and
+      - event: n17
+        text: toes,
+      - event: n18
+        text: knees
+      - event: n19
+        text: and
+      - event: n20
+        text: toes
+      - event: n21
+        text: and
+      - event: n22
+        text: eyes
+      - event: n23
+        text: and
+      - event: n24
+        text: ears
+      - event: n25
+        text: and
+      - event: n26
+        text: mouth
+      - event: n28
+        text: and
+      - event: n30
+        text: nose.
+      - event: n31
+        text: Head,
+      - event: n32
+        text: and
+      - event: n33
+        text: shoul-
+      - event: n34
+        text: ders,
+      - event: n35
+        text: knees
+      - event: n36
+        text: and
+      - event: n37
+        text: toes,
+      - event: n38
+        text: knees
+      - event: n39
+        text: and
+      - event: n40
+        text: toes.
+      continuations:
+      - from: n26
+        through: n27
+      - from: n28
+        through: n29
+  - id: five-little-ducks
+    title: Five Little Ducks
+    status: verified
+    key: C major
+    meter: 4/4
+    pickup_eighth_units: 0
+    source:
+      title: Five Little Ducks Glockenspiel Sheet Music
+      source_type: score_website
+      provided_by: assistant_web_research
+      publisher_or_origin: Singing Bell
+      publisher: Singing Bell
+      accessed_at: '2026-08-08'
+      selected_variant: Singing Bell D-major 4/4 glockenspiel score, first English verse; transposed diatonically to C major
+        for the KAWAI 16-note instrument
+      original_key: D major
+      original_meter: 4/4
+      pickup: 0
+      rights_status: traditional_children_song_with_free_glockenspiel_sheet_music
+      url: https://www.singing-bell.com/five-little-ducks-glockenspiel-xylophone-letters-notes-chart-sheet-music/
+      transposition_semitones: -2
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 8
+      events:
+      - id: n01
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n02
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n03
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n04
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n05
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 2
+      capacity_eighth_units: 8
+      events:
+      - id: n06
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n07
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n08
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n09
+        kind: note
+        pitch: '1'
+        duration: 4
+    - number: 3
+      capacity_eighth_units: 8
+      events:
+      - id: n10
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n11
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n12
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n13
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n14
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 4
+      capacity_eighth_units: 8
+      events:
+      - id: n15
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n16
+        kind: note
+        pitch: '7_'
+        duration: 2
+      - id: n17
+        kind: note
+        pitch: '5_'
+        duration: 4
+    - number: 5
+      capacity_eighth_units: 8
+      events:
+      - id: n18
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n19
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n20
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n21
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n22
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 6
+      capacity_eighth_units: 8
+      events:
+      - id: n23
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n24
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n25
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n26
+        kind: note
+        pitch: '1'
+        duration: 2
+    - number: 7
+      capacity_eighth_units: 8
+      events:
+      - id: n27
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n28
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n29
+        kind: note
+        pitch: '5_'
+        duration: 2
+      - id: n30
+        kind: note
+        pitch: '7_'
+        duration: 1
+      - id: n31
+        kind: note
+        pitch: '7_'
+        duration: 1
+    - number: 8
+      capacity_eighth_units: 8
+      events:
+      - id: n32
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n33
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n34
+        kind: note
+        pitch: '1'
+        duration: 4
+    ties: []
+    lyric_tracks:
+    - id: en
+      locale: en
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: Five
+      - event: n02
+        text: lit-
+      - event: n03
+        text: tle
+      - event: n04
+        text: ducks
+      - event: n05
+        text: went
+      - event: n06
+        text: swim-
+      - event: n07
+        text: ming
+      - event: n08
+        text: one
+      - event: n09
+        text: day
+      - event: n10
+        text: O-
+      - event: n11
+        text: ver
+      - event: n12
+        text: the
+      - event: n13
+        text: hill
+      - event: n14
+        text: and
+      - event: n15
+        text: far
+      - event: n16
+        text: a-
+      - event: n17
+        text: way
+      - event: n18
+        text: Mo-
+      - event: n19
+        text: ther
+      - event: n20
+        text: duck
+      - event: n21
+        text: said
+      - event: n22
+        text: '"Quack,'
+      - event: n23
+        text: quack,
+      - event: n24
+        text: quack,
+      - event: n25
+        text: quack"
+      - event: n26
+        text: But
+      - event: n27
+        text: on-
+      - event: n28
+        text: ly
+      - event: n29
+        text: four
+      - event: n30
+        text: lit-
+      - event: n31
+        text: tle
+      - event: n32
+        text: ducks
+      - event: n33
+        text: came
+      - event: n34
+        text: back.
+  - id: i-am-a-painter-zh
+    title: 我是個粉刷匠
+    alias: 我是一個粉刷匠
+    status: verified
+    key: C major
+    meter: 2/4
+    pickup_eighth_units: 0
+    source:
+      title: 我是一个粉刷匠
+      source_type: score_website
+      provided_by: assistant_web_research
+      publisher_or_origin: EveryonePiano
+      publisher: EveryonePiano
+      accessed_at: '2026-08-08'
+      selected_variant: EveryonePiano no. 0000470 C-major 2/4 right-hand numbered melody, 16 measures; published Traditional
+        Chinese lyric wording follows Chord4 static lyric/chord page
+      original_key: C major
+      original_meter: 2/4
+      pickup: 0
+      rights_status: published_children_song_static_numbered_notation_with_traditional_chinese_lyric_source
+      url: https://www.everyonepiano.cn/Music-470.html
+      supporting_sources:
+      - title: 粉刷匠 - 兒歌童謠 - 吉他譜
+        publisher_or_origin: Chord4
+        url: https://chord4.com/zh-hant/tabs/24832
+        purpose: Exact Traditional Chinese wording for the published lyric track, including 刷了房子又刷牆／刷子飛舞忙
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 4
+      events:
+      - id: n01
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n02
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n03
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n04
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 2
+      capacity_eighth_units: 4
+      events:
+      - id: n05
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n06
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n07
+        kind: note
+        pitch: '1'
+        duration: 2
+    - number: 3
+      capacity_eighth_units: 4
+      events:
+      - id: n08
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n09
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n10
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n11
+        kind: note
+        pitch: '2'
+        duration: 1
+    - number: 4
+      capacity_eighth_units: 4
+      events:
+      - id: n12
+        kind: note
+        pitch: '5'
+        duration: 4
+    - number: 5
+      capacity_eighth_units: 4
+      events:
+      - id: n13
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n14
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n15
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n16
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 6
+      capacity_eighth_units: 4
+      events:
+      - id: n17
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n18
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n19
+        kind: note
+        pitch: '1'
+        duration: 2
+    - number: 7
+      capacity_eighth_units: 4
+      events:
+      - id: n20
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n21
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n22
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n23
+        kind: note
+        pitch: '2'
+        duration: 1
+    - number: 8
+      capacity_eighth_units: 4
+      events:
+      - id: n24
+        kind: note
+        pitch: '1'
+        duration: 4
+    - number: 9
+      capacity_eighth_units: 4
+      events:
+      - id: n25
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n26
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n27
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n28
+        kind: note
+        pitch: '4'
+        duration: 1
+    - number: 10
+      capacity_eighth_units: 4
+      events:
+      - id: n29
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n30
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n31
+        kind: note
+        pitch: '5'
+        duration: 2
+    - number: 11
+      capacity_eighth_units: 4
+      events:
+      - id: n32
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n33
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n34
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n35
+        kind: note
+        pitch: '2'
+        duration: 1
+    - number: 12
+      capacity_eighth_units: 4
+      events:
+      - id: n36
+        kind: note
+        pitch: '5'
+        duration: 4
+    - number: 13
+      capacity_eighth_units: 4
+      events:
+      - id: n37
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n38
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n39
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n40
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 14
+      capacity_eighth_units: 4
+      events:
+      - id: n41
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n42
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n43
+        kind: note
+        pitch: '1'
+        duration: 2
+    - number: 15
+      capacity_eighth_units: 4
+      events:
+      - id: n44
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n45
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n46
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n47
+        kind: note
+        pitch: '2'
+        duration: 1
+    - number: 16
+      capacity_eighth_units: 4
+      events:
+      - id: n48
+        kind: note
+        pitch: '1'
+        duration: 4
+    ties: []
+    lyric_tracks:
+    - id: zh-tw
+      locale: zh-TW
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: 我
+      - event: n02
+        text: 是
+      - event: n03
+        text: 一
+      - event: n04
+        text: 個
+      - event: n05
+        text: 粉
+      - event: n06
+        text: 刷
+      - event: n07
+        text: 匠
+      - event: n08
+        text: 粉
+      - event: n09
+        text: 刷
+      - event: n10
+        text: 本
+      - event: n11
+        text: 領
+      - event: n12
+        text: 強
+      - event: n13
+        text: 我
+      - event: n14
+        text: 要
+      - event: n15
+        text: 把
+      - event: n16
+        text: 那
+      - event: n17
+        text: 新
+      - event: n18
+        text: 房
+      - event: n19
+        text: 子
+      - event: n20
+        text: 刷
+      - event: n21
+        text: 得
+      - event: n22
+        text: 很
+      - event: n23
+        text: 漂
+      - event: n24
+        text: 亮
+      - event: n25
+        text: 刷
+      - event: n26
+        text: 了
+      - event: n27
+        text: 房
+      - event: n28
+        text: 子
+      - event: n29
+        text: 又
+      - event: n30
+        text: 刷
+      - event: n31
+        text: 牆
+      - event: n32
+        text: 刷
+      - event: n33
+        text: 子
+      - event: n34
+        text: 飛
+      - event: n35
+        text: 舞
+      - event: n36
+        text: 忙
+      - event: n37
+        text: 哎
+      - event: n38
+        text: 呀
+      - event: n39
+        text: 我
+      - event: n40
+        text: 的
+      - event: n41
+        text: 小
+      - event: n42
+        text: 鼻
+      - event: n43
+        text: 子
+      - event: n44
+        text: 變
+      - event: n45
+        text: 呀
+      - event: n46
+        text: 變
+      - event: n47
+        text: 了
+      - event: n48
+        text: 樣
+  - id: counting-ducks-zh
+    title: 數鴨子
+    alias: Counting Ducks
+    status: verified
+    key: C major
+    meter: 4/4
+    pickup_eighth_units: 0
+    source:
+      title: 数鸭子（儿童歌曲）简谱
+      source_type: score_website
+      provided_by: assistant_web_research
+      publisher_or_origin: 简谱家
+      publisher: 简谱家
+      accessed_at: '2026-08-08'
+      selected_variant: Jianpujia C-major 4/4 lyric-aligned static jianpu, sung section only after the two-measure instrumental
+        intro, first verse; 嘎嘎嘎嘎 wording follows EveryonePiano and Traditional Chinese orthography is retained in scorebook
+      original_key: C major
+      original_meter: 4/4
+      pickup: 0
+      rights_status: published_children_song_static_numbered_notation_with_lyric_crosscheck
+      url: https://www.jianpujia.com/jianpu/15778.html
+      supporting_sources:
+      - title: 数鸭子-人人钢琴网
+        publisher_or_origin: EveryonePiano
+        url: https://www.everyonepiano.cn/Music-284.html
+        purpose: Independent static melody/rhythm cross-check and exact first-verse 嘎嘎嘎嘎 lyric wording
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 8
+      events:
+      - id: n01
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n02
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n03
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n04
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n05
+        kind: note
+        pitch: '1'
+        duration: 2
+    - number: 2
+      capacity_eighth_units: 8
+      events:
+      - id: n06
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n07
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n08
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n09
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n10
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: r01
+        kind: rest
+        duration: 2
+    - number: 3
+      capacity_eighth_units: 8
+      events:
+      - id: n11
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n12
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n13
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n14
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n15
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n16
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n17
+        kind: note
+        pitch: '4'
+        duration: 2
+    - number: 4
+      capacity_eighth_units: 8
+      events:
+      - id: n18
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n19
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n20
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n21
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n22
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: r02
+        kind: rest
+        duration: 2
+    - number: 5
+      capacity_eighth_units: 8
+      events:
+      - id: n23
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n24
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: r03
+        kind: rest
+        duration: 1
+      - id: n25
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n26
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: r04
+        kind: rest
+        duration: 1
+    - number: 6
+      capacity_eighth_units: 8
+      events:
+      - id: n27
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n28
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n29
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n30
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n31
+        kind: note
+        pitch: '6'
+        duration: 2
+      - id: r05
+        kind: rest
+        duration: 2
+    - number: 7
+      capacity_eighth_units: 8
+      events:
+      - id: n32
+        kind: note
+        pitch: 1^
+        duration: 2
+      - id: n33
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n34
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n35
+        kind: note
+        pitch: '6'
+        duration: 2
+      - id: n36
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 8
+      capacity_eighth_units: 8
+      events:
+      - id: n37
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n38
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n39
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n40
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n41
+        kind: note
+        pitch: '5'
+        duration: 4
+    - number: 9
+      capacity_eighth_units: 8
+      events:
+      - id: n42
+        kind: note
+        pitch: 1^
+        duration: 2
+      - id: n43
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n44
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n45
+        kind: note
+        pitch: '6'
+        duration: 2
+      - id: n46
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 10
+      capacity_eighth_units: 8
+      events:
+      - id: n47
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n48
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n49
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n50
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n51
+        kind: note
+        pitch: '1'
+        duration: 4
+    ties: []
+    lyric_tracks:
+    - id: zh-tw
+      locale: zh-TW
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: 門
+      - event: n02
+        text: 前
+      - event: n03
+        text: 大
+      - event: n04
+        text: 橋
+      - event: n05
+        text: 下
+      - event: n06
+        text: 游
+      - event: n07
+        text: 過
+      - event: n08
+        text: 一
+      - event: n09
+        text: 群
+      - event: n10
+        text: 鴨
+      - event: n11
+        text: 快
+      - event: n12
+        text: 來
+      - event: n13
+        text: 快
+      - event: n14
+        text: 來
+      - event: n15
+        text: 數
+      - event: n16
+        text: 一
+      - event: n17
+        text: 數
+      - event: n18
+        text: 二
+      - event: n19
+        text: 四
+      - event: n20
+        text: 六
+      - event: n21
+        text: 七
+      - event: n22
+        text: 八
+      - event: n23
+        text: 嘎
+      - event: n24
+        text: 嘎
+      - event: n25
+        text: 嘎
+      - event: n26
+        text: 嘎
+      - event: n27
+        text: 真
+      - event: n28
+        text: 呀
+      - event: n29
+        text: 真
+      - event: n30
+        text: 多
+      - event: n31
+        text: 呀
+      - event: n32
+        text: 數
+      - event: n33
+        text: 不
+      - event: n34
+        text: 清
+      - event: n35
+        text: 到
+      - event: n36
+        text: 底
+      - event: n37
+        text: 多
+      - event: n39
+        text: 少
+      - event: n41
+        text: 鴨
+      - event: n42
+        text: 數
+      - event: n43
+        text: 不
+      - event: n44
+        text: 清
+      - event: n45
+        text: 到
+      - event: n46
+        text: 底
+      - event: n47
+        text: 多
+      - event: n49
+        text: 少
+      - event: n51
+        text: 鴨
+      continuations:
+      - from: n37
+        through: n38
+      - from: n39
+        through: n40
+      - from: n47
+        through: n48
+      - from: n49
+        through: n50
+  - id: little-rabbit-be-good-zh
+    title: 小兔子乖乖
+    status: verified
+    key: C major
+    meter: 4/4
+    pickup_eighth_units: 0
+    source:
+      title: 小兔子乖乖
+      source_type: score_image
+      provided_by: assistant_web_research
+      publisher_or_origin: 新浪靜態樂譜圖片
+      publisher: 新浪
+      accessed_at: '2026-08-08'
+      selected_variant: Static 1=C, 4/4 numbered vocal score credited to 黎錦暉; first wolf/rabbit sung verse only, excluding the
+        instrumental prelude, second lyric alternative, and D.C. repeat; Traditional Chinese orthography retained in scorebook
+      original_key: C major
+      original_meter: 4/4
+      pickup: 0
+      rights_status: published_children_song_static_score_image
+      url: https://n.sinaimg.cn/sinakd20220628s/344/w700h444/20220628/2aa3-1c6923e1b85a606f8e67aa50c3a3327a.jpg
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 8
+      events:
+      - id: n01
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n02
+        kind: note
+        pitch: 1^
+        duration: 1
+      - id: n03
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n04
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n05
+        kind: note
+        pitch: '5'
+        duration: 2
+    - number: 2
+      capacity_eighth_units: 8
+      events:
+      - id: n06
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n07
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n08
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n09
+        kind: note
+        pitch: 1^
+        duration: 1
+      - id: n10
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n11
+        kind: note
+        pitch: '5'
+        duration: 2
+    - number: 3
+      capacity_eighth_units: 8
+      events:
+      - id: n12
+        kind: note
+        pitch: '6'
+        duration: 2
+      - id: n13
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n14
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n15
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n16
+        kind: note
+        pitch: '2'
+        duration: 2
+    - number: 4
+      capacity_eighth_units: 8
+      events:
+      - id: n17
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n18
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n19
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n20
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n21
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n22
+        kind: note
+        pitch: '1'
+        duration: 2
+    - number: 5
+      capacity_eighth_units: 8
+      events:
+      - id: n23
+        kind: note
+        pitch: '6'
+        duration: 2
+      - id: n24
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n25
+        kind: note
+        pitch: '6'
+        duration: 2
+      - id: n26
+        kind: note
+        pitch: '5'
+        duration: 2
+    - number: 6
+      capacity_eighth_units: 8
+      events:
+      - id: n27
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n28
+        kind: note
+        pitch: '6'
+        duration: 2
+      - id: n29
+        kind: note
+        pitch: '5'
+        duration: 4
+    - number: 7
+      capacity_eighth_units: 8
+      events:
+      - id: n30
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n31
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n32
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n33
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n34
+        kind: note
+        pitch: '1'
+        duration: 4
+    - number: 8
+      capacity_eighth_units: 8
+      events:
+      - id: n35
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n36
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n37
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n38
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n39
+        kind: note
+        pitch: '1'
+        duration: 4
+    ties: []
+    lyric_tracks:
+    - id: zh-tw
+      locale: zh-TW
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: 小
+      - event: n02
+        text: 兔
+      - event: n03
+        text: 子
+      - event: n04
+        text: 乖
+      - event: n05
+        text: 乖
+      - event: n06
+        text: 把
+      - event: n08
+        text: 門
+      - event: n09
+        text: 兒
+      - event: n10
+        text: 開
+      - event: n11
+        text: 開
+      - event: n12
+        text: 快
+      - event: n13
+        text: 點
+      - event: n15
+        text: 開
+      - event: n16
+        text: 開
+      - event: n17
+        text: 我
+      - event: n18
+        text: 要
+      - event: n20
+        text: 進
+      - event: n22
+        text: 來
+      - event: n23
+        text: 不
+      - event: n24
+        text: 開
+      - event: n25
+        text: 不
+      - event: n26
+        text: 開
+      - event: n27
+        text: 我
+      - event: n28
+        text: 不
+      - event: n29
+        text: 開
+      - event: n30
+        text: 媽
+      - event: n31
+        text: 媽
+      - event: n32
+        text: 沒
+      - event: n33
+        text: 回
+      - event: n34
+        text: 來
+      - event: n35
+        text: 誰
+      - event: n36
+        text: 來
+      - event: n37
+        text: 也
+      - event: n38
+        text: 不
+      - event: n39
+        text: 開
+      continuations:
+      - from: n06
+        through: n07
+      - from: n13
+        through: n14
+      - from: n18
+        through: n19
+      - from: n20
+        through: n21
   quarantine: []
 workflow:
 - read_scorebook
