@@ -18,15 +18,15 @@ async function loadProject() {
   return { book, fixtures };
 }
 
-test('0.6.26 has thirty-six verified songs, no quarantine, and passes structural gates', async () => {
+test('0.6.27 has forty-one verified songs, no quarantine, and passes structural gates', async () => {
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.26');
+  assert.equal(book.project.version, '0.6.27');
   assert.equal(book.schema.duration_quantum_eighth_units, 0.5);
   assert.equal(book.schema.smallest_supported_duration, 'sixteenth_note');
   assert.deepEqual(result.counts, {
-    verifiedSongs: 36,
+    verifiedSongs: 41,
     quarantinedEntries: 0,
     fixtures: 1,
   });
@@ -67,6 +67,11 @@ test('0.6.26 has thirty-six verified songs, no quarantine, and passes structural
     'ring-around-the-rosie',
     'little-sister-carries-doll-zh',
     'little-mouse-on-the-lampstand-zh',
+    'yankee-doodle',
+    'skip-to-my-lou',
+    'pop-goes-the-weasel',
+    'little-red-riding-hood-zh',
+    'one-pug-dog-zh',
   ]);
 });
 
@@ -590,4 +595,98 @@ test('five-song Muffin/Farmer/Rosie/doll/mouse batch exactly matches fixed stati
 
   const mouse = book.library.songs.find((candidate) => candidate.id === 'little-mouse-on-the-lampstand-zh');
   assert.deepEqual(mouse.lyric_tracks[0].continuations, [{ from: 'n17', through: 'n18' }]);
+});
+
+test('five-song Yankee/Skip/Pop/red-hood/pug batch exactly matches fixed static sources', async () => {
+  const { book } = await loadProject();
+  const specs = {
+  "yankee-doodle": {
+    "title": "Yankee Doodle",
+    "difficulty": 3,
+    "meter": "4/4",
+    "pickup": 0,
+    "notes": 55,
+    "lyrics": 53,
+    "digest": "e92cd566e57820e60dcb3fdcdba9a62d49bf93ab4d3edb94790e8dfae06bc5da",
+    "url": "https://de.wikibooks.org/wiki/Gitarre%3A_Notenlesen_-_Vorarbeiten"
+  },
+  "skip-to-my-lou": {
+    "title": "Skip to My Lou",
+    "difficulty": 2,
+    "meter": "4/4",
+    "pickup": 0,
+    "notes": 25,
+    "lyrics": 25,
+    "digest": "4da570c6cdd4cc88672bedacf54875c4e1febf4e851167ce385a6410d5903684",
+    "url": "https://abcnotation.com/tunePage?a=raw.githubusercontent.com%2Feconrad003%2Fmusic-abc%2Fmaster%2FSkipToMyLou%2F0000"
+  },
+  "pop-goes-the-weasel": {
+    "title": "Pop Goes the Weasel",
+    "difficulty": 4,
+    "meter": "6/8",
+    "pickup": 1,
+    "notes": 60,
+    "lyrics": 52,
+    "digest": "100125b6018f7379d17ddf4bd7c1effafa9d34a5c679450936a5c2eb49d4d05d",
+    "url": "https://abcnotation.com/tunePage?a=trillian.mit.edu%2F~jc%2Fmusic%2Fabc%2Fmirror%2FBruceShawyer%2Fenglish%2Ftmp%2FPop_Goes_the_Weasel%2F0000"
+  },
+  "little-red-riding-hood-zh": {
+    "title": "小紅帽",
+    "difficulty": 3,
+    "meter": "2/4",
+    "pickup": 0,
+    "notes": 72,
+    "lyrics": 68,
+    "digest": "5faf72e25fd6d68bb2b05d6e7bbee91272a747559ec88cd9d9e7771599ce4790",
+    "url": "https://zy.21cnjy.com/13582041"
+  },
+  "one-pug-dog-zh": {
+    "title": "一隻哈巴狗",
+    "difficulty": 1,
+    "meter": "2/4",
+    "pickup": 0,
+    "notes": 20,
+    "lyrics": 20,
+    "digest": "6a9ea9c75e19df5147e7c5d44c36060750705b014f630d95850894bb50931396",
+    "url": "https://max.book118.com/html/2021/0520/5324012244003231.shtm"
+  }
+};
+
+  for (const [id, expected] of Object.entries(specs)) {
+    const song = book.library.songs.find((candidate) => candidate.id === id);
+    assert.ok(song, id);
+    assert.equal(song.title, expected.title);
+    assert.equal(song.difficulty, expected.difficulty);
+    assert.equal(song.key, 'C major');
+    assert.equal(song.meter, expected.meter);
+    assert.equal(song.pickup_eighth_units, expected.pickup);
+    assert.equal(song.source.url, expected.url);
+    assert.ok(Object.values(song.verification).every((value) => value === true));
+
+    const events = flattenEvents(song);
+    assert.equal(events.filter((event) => event.kind === 'note').length, expected.notes);
+    const track = song.lyric_tracks.find((candidate) => candidate.default);
+    assert.equal(track.syllables.length, expected.lyrics);
+
+    const compactMeasures = song.measures.map((measure) => measure.events.map(
+      (event) => [event.pitch ?? null, event.duration],
+    ));
+    const digest = createHash('sha256').update(JSON.stringify(compactMeasures)).digest('hex');
+    assert.equal(digest, expected.digest, id);
+  }
+
+  const pop = book.library.songs.find((candidate) => candidate.id === 'pop-goes-the-weasel');
+  assert.equal(flattenEvents(pop).filter((event) => event.kind === 'rest').length, 4);
+  assert.deepEqual(pop.measures[0], {
+    number: 0,
+    capacity_eighth_units: 1,
+    events: [{ id: 'n01', kind: 'note', pitch: '5_', duration: 1 }],
+    pickup: true,
+  });
+
+  const pug = book.library.songs.find((candidate) => candidate.id === 'one-pug-dog-zh');
+  assert.equal(
+    pug.lyric_tracks[0].syllables.map((item) => item.text).join(''),
+    '一隻哈巴狗坐在大門口兩眼黑黝黝想吃肉骨頭',
+  );
 });
