@@ -1,0 +1,173 @@
+  - id: hot-cross-buns
+    title: Hot Cross Buns
+    status: verified
+    difficulty: 1
+    key: C major
+    meter: 4/4
+    pickup_eighth_units: 0
+    source:
+      title: Hot Cross Buns
+      source_type: score_pdf
+      provided_by: assistant_web_research
+      publisher_or_origin: Piano Song Download
+      publisher: Piano Song Download
+      accessed_at: '2026-08-08'
+      selected_variant: Fixed one-page 4/4 Level 1 right-hand-only score, Traditional, arranged by Julie A. Lind; complete printed
+        Hot cross buns / One a penny verse. The C-D-E note labels and exact half/whole/quarter-note rhythm are taken from the
+        static PDF.
+      original_key: C major
+      original_meter: 4/4
+      pickup: 0
+      rights_status: traditional_nursery_rhyme_static_beginner_arrangement_rights_retained_by_julie_a_lind
+      url: https://www.pianosongdownload.com/Hot%20Cross%20Buns.pdf
+      content_sha256: d1acd2e45ba069a23a367ffaebb6c73550bfea06c02311b9edeffd28ec2b1dd9
+      supporting_sources:
+      - title: Hot Cross Buns - Free Easy Piano Sheet Music for right hand
+        publisher_or_origin: Piano Song Download
+        url: https://www.pianosongdownload.com/hotcrossbuns.html
+        purpose: Identifies the score as Traditional, arranged by Julie Lind, Level 1, right hand only.
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 8
+      events:
+      - id: n01
+        kind: note
+        pitch: '3'
+        duration: 4
+      - id: n02
+        kind: note
+        pitch: '2'
+        duration: 4
+    - number: 2
+      capacity_eighth_units: 8
+      events:
+      - id: n03
+        kind: note
+        pitch: '1'
+        duration: 8
+    - number: 3
+      capacity_eighth_units: 8
+      events:
+      - id: n04
+        kind: note
+        pitch: '3'
+        duration: 4
+      - id: n05
+        kind: note
+        pitch: '2'
+        duration: 4
+    - number: 4
+      capacity_eighth_units: 8
+      events:
+      - id: n06
+        kind: note
+        pitch: '1'
+        duration: 8
+    - number: 5
+      capacity_eighth_units: 8
+      events:
+      - id: n07
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n08
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n09
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n10
+        kind: note
+        pitch: '1'
+        duration: 2
+    - number: 6
+      capacity_eighth_units: 8
+      events:
+      - id: n11
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n12
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n13
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n14
+        kind: note
+        pitch: '2'
+        duration: 2
+    - number: 7
+      capacity_eighth_units: 8
+      events:
+      - id: n15
+        kind: note
+        pitch: '3'
+        duration: 4
+      - id: n16
+        kind: note
+        pitch: '2'
+        duration: 4
+    - number: 8
+      capacity_eighth_units: 8
+      events:
+      - id: n17
+        kind: note
+        pitch: '1'
+        duration: 8
+    ties: []
+    lyric_tracks:
+    - id: en
+      locale: en
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: Hot
+      - event: n02
+        text: cross
+      - event: n03
+        text: buns.
+      - event: n04
+        text: Hot
+      - event: n05
+        text: cross
+      - event: n06
+        text: buns.
+      - event: n07
+        text: One
+      - event: n08
+        text: a
+      - event: n09
+        text: pen-
+      - event: n10
+        text: ny,
+      - event: n11
+        text: two
+      - event: n12
+        text: a
+      - event: n13
+        text: pen-
+      - event: n14
+        text: ny
+      - event: n15
+        text: Hot
+      - event: n16
+        text: cross
+      - event: n17
+        text: buns.
