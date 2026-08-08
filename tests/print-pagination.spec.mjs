@@ -5,8 +5,9 @@ import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 const reportDirectory = 'reports/visual';
 const continuationPdf = `${reportDirectory}/continuation-page-top-clearance.pdf`;
 const minimumVisibleTopMarginMm = 10;
+const regressionSystemCount = 10;
 
-test('continuation print pages keep the whole score safely below the physical page top', async ({ page }) => {
+test('continuation print pages start safely below the top and never split a score system', async ({ page }) => {
   test.setTimeout(120_000);
   await mkdir(reportDirectory, { recursive: true });
   await page.addInitScript(() => {
@@ -20,20 +21,31 @@ test('continuation print pages keep the whole score safely below the physical pa
   await expect.poll(() => page.evaluate(() => window.__printCalled === true)).toBe(true);
   await expect(target).toHaveClass(/print-selected/);
 
-  await target.evaluate((element) => {
+  await target.evaluate((element, systemCount) => {
     const render = element.querySelector('.score-render');
     const sourceSystem = render?.querySelector('.score-system');
     if (!render || !sourceSystem) throw new Error('Regression fixture needs a rendered score system');
 
     // Force a true multi-page print case while exercising the renderer's allowed
     // maximum upward numbered-notation adjustment on every continuation system.
-    for (let index = 0; index < 10; index += 1) {
+    // A unique top-number / lyric marker pair lets the PDF gate prove that the
+    // numbered row and the lower part of each system stay on the same page.
+    for (let index = 0; index < systemCount; index += 1) {
       const clone = sourceSystem.cloneNode(true);
-      clone.dataset.system = `print-regression-${index + 1}`;
+      const marker = String(index + 1).padStart(2, '0');
+      clone.dataset.system = `print-regression-${marker}`;
       for (const note of clone.querySelectorAll('.numbered-note')) note.style.top = '-32px';
+
+      const topMarker = clone.querySelector('.note-number');
+      const lowerMarker = clone.querySelector('.score-lyric');
+      if (!topMarker || !lowerMarker) throw new Error('Regression system needs note and lyric markers');
+      topMarker.textContent = `T${marker}`;
+      topMarker.style.fontSize = '6px';
+      lowerMarker.textContent = `L${marker}`;
+      lowerMarker.style.fontSize = '6px';
       render.append(clone);
     }
-  });
+  }, regressionSystemCount);
 
   await page.emulateMedia({ media: 'print' });
   await page.pdf({
@@ -49,17 +61,38 @@ test('continuation print pages keep the whole score safely below the physical pa
   }).promise;
   expect(document.numPages).toBeGreaterThanOrEqual(2);
 
-  const secondPage = await document.getPage(2);
-  const viewport = secondPage.getViewport({ scale: 1 });
-  const textContent = await secondPage.getTextContent();
-  const visibleItems = textContent.items.filter((item) => item.str?.trim());
+  const pages = [];
+  for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+    const pdfPage = await document.getPage(pageNumber);
+    const viewport = pdfPage.getViewport({ scale: 1 });
+    const textContent = await pdfPage.getTextContent();
+    pages.push({ pageNumber, viewport, items: textContent.items });
+  }
+
+  const secondPage = pages[1];
+  const visibleItems = secondPage.items.filter((item) => {
+    const text = item.str?.trim();
+    return text && !/^[TL]\d{2}$/.test(text);
+  });
   expect(visibleItems.length).toBeGreaterThan(0);
 
   const topMostTextPt = Math.max(...visibleItems.map((item) => (
     Number(item.transform?.[5] ?? 0) + Number(item.height ?? 0)
   )));
-  const topMarginPt = viewport.height - topMostTextPt;
+  const topMarginPt = secondPage.viewport.height - topMostTextPt;
   const topMarginMm = topMarginPt * 25.4 / 72;
-
   expect(topMarginMm).toBeGreaterThanOrEqual(minimumVisibleTopMarginMm);
+
+  const pageForMarker = (marker) => pages.find(({ items }) => (
+    items.some((item) => item.str?.trim() === marker)
+  ))?.pageNumber ?? null;
+
+  for (let index = 0; index < regressionSystemCount; index += 1) {
+    const marker = String(index + 1).padStart(2, '0');
+    const topPage = pageForMarker(`T${marker}`);
+    const lowerPage = pageForMarker(`L${marker}`);
+    expect(topPage, `missing top marker T${marker}`).not.toBeNull();
+    expect(lowerPage, `missing lower marker L${marker}`).not.toBeNull();
+    expect(lowerPage, `score system ${marker} was fragmented across pages`).toBe(topPage);
+  }
 });
