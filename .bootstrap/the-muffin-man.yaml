@@ -1,0 +1,232 @@
+  - id: the-muffin-man
+    title: The Muffin Man
+    status: verified
+    difficulty: 2
+    key: C major
+    meter: 4/4
+    pickup_eighth_units: 0
+    source:
+      title: The Muffin Man Free Sheet Music
+      source_type: score_website
+      provided_by: assistant_web_research
+      publisher_or_origin: Pianocoda
+      publisher: Pianocoda
+      accessed_at: '2026-08-08'
+      selected_variant: Pianocoda one-page static C-major 4/4 beginner piano score, complete printed English verse;
+        treble melody only.
+      original_key: C major
+      original_meter: 4/4
+      pickup: 0
+      rights_status: traditional_nursery_rhyme_public_domain_static_sheet_music
+      url: https://pianocoda.com/kids-songs/the-muffin-man/
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 8
+      events:
+      - id: n01
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n02
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n03
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n04
+        kind: note
+        pitch: '5'
+        duration: 2
+    - number: 2
+      capacity_eighth_units: 8
+      events:
+      - id: n05
+        kind: note
+        pitch: '6'
+        duration: 2
+      - id: n06
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n07
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n08
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 3
+      capacity_eighth_units: 8
+      events:
+      - id: n09
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n10
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n11
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n12
+        kind: note
+        pitch: '4'
+        duration: 2
+    - number: 4
+      capacity_eighth_units: 8
+      events:
+      - id: n13
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n14
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n15
+        kind: note
+        pitch: '1'
+        duration: 4
+    - number: 5
+      capacity_eighth_units: 8
+      events:
+      - id: n16
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n17
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n18
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n19
+        kind: note
+        pitch: '5'
+        duration: 2
+    - number: 6
+      capacity_eighth_units: 8
+      events:
+      - id: n20
+        kind: note
+        pitch: '6'
+        duration: 2
+      - id: n21
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n22
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n23
+        kind: note
+        pitch: '4'
+        duration: 2
+    - number: 7
+      capacity_eighth_units: 8
+      events:
+      - id: n24
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n25
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n26
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n27
+        kind: note
+        pitch: '1'
+        duration: 2
+    - number: 8
+      capacity_eighth_units: 8
+      events:
+      - id: n28
+        kind: note
+        pitch: '4'
+        duration: 8
+    ties: []
+    lyric_tracks:
+    - id: en
+      locale: en
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: Do
+      - event: n02
+        text: you
+      - event: n03
+        text: know
+      - event: n04
+        text: the
+      - event: n05
+        text: muf-
+      - event: n06
+        text: fin
+      - event: n07
+        text: man
+      - event: n08
+        text: The
+      - event: n09
+        text: muf-
+      - event: n10
+        text: fin
+      - event: n11
+        text: man,
+      - event: n12
+        text: the
+      - event: n13
+        text: muf-
+      - event: n14
+        text: fin
+      - event: n15
+        text: man
+      - event: n16
+        text: Oh,
+      - event: n17
+        text: Do
+      - event: n18
+        text: you
+      - event: n19
+        text: know
+      - event: n20
+        text: the
+      - event: n21
+        text: muf-
+      - event: n22
+        text: fin
+      - event: n23
+        text: man
+      - event: n24
+        text: That
+      - event: n25
+        text: Lives
+      - event: n26
+        text: 'on'
+      - event: n27
+        text: Drury
+      - event: n28
+        text: Lane?
