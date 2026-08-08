@@ -1,0 +1,65 @@
+name: Difficulty legacy test migration
+
+on:
+  push:
+    branches:
+      - feat/song-difficulty-sort
+
+permissions:
+  contents: write
+
+jobs:
+  patch-tests:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/song-difficulty-sort
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Update legacy fixtures for difficulty schema
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          scorebook_test = Path('tests/scorebook.test.mjs')
+          text = scorebook_test.read_text(encoding='utf-8')
+          text = text.replace('0.6.24 has thirty-one verified songs', '0.6.25 has thirty-one verified songs', 1)
+          text = text.replace("assert.equal(book.project.version, '0.6.24');", "assert.equal(book.project.version, '0.6.25');", 1)
+          mode_anchor = "    label_format: 'title_with_alias',\n    link_behavior: 'same_page_anchor',\n"
+          mode_replacement = "    label_format: 'title_with_alias',\n    difficulty_display: 'five_star_rating',\n    sort_order: 'difficulty_ascending_then_title',\n    link_behavior: 'same_page_anchor',\n"
+          if "difficulty_display: 'five_star_rating'" not in text:
+              if mode_anchor not in text:
+                  raise SystemExit('mode directory anchor missing')
+              text = text.replace(mode_anchor, mode_replacement, 1)
+          layout_anchor = "    label_format: 'title_with_alias',\n    sticky_header_offset_px: 88,\n"
+          layout_replacement = "    label_format: 'title_with_alias',\n    difficulty_display: 'five_star_rating',\n    sort_order: 'difficulty_ascending_then_title',\n    sticky_header_offset_px: 88,\n"
+          if text.count("difficulty_display: 'five_star_rating'") < 2:
+              if layout_anchor not in text:
+                  raise SystemExit('layout directory anchor missing')
+              text = text.replace(layout_anchor, layout_replacement, 1)
+          scorebook_test.write_text(text, encoding='utf-8')
+
+          source_policy = Path('tests/source-policy.test.mjs')
+          text = source_policy.read_text(encoding='utf-8')
+          anchor = "  candidate.status = 'verified';\n"
+          replacement = anchor + "  candidate.difficulty = 1;\n"
+          if 'candidate.difficulty = 1;' not in text:
+              if anchor not in text:
+                  raise SystemExit('verified candidate anchor missing')
+              text = text.replace(anchor, replacement, 1)
+          source_policy.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit legacy test migration
+        run: |
+          if git diff --quiet; then
+            echo 'No legacy-test changes needed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tests/scorebook.test.mjs tests/source-policy.test.mjs
+          git commit -m 'test: migrate fixtures to song difficulty schema'
+          git push origin HEAD:feat/song-difficulty-sort
