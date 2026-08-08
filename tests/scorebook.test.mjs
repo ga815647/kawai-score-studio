@@ -385,7 +385,52 @@ test('淡々泡々 exactly models the user-provided Guitar Pro melody reduction'
   assert.ok(Object.values(song.verification).every((value) => value === true));
 });
 
-\ntest('BINGO, This Old Man, 泥娃娃, 丟手絹, and 打電話 pin the selected static-source reductions', async () => {\n  const { book } = await loadProject();\n  const specs = {\n    bingo: { title: 'BINGO', meter: '2/4', pickup: 1, measures: 13, notes: 37, lyrics: 37, rests: 1, digest: 'b90682ad2b9885c285ffaef5c05f67a70f557a69ed480e2362d874d7596bbee7' },\n    'this-old-man': { title: 'This Old Man', meter: '4/4', pickup: 0, measures: 8, notes: 32, lyrics: 32, rests: 0, digest: 'd5aaea07a1c6ffd4cfbc6de9f2694a099909954f6a5674d65adbb56722922382' },\n    'clay-doll-zh': { title: '泥娃娃', meter: '4/4', pickup: 0, measures: 8, notes: 26, lyrics: 26, rests: 2, digest: '7ddb8666951ad92729b899059f88e5a540458ba7d7094ad9f949ff1b70297ae4' },\n    'drop-the-handkerchief-zh': { title: '丟手絹', meter: '2/4', pickup: 0, measures: 17, notes: 41, lyrics: 37, rests: 0, digest: 'd43bacf7518f64e3ab60eb1637799b9e5b44a8ce787e6d173b1551a6e2df43ea' },\n    'telephone-call-zh': { title: '打電話', meter: '2/4', pickup: 0, measures: 12, notes: 29, lyrics: 28, rests: 6, digest: '73b702624282a7018f03d456ea3c091ed88c2c96850cdc808751ab7283c122bf' },\n  };\n  for (const [id, spec] of Object.entries(specs)) {\n    const song = book.library.songs.find((candidate) => candidate.id === id);\n    assert.ok(song, id);\n    assert.equal(song.title, spec.title);\n    assert.equal(song.key, 'C major');\n    assert.equal(song.meter, spec.meter);\n    assert.equal(song.pickup_eighth_units, spec.pickup);\n    assert.equal(song.measures.length, spec.measures);\n    const events = flattenEvents(song);\n    assert.equal(events.filter((event) => event.kind === 'note').length, spec.notes);\n    assert.equal(events.filter((event) => event.kind === 'rest').length, spec.rests);\n    const lyricTrack = song.lyric_tracks.find((candidate) => candidate.default);\n    assert.equal(lyricTrack.syllables.length, spec.lyrics);\n    const digest = createHash('sha256').update(JSON.stringify(\n      events.map((event) => [event.kind, event.pitch ?? null, event.duration]),\n    )).digest('hex');\n    assert.equal(digest, spec.digest, id);\n    assert.ok(Object.values(song.verification).every((value) => value === true));\n  }\n  const bingo = book.library.songs.find((song) => song.id === 'bingo');\n  assert.equal(bingo.source.url, 'https://www.musicyoucanread.com/SONGS/00-BINGO.html');\n  assert.equal(bingo.source.transposition_semitones, -7);\n  const oldMan = book.library.songs.find((song) => song.id === 'this-old-man');\n  assert.equal(oldMan.source.supporting_sources[0].url.startsWith('https://abcnotation.com/'), true);\n  const clay = book.library.songs.find((song) => song.id === 'clay-doll-zh');\n  assert.match(clay.source.octave_adaptation, /lower-octave comma-marked notes/);\n  const handkerchief = book.library.songs.find((song) => song.id === 'drop-the-handkerchief-zh');\n  assert.equal(handkerchief.source.original_key, 'E major');\n  assert.equal(handkerchief.source.transposition_semitones, -4);\n  const phone = book.library.songs.find((song) => song.id === 'telephone-call-zh');\n  assert.equal(phone.source.selected_source_page, 146);\n  assert.equal(phone.measures[9].events.at(-1).id, 'n24');\n  assert.equal(phone.lyric_tracks[0].syllables.some((item) => item.event === 'n24'), false);\n});\n\ntest('A4 print contract selects one verified song and permits page breaks only between systems', async () => {
+
+test('BINGO, This Old Man, 泥娃娃, 丟手絹, and 打電話 pin the selected static-source reductions', async () => {
+  const { book } = await loadProject();
+  const specs = {
+    bingo: { title: 'BINGO', meter: '2/4', pickup: 1, measures: 13, notes: 37, lyrics: 37, rests: 1, digest: 'b90682ad2b9885c285ffaef5c05f67a70f557a69ed480e2362d874d7596bbee7' },
+    'this-old-man': { title: 'This Old Man', meter: '4/4', pickup: 0, measures: 8, notes: 32, lyrics: 32, rests: 0, digest: 'd5aaea07a1c6ffd4cfbc6de9f2694a099909954f6a5674d65adbb56722922382' },
+    'clay-doll-zh': { title: '泥娃娃', meter: '4/4', pickup: 0, measures: 8, notes: 26, lyrics: 26, rests: 2, digest: '7ddb8666951ad92729b899059f88e5a540458ba7d7094ad9f949ff1b70297ae4' },
+    'drop-the-handkerchief-zh': { title: '丟手絹', meter: '2/4', pickup: 0, measures: 17, notes: 41, lyrics: 37, rests: 0, digest: 'd43bacf7518f64e3ab60eb1637799b9e5b44a8ce787e6d173b1551a6e2df43ea' },
+    'telephone-call-zh': { title: '打電話', meter: '2/4', pickup: 0, measures: 12, notes: 29, lyrics: 28, rests: 6, digest: '73b702624282a7018f03d456ea3c091ed88c2c96850cdc808751ab7283c122bf' },
+  };
+  for (const [id, spec] of Object.entries(specs)) {
+    const song = book.library.songs.find((candidate) => candidate.id === id);
+    assert.ok(song, id);
+    assert.equal(song.title, spec.title);
+    assert.equal(song.key, 'C major');
+    assert.equal(song.meter, spec.meter);
+    assert.equal(song.pickup_eighth_units, spec.pickup);
+    assert.equal(song.measures.length, spec.measures);
+    const events = flattenEvents(song);
+    assert.equal(events.filter((event) => event.kind === 'note').length, spec.notes);
+    assert.equal(events.filter((event) => event.kind === 'rest').length, spec.rests);
+    const lyricTrack = song.lyric_tracks.find((candidate) => candidate.default);
+    assert.equal(lyricTrack.syllables.length, spec.lyrics);
+    const digest = createHash('sha256').update(JSON.stringify(
+      events.map((event) => [event.kind, event.pitch ?? null, event.duration]),
+    )).digest('hex');
+    assert.equal(digest, spec.digest, id);
+    assert.ok(Object.values(song.verification).every((value) => value === true));
+  }
+  const bingo = book.library.songs.find((song) => song.id === 'bingo');
+  assert.equal(bingo.source.url, 'https://www.musicyoucanread.com/SONGS/00-BINGO.html');
+  assert.equal(bingo.source.transposition_semitones, -7);
+  const oldMan = book.library.songs.find((song) => song.id === 'this-old-man');
+  assert.equal(oldMan.source.supporting_sources[0].url.startsWith('https://abcnotation.com/'), true);
+  const clay = book.library.songs.find((song) => song.id === 'clay-doll-zh');
+  assert.match(clay.source.octave_adaptation, /lower-octave comma-marked notes/);
+  const handkerchief = book.library.songs.find((song) => song.id === 'drop-the-handkerchief-zh');
+  assert.equal(handkerchief.source.original_key, 'E major');
+  assert.equal(handkerchief.source.transposition_semitones, -4);
+  const phone = book.library.songs.find((song) => song.id === 'telephone-call-zh');
+  assert.equal(phone.source.selected_source_page, 146);
+  assert.equal(phone.measures[9].events.at(-1).id, 'n24');
+  assert.equal(phone.lyric_tracks[0].syllables.some((item) => item.event === 'n24'), false);
+});
+
+test('A4 print contract selects one verified song and permits page breaks only between systems', async () => {
   const { book } = await loadProject();
   assert.deepEqual(book.layout.print, {
     page_size: 'A4',
