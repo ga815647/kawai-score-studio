@@ -18,15 +18,15 @@ async function loadProject() {
   return { book, fixtures };
 }
 
-test('0.6.27 has forty-one verified songs, no quarantine, and passes structural gates', async () => {
+test('0.6.28 has forty-five verified songs, no quarantine, and passes structural gates', async () => {
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.27');
+  assert.equal(book.project.version, '0.6.28');
   assert.equal(book.schema.duration_quantum_eighth_units, 0.5);
   assert.equal(book.schema.smallest_supported_duration, 'sixteenth_note');
   assert.deepEqual(result.counts, {
-    verifiedSongs: 41,
+    verifiedSongs: 45,
     quarantinedEntries: 0,
     fixtures: 1,
   });
@@ -72,6 +72,10 @@ test('0.6.27 has forty-one verified songs, no quarantine, and passes structural 
     'pop-goes-the-weasel',
     'little-red-riding-hood-zh',
     'one-pug-dog-zh',
+    'ode-to-joy',
+    'three-blind-mice',
+    'hot-cross-buns',
+    'the-mulberry-bush',
   ]);
 });
 
@@ -689,4 +693,98 @@ test('five-song Yankee/Skip/Pop/red-hood/pug batch exactly matches fixed static 
     pug.lyric_tracks[0].syllables.map((item) => item.text).join(''),
     '一隻哈巴狗坐在大門口兩眼黑黝黝想吃肉骨頭',
   );
+});
+
+test('four-song Ode/Mice/Buns/Mulberry batch exactly matches fixed static sources', async () => {
+  const { book } = await loadProject();
+  const specs = {
+  "ode-to-joy": {
+    "title": "快樂頌",
+    "difficulty": 3,
+    "meter": "4/4",
+    "pickup": 0,
+    "notes": 62,
+    "lyrics": 0,
+    "digest": "c88f4508d5a432ba5f4e5eac0285e7d389a02055184fccac03144016c345b0ff",
+    "url": "https://abcnotation.com/tunePage?a=trillian.mit.edu%2F~jc%2Fmusic%2Fabc%2Fmirror%2Ftroseandassociates.com%2Fabc%2FOdeToJoy%2F0000"
+  },
+  "three-blind-mice": {
+    "title": "Three Blind Mice",
+    "difficulty": 3,
+    "meter": "6/8",
+    "pickup": 0,
+    "notes": 48,
+    "lyrics": 48,
+    "digest": "ddca0b8e3d521925a87f6126bc14b68da903b80782382f35c0f527c3443f7ee5",
+    "url": "https://abcnotation.com/tunePage?a=alijc.github.io%2Fmusic%2Ffriendly-house-senior-choir%2F0032"
+  },
+  "hot-cross-buns": {
+    "title": "Hot Cross Buns",
+    "difficulty": 1,
+    "meter": "4/4",
+    "pickup": 0,
+    "notes": 17,
+    "lyrics": 17,
+    "digest": "e6583bf9a1082a9c57e76bb95a26896d934f3d7e323b2f1a122666517a0084ba",
+    "url": "https://www.pianosongdownload.com/Hot%20Cross%20Buns.pdf"
+  },
+  "the-mulberry-bush": {
+    "title": "The Mulberry Bush",
+    "difficulty": 3,
+    "meter": "6/8",
+    "pickup": 0,
+    "notes": 36,
+    "lyrics": 35,
+    "digest": "25979431b434bdf6f83a9bdfb283fbcf3a7a8e6b50fafb3eb24ecd17ead688b6",
+    "url": "https://abcnotation.com/tunePage?a=trillian.mit.edu%2F~jc%2Fmusic%2Fbook%2FEverydaySongBook%2FEverydaySongBook2%2F0076"
+  }
+};
+
+  for (const [id, expected] of Object.entries(specs)) {
+    const song = book.library.songs.find((candidate) => candidate.id === id);
+    assert.ok(song, id);
+    assert.equal(song.title, expected.title);
+    assert.equal(song.difficulty, expected.difficulty);
+    assert.equal(song.key, 'C major');
+    assert.equal(song.meter, expected.meter);
+    assert.equal(song.pickup_eighth_units, expected.pickup);
+    assert.equal(song.source.url, expected.url);
+    assert.ok(Object.values(song.verification).every((value) => value === true));
+
+    const events = flattenEvents(song);
+    assert.equal(events.filter((event) => event.kind === 'note').length, expected.notes);
+    const track = song.lyric_tracks.find((candidate) => candidate.default);
+    assert.equal(track.syllables.length, expected.lyrics);
+
+    const compactMeasures = song.measures.map((measure) => measure.events.map(
+      (event) => [event.pitch ?? null, event.duration],
+    ));
+    const digest = createHash('sha256').update(JSON.stringify(compactMeasures)).digest('hex');
+    assert.equal(digest, expected.digest, id);
+  }
+
+  const ode = book.library.songs.find((candidate) => candidate.id === 'ode-to-joy');
+  assert.deepEqual(ode.lyric_tracks[0], {
+    id: 'instrumental',
+    locale: 'zxx',
+    role: 'original',
+    status: 'verified',
+    default: true,
+    syllables: [],
+  });
+  assert.equal(ode.measures[11].events.at(-1).pitch, '5_');
+
+  const mice = book.library.songs.find((candidate) => candidate.id === 'three-blind-mice');
+  assert.equal(flattenEvents(mice).filter((event) => event.kind === 'rest').length, 5);
+
+  const buns = book.library.songs.find((candidate) => candidate.id === 'hot-cross-buns');
+  assert.equal(buns.source.content_sha256, 'd1acd2e45ba069a23a367ffaebb6c73550bfea06c02311b9edeffd28ec2b1dd9');
+  assert.deepEqual(
+    buns.measures.slice(0, 2).map((measure) => measure.events.map((event) => [event.pitch, event.duration])),
+    [[['3', 4], ['2', 4]], [['1', 8]]],
+  );
+
+  const mulberry = book.library.songs.find((candidate) => candidate.id === 'the-mulberry-bush');
+  assert.equal(flattenEvents(mulberry).filter((event) => event.kind === 'rest').length, 2);
+  assert.deepEqual(mulberry.lyric_tracks[0].continuations, [{ from: 'n32', through: 'n33' }]);
 });
