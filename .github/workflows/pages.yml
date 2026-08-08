@@ -13,10 +13,11 @@ permissions:
   pages: write
   id-token: write
 
-# Keep the repaired deployment chain separate from the stale legacy queue.
+# A static Pages site should publish the newest successful main build only.
+# Use a fresh group to avoid inheriting stale queue state left by earlier runs.
 concurrency:
-  group: pages-v5
-  cancel-in-progress: false
+  group: pages-v6
+  cancel-in-progress: true
 
 jobs:
   build:
