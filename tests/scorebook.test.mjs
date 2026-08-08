@@ -18,15 +18,15 @@ async function loadProject() {
   return { book, fixtures };
 }
 
-test('0.6.23 has twenty-six verified songs, no quarantine, and passes structural gates', async () => {
+test('0.6.24 has thirty-one verified songs, no quarantine, and passes structural gates', async () => {
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.23');
+  assert.equal(book.project.version, '0.6.24');
   assert.equal(book.schema.duration_quantum_eighth_units, 0.5);
   assert.equal(book.schema.smallest_supported_duration, 'sixteenth_note');
   assert.deepEqual(result.counts, {
-    verifiedSongs: 26,
+    verifiedSongs: 31,
     quarantinedEntries: 0,
     fixtures: 1,
   });
@@ -57,6 +57,11 @@ test('0.6.23 has twenty-six verified songs, no quarantine, and passes structural
     'i-am-a-painter-zh',
     'counting-ducks-zh',
     'little-rabbit-be-good-zh',
+    'bingo',
+    'this-old-man',
+    'clay-doll-zh',
+    'drop-the-handkerchief-zh',
+    'telephone-call-zh',
   ]);
 });
 
@@ -380,7 +385,7 @@ test('淡々泡々 exactly models the user-provided Guitar Pro melody reduction'
   assert.ok(Object.values(song.verification).every((value) => value === true));
 });
 
-test('A4 print contract selects one verified song and permits page breaks only between systems', async () => {
+\ntest('BINGO, This Old Man, 泥娃娃, 丟手絹, and 打電話 pin the selected static-source reductions', async () => {\n  const { book } = await loadProject();\n  const specs = {\n    bingo: { title: 'BINGO', meter: '2/4', pickup: 1, measures: 13, notes: 37, lyrics: 37, rests: 1, digest: 'b90682ad2b9885c285ffaef5c05f67a70f557a69ed480e2362d874d7596bbee7' },\n    'this-old-man': { title: 'This Old Man', meter: '4/4', pickup: 0, measures: 8, notes: 32, lyrics: 32, rests: 0, digest: 'd5aaea07a1c6ffd4cfbc6de9f2694a099909954f6a5674d65adbb56722922382' },\n    'clay-doll-zh': { title: '泥娃娃', meter: '4/4', pickup: 0, measures: 8, notes: 26, lyrics: 26, rests: 2, digest: '7ddb8666951ad92729b899059f88e5a540458ba7d7094ad9f949ff1b70297ae4' },\n    'drop-the-handkerchief-zh': { title: '丟手絹', meter: '2/4', pickup: 0, measures: 17, notes: 41, lyrics: 37, rests: 0, digest: 'd43bacf7518f64e3ab60eb1637799b9e5b44a8ce787e6d173b1551a6e2df43ea' },\n    'telephone-call-zh': { title: '打電話', meter: '2/4', pickup: 0, measures: 12, notes: 29, lyrics: 28, rests: 6, digest: '73b702624282a7018f03d456ea3c091ed88c2c96850cdc808751ab7283c122bf' },\n  };\n  for (const [id, spec] of Object.entries(specs)) {\n    const song = book.library.songs.find((candidate) => candidate.id === id);\n    assert.ok(song, id);\n    assert.equal(song.title, spec.title);\n    assert.equal(song.key, 'C major');\n    assert.equal(song.meter, spec.meter);\n    assert.equal(song.pickup_eighth_units, spec.pickup);\n    assert.equal(song.measures.length, spec.measures);\n    const events = flattenEvents(song);\n    assert.equal(events.filter((event) => event.kind === 'note').length, spec.notes);\n    assert.equal(events.filter((event) => event.kind === 'rest').length, spec.rests);\n    const lyricTrack = song.lyric_tracks.find((candidate) => candidate.default);\n    assert.equal(lyricTrack.syllables.length, spec.lyrics);\n    const digest = createHash('sha256').update(JSON.stringify(\n      events.map((event) => [event.kind, event.pitch ?? null, event.duration]),\n    )).digest('hex');\n    assert.equal(digest, spec.digest, id);\n    assert.ok(Object.values(song.verification).every((value) => value === true));\n  }\n  const bingo = book.library.songs.find((song) => song.id === 'bingo');\n  assert.equal(bingo.source.url, 'https://www.musicyoucanread.com/SONGS/00-BINGO.html');\n  assert.equal(bingo.source.transposition_semitones, -7);\n  const oldMan = book.library.songs.find((song) => song.id === 'this-old-man');\n  assert.equal(oldMan.source.supporting_sources[0].url.startsWith('https://abcnotation.com/'), true);\n  const clay = book.library.songs.find((song) => song.id === 'clay-doll-zh');\n  assert.match(clay.source.octave_adaptation, /lower-octave comma-marked notes/);\n  const handkerchief = book.library.songs.find((song) => song.id === 'drop-the-handkerchief-zh');\n  assert.equal(handkerchief.source.original_key, 'E major');\n  assert.equal(handkerchief.source.transposition_semitones, -4);\n  const phone = book.library.songs.find((song) => song.id === 'telephone-call-zh');\n  assert.equal(phone.source.selected_source_page, 146);\n  assert.equal(phone.measures[9].events.at(-1).id, 'n24');\n  assert.equal(phone.lyric_tracks[0].syllables.some((item) => item.event === 'n24'), false);\n});\n\ntest('A4 print contract selects one verified song and permits page breaks only between systems', async () => {
   const { book } = await loadProject();
   assert.deepEqual(book.layout.print, {
     page_size: 'A4',
