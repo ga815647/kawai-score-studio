@@ -256,8 +256,7 @@ test('stale cached index automatically reloads with the current build hash', asy
 });
 
 test('selected-song print produces readable A4 output and never prints the fixture, directory, or other songs', async ({ page }) => {
-  // Full-library geometry validation scales with the verified-song count.
-  test.setTimeout(240_000);
+  test.setTimeout(120_000);
   await mkdir(reportDirectory, { recursive: true });
   await page.addInitScript(() => {
     window.print = () => { window.__printCalled = true; };
