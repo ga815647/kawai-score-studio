@@ -1,0 +1,391 @@
+  - id: three-blind-mice
+    title: Three Blind Mice
+    status: verified
+    difficulty: 3
+    key: C major
+    meter: 6/8
+    pickup_eighth_units: 0
+    source:
+      title: Three Blind Mice
+      source_type: score_website
+      provided_by: assistant_web_research
+      publisher_or_origin: ABCnotation / Ali Corbin friendly-house collection / The Everyday Song Book (1927)
+      publisher: ABCnotation
+      accessed_at: '2026-08-08'
+      selected_variant: Static machine-readable C-major 6/8 ABC credited as an old round from The Everyday Song Book (1927),
+        complete printed English verse; rests and all lyric syllabification preserved.
+      original_key: C major
+      original_meter: 6/8
+      pickup: 0
+      rights_status: traditional_nursery_round_static_abc_from_1927_songbook
+      url: https://abcnotation.com/tunePage?a=alijc.github.io%2Fmusic%2Ffriendly-house-senior-choir%2F0032
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 6
+      events:
+      - id: n01
+        kind: note
+        pitch: '3'
+        duration: 3
+      - id: n02
+        kind: note
+        pitch: '2'
+        duration: 3
+    - number: 2
+      capacity_eighth_units: 6
+      events:
+      - id: n03
+        kind: note
+        pitch: '1'
+        duration: 3
+      - id: r01
+        kind: rest
+        duration: 3
+    - number: 3
+      capacity_eighth_units: 6
+      events:
+      - id: n04
+        kind: note
+        pitch: '3'
+        duration: 3
+      - id: n05
+        kind: note
+        pitch: '2'
+        duration: 3
+    - number: 4
+      capacity_eighth_units: 6
+      events:
+      - id: n06
+        kind: note
+        pitch: '1'
+        duration: 3
+      - id: r02
+        kind: rest
+        duration: 3
+    - number: 5
+      capacity_eighth_units: 6
+      events:
+      - id: n07
+        kind: note
+        pitch: '5'
+        duration: 3
+      - id: n08
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n09
+        kind: note
+        pitch: '4'
+        duration: 1
+    - number: 6
+      capacity_eighth_units: 6
+      events:
+      - id: n10
+        kind: note
+        pitch: '3'
+        duration: 3
+      - id: r03
+        kind: rest
+        duration: 3
+    - number: 7
+      capacity_eighth_units: 6
+      events:
+      - id: n11
+        kind: note
+        pitch: '5'
+        duration: 3
+      - id: n12
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n13
+        kind: note
+        pitch: '4'
+        duration: 1
+    - number: 8
+      capacity_eighth_units: 6
+      events:
+      - id: n14
+        kind: note
+        pitch: '3'
+        duration: 3
+      - id: r04
+        kind: rest
+        duration: 2
+      - id: n15
+        kind: note
+        pitch: '5'
+        duration: 1
+    - number: 9
+      capacity_eighth_units: 6
+      events:
+      - id: n16
+        kind: note
+        pitch: 1^
+        duration: 2
+      - id: n17
+        kind: note
+        pitch: 1^
+        duration: 1
+      - id: n18
+        kind: note
+        pitch: '7'
+        duration: 1
+      - id: n19
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n20
+        kind: note
+        pitch: '7'
+        duration: 1
+    - number: 10
+      capacity_eighth_units: 6
+      events:
+      - id: n21
+        kind: note
+        pitch: 1^
+        duration: 2
+      - id: n22
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n23
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n24
+        kind: note
+        pitch: '5'
+        duration: 1
+    - number: 11
+      capacity_eighth_units: 6
+      events:
+      - id: n25
+        kind: note
+        pitch: 1^
+        duration: 1
+      - id: n26
+        kind: note
+        pitch: 1^
+        duration: 1
+      - id: n27
+        kind: note
+        pitch: 1^
+        duration: 1
+      - id: n28
+        kind: note
+        pitch: '7'
+        duration: 1
+      - id: n29
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n30
+        kind: note
+        pitch: '7'
+        duration: 1
+    - number: 12
+      capacity_eighth_units: 6
+      events:
+      - id: n31
+        kind: note
+        pitch: 1^
+        duration: 2
+      - id: n32
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n33
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n34
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n35
+        kind: note
+        pitch: '5'
+        duration: 1
+    - number: 13
+      capacity_eighth_units: 6
+      events:
+      - id: n36
+        kind: note
+        pitch: 1^
+        duration: 2
+      - id: n37
+        kind: note
+        pitch: 1^
+        duration: 1
+      - id: n38
+        kind: note
+        pitch: '7'
+        duration: 1
+      - id: n39
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n40
+        kind: note
+        pitch: '7'
+        duration: 1
+    - number: 14
+      capacity_eighth_units: 6
+      events:
+      - id: n41
+        kind: note
+        pitch: 1^
+        duration: 1
+      - id: n42
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n43
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n44
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n45
+        kind: note
+        pitch: '4'
+        duration: 1
+    - number: 15
+      capacity_eighth_units: 6
+      events:
+      - id: n46
+        kind: note
+        pitch: '3'
+        duration: 3
+      - id: n47
+        kind: note
+        pitch: '2'
+        duration: 3
+    - number: 16
+      capacity_eighth_units: 6
+      events:
+      - id: n48
+        kind: note
+        pitch: '1'
+        duration: 3
+      - id: r05
+        kind: rest
+        duration: 3
+    ties: []
+    lyric_tracks:
+    - id: en
+      locale: en
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: Three
+      - event: n02
+        text: blind
+      - event: n03
+        text: mice,
+      - event: n04
+        text: three
+      - event: n05
+        text: blind
+      - event: n06
+        text: mice;
+      - event: n07
+        text: See
+      - event: n08
+        text: how
+      - event: n09
+        text: they
+      - event: n10
+        text: run;
+      - event: n11
+        text: see
+      - event: n12
+        text: how
+      - event: n13
+        text: they
+      - event: n14
+        text: run;
+      - event: n15
+        text: They
+      - event: n16
+        text: all
+      - event: n17
+        text: ran
+      - event: n18
+        text: aft-
+      - event: n19
+        text: er
+      - event: n20
+        text: the
+      - event: n21
+        text: farm-
+      - event: n22
+        text: er's
+      - event: n23
+        text: wife,
+      - event: n24
+        text: She
+      - event: n25
+        text: cut
+      - event: n26
+        text: 'off'
+      - event: n27
+        text: their
+      - event: n28
+        text: tails
+      - event: n29
+        text: with
+      - event: n30
+        text: a
+      - event: n31
+        text: carv-
+      - event: n32
+        text: ing
+      - event: n33
+        text: knife;
+      - event: n34
+        text: Did
+      - event: n35
+        text: you
+      - event: n36
+        text: ev-
+      - event: n37
+        text: er
+      - event: n38
+        text: see
+      - event: n39
+        text: such
+      - event: n40
+        text: a
+      - event: n41
+        text: sight
+      - event: n42
+        text: in
+      - event: n43
+        text: your
+      - event: n44
+        text: life
+      - event: n45
+        text: As
+      - event: n46
+        text: three
+      - event: n47
+        text: blind
+      - event: n48
+        text: mice?
