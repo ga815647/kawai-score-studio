@@ -21,7 +21,7 @@ jobs:
           python-version: '3.13'
       - name: Patch canonical scorebook first
         run: python scripts/apply_difficulty_patch.py
-      - name: Commit canonical migration
+      - name: Commit migration results
         run: |
           if git diff --quiet; then
             echo 'No migration changes needed.'
@@ -29,6 +29,6 @@ jobs:
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add scorebook.yaml
-          git commit -m 'feat: add song difficulty ratings to scorebook'
+          git add scorebook.yaml src/app.js package.json
+          git commit -m 'feat: render and sort song difficulty'
           git push origin HEAD:feat/song-difficulty-sort
