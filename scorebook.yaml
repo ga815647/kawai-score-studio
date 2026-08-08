@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.28
+  version: 0.6.29
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -15486,6 +15486,1393 @@ library:
       continuations:
       - from: n32
         through: n33
+  - id: rain-rain-go-away
+    title: Rain, Rain, Go Away
+    status: verified
+    difficulty: 1
+    key: C major
+    meter: 2/4
+    pickup_eighth_units: 0
+    source:
+      title: Rain, Rain, Go Away — Pitch Number Format
+      source_type: score_image
+      provided_by: assistant_web_research
+      publisher_or_origin: Music You Can Read / Music Notes, Inc.
+      publisher: Music Notes, Inc.
+      accessed_at: '2026-08-08'
+      selected_variant: Fixed 2/4 pitch-number static score image; first printed four-line verse. Source is D major; scale degrees
+        are preserved and rendered in C major (-2 semitones).
+      original_key: D major
+      original_meter: 2/4
+      pickup: 0
+      rights_status: traditional_nursery_rhyme_static_educational_notation_rights_retained_by_music_notes_inc
+      url: https://www.musicyoucanread.com/images/SONGS/240/00-RAINR-PN.jpg
+      content_sha256: cf9c282be1ee415409a503fbc127495c41ab3b588f3472df6129ae066376129f
+      transposition_semitones: -2
+      supporting_sources:
+      - title: Rain, Rain, Go Away
+        publisher_or_origin: Music You Can Read / Music Notes, Inc.
+        url: https://www.musicyoucanread.com/SONGS/00-RAINR.html
+        purpose: Identifies the fixed score as D major, 2/4, English nursery rhyme, and supplies the exact printed verse text.
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 4
+      events:
+      - id: n01
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n02
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 2
+      capacity_eighth_units: 4
+      events:
+      - id: n03
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n04
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n05
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 3
+      capacity_eighth_units: 4
+      events:
+      - id: n06
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n07
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n08
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n09
+        kind: note
+        pitch: '6'
+        duration: 1
+    - number: 4
+      capacity_eighth_units: 4
+      events:
+      - id: n10
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n11
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n12
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 5
+      capacity_eighth_units: 4
+      events:
+      - id: n13
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n14
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 6
+      capacity_eighth_units: 4
+      events:
+      - id: n15
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n16
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n17
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 7
+      capacity_eighth_units: 4
+      events:
+      - id: n18
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n19
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n20
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n21
+        kind: note
+        pitch: '6'
+        duration: 1
+    - number: 8
+      capacity_eighth_units: 4
+      events:
+      - id: n22
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n23
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n24
+        kind: note
+        pitch: '3'
+        duration: 2
+    ties: []
+    lyric_tracks:
+    - id: en
+      locale: en
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: Rain
+      - event: n02
+        text: rain
+      - event: n03
+        text: go
+      - event: n04
+        text: a-
+      - event: n05
+        text: way
+      - event: n06
+        text: Come
+      - event: n07
+        text: a-
+      - event: n08
+        text: gain
+      - event: n09
+        text: an-
+      - event: n10
+        text: oth-
+      - event: n11
+        text: er
+      - event: n12
+        text: day
+      - event: n13
+        text: Rain
+      - event: n14
+        text: rain
+      - event: n15
+        text: go
+      - event: n16
+        text: a-
+      - event: n17
+        text: way
+      - event: n18
+        text: All
+      - event: n19
+        text: the
+      - event: n20
+        text: chil-
+      - event: n21
+        text: dren
+      - event: n22
+        text: want
+      - event: n23
+        text: to
+      - event: n24
+        text: play
+  - id: jack-and-jill
+    title: Jack and Jill
+    status: verified
+    difficulty: 2
+    key: C major
+    meter: 3/4
+    pickup_eighth_units: 0
+    source:
+      title: Jack and Jill – English Nursery Rhyme [EASY]
+      source_type: score_image
+      provided_by: assistant_web_research
+      publisher_or_origin: Music Lessons by Darek / Sheet Music Plus
+      publisher: Darek
+      accessed_at: '2026-08-08'
+      selected_variant: Fixed page-1 static preview of the 2023 Darek easy-piano arrangement; treble melody and complete first
+        verse only, accompaniment omitted. Transposed from D major to C major (-2 semitones).
+      original_key: D major
+      original_meter: 3/4
+      pickup: 0
+      rights_status: traditional_nursery_rhyme_2023_arrangement_preview_rights_retained_by_darek
+      url: https://www.sheetmusicplus.com/on/demandware.static/-/Sites-smp-main/default/dw9666c81d/images/6211/22666211_cover-large_file.png
+      content_sha256: 60e6a71c2640380f6a464d54c7b1f41f30a8cf3090016155c1a846f925cc3a5c
+      transposition_semitones: -2
+      supporting_sources:
+      - title: Jack and Jill – English Nursery Rhyme [EASY]
+        publisher_or_origin: Sheet Music Plus
+        url: https://www.sheetmusicplus.com/en/product/jack-and-jill-english-nursery-rhyme-easy-22666211.html
+        purpose: Identifies the fixed preview, traditional song, arranger, publication date, and easy-piano edition.
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 6
+      events:
+      - id: n01
+        kind: note
+        pitch: '1'
+        duration: 4
+      - id: n02
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 2
+      capacity_eighth_units: 6
+      events:
+      - id: n03
+        kind: note
+        pitch: '1'
+        duration: 4
+      - id: n04
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 3
+      capacity_eighth_units: 6
+      events:
+      - id: n05
+        kind: note
+        pitch: '5'
+        duration: 4
+      - id: n06
+        kind: note
+        pitch: '6'
+        duration: 2
+    - number: 4
+      capacity_eighth_units: 6
+      events:
+      - id: n07
+        kind: note
+        pitch: '5'
+        duration: 4
+      - id: n08
+        kind: note
+        pitch: '6'
+        duration: 2
+    - number: 5
+      capacity_eighth_units: 6
+      events:
+      - id: n09
+        kind: note
+        pitch: '7'
+        duration: 4
+      - id: n10
+        kind: note
+        pitch: 1^
+        duration: 2
+    - number: 6
+      capacity_eighth_units: 6
+      events:
+      - id: n11
+        kind: note
+        pitch: '7'
+        duration: 4
+      - id: n12
+        kind: note
+        pitch: 1^
+        duration: 2
+    - number: 7
+      capacity_eighth_units: 6
+      events:
+      - id: n13
+        kind: note
+        pitch: 1^
+        duration: 6
+    - number: 8
+      capacity_eighth_units: 6
+      events:
+      - id: n14
+        kind: note
+        pitch: 1^
+        duration: 6
+    - number: 9
+      capacity_eighth_units: 6
+      events:
+      - id: n15
+        kind: note
+        pitch: '1'
+        duration: 4
+      - id: n16
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 10
+      capacity_eighth_units: 6
+      events:
+      - id: n17
+        kind: note
+        pitch: '1'
+        duration: 4
+      - id: n18
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 11
+      capacity_eighth_units: 6
+      events:
+      - id: n19
+        kind: note
+        pitch: '4'
+        duration: 4
+      - id: n20
+        kind: note
+        pitch: '5'
+        duration: 2
+    - number: 12
+      capacity_eighth_units: 6
+      events:
+      - id: n21
+        kind: note
+        pitch: '4'
+        duration: 4
+      - id: n22
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 13
+      capacity_eighth_units: 6
+      events:
+      - id: n23
+        kind: note
+        pitch: '4'
+        duration: 4
+      - id: n24
+        kind: note
+        pitch: '1'
+        duration: 2
+    - number: 14
+      capacity_eighth_units: 6
+      events:
+      - id: n25
+        kind: note
+        pitch: '1'
+        duration: 4
+      - id: n26
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 15
+      capacity_eighth_units: 6
+      events:
+      - id: n27
+        kind: note
+        pitch: '2'
+        duration: 6
+    - number: 16
+      capacity_eighth_units: 6
+      events:
+      - id: n28
+        kind: note
+        pitch: '1'
+        duration: 6
+    ties: []
+    lyric_tracks:
+    - id: en
+      locale: en
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: Jack
+      - event: n02
+        text: and
+      - event: n03
+        text: Jill
+      - event: n04
+        text: went
+      - event: n05
+        text: up
+      - event: n06
+        text: the
+      - event: n07
+        text: hill,
+      - event: n08
+        text: To
+      - event: n09
+        text: fetch
+      - event: n10
+        text: a
+      - event: n11
+        text: pail
+      - event: n12
+        text: of
+      - event: n13
+        text: wa-
+      - event: n14
+        text: ter,
+      - event: n15
+        text: Jack
+      - event: n16
+        text: fell
+      - event: n17
+        text: down
+      - event: n18
+        text: and
+      - event: n19
+        text: broke
+      - event: n20
+        text: his
+      - event: n21
+        text: crown,
+      - event: n22
+        text: And
+      - event: n23
+        text: Jill
+      - event: n24
+        text: came
+      - event: n25
+        text: tumb-
+      - event: n26
+        text: ling
+      - event: n27
+        text: af-
+      - event: n28
+        text: ter.
+  - id: the-bear-went-over-the-mountain
+    title: The Bear Went Over the Mountain
+    status: verified
+    difficulty: 3
+    key: C major
+    meter: 6/8
+    pickup_eighth_units: 1
+    source:
+      title: The Bear Went Over the Mountain — C Major Sheet Music
+      source_type: score_image
+      provided_by: assistant_web_research
+      publisher_or_origin: Singing Bell
+      publisher: Singing Bell
+      accessed_at: '2026-08-08'
+      selected_variant: Fixed C-major 6/8 static lead-sheet image; opening stanza only through the first “to see what he could
+        see.” The following pickup “And” and later “other side” stanza are omitted; the final leftover eighth is encoded as
+        an explicit rest.
+      original_key: C major
+      original_meter: 6/8
+      pickup: 1
+      rights_status: traditional_public_domain_song_static_singing_bell_lead_sheet
+      url: https://www.singing-bell.com/wp-content/uploads/2016/03/The-bear-went-over-the-mountain_C_Singing-Bell.jpg
+      content_sha256: 583c27b7f5f216863f7cf26d7c8bb06f471eb4cc0d3d379ce0a0153a4e405887
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 0
+      capacity_eighth_units: 1
+      events:
+      - id: n01
+        kind: note
+        pitch: '1'
+        duration: 1
+      pickup: true
+    - number: 1
+      capacity_eighth_units: 6
+      events:
+      - id: n02
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n03
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n04
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n05
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n06
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 2
+      capacity_eighth_units: 6
+      events:
+      - id: n07
+        kind: note
+        pitch: '4'
+        duration: 3
+      - id: n08
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n09
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 3
+      capacity_eighth_units: 6
+      events:
+      - id: n10
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n11
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n12
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n13
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n14
+        kind: note
+        pitch: '2'
+        duration: 1
+    - number: 4
+      capacity_eighth_units: 6
+      events:
+      - id: n15
+        kind: note
+        pitch: '3'
+        duration: 3
+      - id: n16
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n17
+        kind: note
+        pitch: '1'
+        duration: 1
+    - number: 5
+      capacity_eighth_units: 6
+      events:
+      - id: n18
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n19
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n20
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n21
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n22
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 6
+      capacity_eighth_units: 6
+      events:
+      - id: n23
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n24
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n25
+        kind: note
+        pitch: '6'
+        duration: 2
+      - id: n26
+        kind: note
+        pitch: '6'
+        duration: 1
+    - number: 7
+      capacity_eighth_units: 6
+      events:
+      - id: n27
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n28
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n29
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n30
+        kind: note
+        pitch: '2'
+        duration: 1
+    - number: 8
+      capacity_eighth_units: 6
+      events:
+      - id: n31
+        kind: note
+        pitch: '1'
+        duration: 3
+      - id: n32
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: r01
+        kind: rest
+        duration: 1
+    ties:
+    - id: t01
+      from: n31
+      to: n32
+    lyric_tracks:
+    - id: en
+      locale: en
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: The
+      - event: n02
+        text: bear
+      - event: n03
+        text: went
+      - event: n04
+        text: o-
+      - event: n05
+        text: ver
+      - event: n06
+        text: the
+      - event: n07
+        text: moun-
+      - event: n08
+        text: tain,
+      - event: n09
+        text: the
+      - event: n10
+        text: bear
+      - event: n11
+        text: went
+      - event: n12
+        text: o-
+      - event: n13
+        text: ver
+      - event: n14
+        text: the
+      - event: n15
+        text: moun-
+      - event: n16
+        text: tain
+      - event: n17
+        text: The
+      - event: n18
+        text: bear
+      - event: n19
+        text: went
+      - event: n20
+        text: o-
+      - event: n21
+        text: ver
+      - event: n22
+        text: the
+      - event: n23
+        text: moun-
+      - event: n25
+        text: tain
+      - event: n26
+        text: to
+      - event: n27
+        text: see
+      - event: n28
+        text: what
+      - event: n29
+        text: he
+      - event: n30
+        text: could
+      - event: n31
+        text: see
+      continuations:
+      - from: n23
+        through: n24
+      - from: n31
+        through: n32
+  - id: im-a-little-teapot
+    title: I'm a Little Teapot
+    status: verified
+    difficulty: 2
+    key: C major
+    meter: 4/4
+    pickup_eighth_units: 0
+    source:
+      title: I'm A Little Teapot Easy Piano Sheet Music
+      source_type: score_image
+      provided_by: assistant_web_research
+      publisher_or_origin: David Sides static beginner score preview
+      publisher: David Sides
+      accessed_at: '2026-08-08'
+      selected_variant: Fixed C-major 4/4 static beginner score preview; first eight measures / first printed verse only. Exact
+        note-letter labels, durations, and lyric alignment are taken from the image.
+      original_key: C major
+      original_meter: 4/4
+      pickup: 0
+      rights_status: published_1939_song_static_beginner_arrangement_preview_rights_retained_by_publisher
+      url: https://www.davidsides.com/cdn/shop/files/im_a_little_teapot_600x600_crop_center.png?v=1710544201
+      supporting_sources:
+      - title: I'm A Little Teapot
+        publisher_or_origin: Paul Hardy's Songs Tunebook / ABCnotation
+        url: https://abcnotation.com/tunePage?a=pghardy.net%2Ftunebooks%2Fpgh_songs_tunebook%2F0013
+        purpose: Independent fixed ABC cross-check for the same 4/4 melody and Sanders/Kelley 1939 identity; the selected static
+          image governs lyric wording and alignment.
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 8
+      events:
+      - id: n01
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n02
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n03
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n04
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n05
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n06
+        kind: note
+        pitch: 1^
+        duration: 2
+    - number: 2
+      capacity_eighth_units: 8
+      events:
+      - id: n07
+        kind: note
+        pitch: '6'
+        duration: 2
+      - id: n08
+        kind: note
+        pitch: 1^
+        duration: 2
+      - id: n09
+        kind: note
+        pitch: '5'
+        duration: 4
+    - number: 3
+      capacity_eighth_units: 8
+      events:
+      - id: n10
+        kind: note
+        pitch: '4'
+        duration: 2
+      - id: n11
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n12
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n13
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n14
+        kind: note
+        pitch: '3'
+        duration: 2
+    - number: 4
+      capacity_eighth_units: 8
+      events:
+      - id: n15
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n16
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n17
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n18
+        kind: note
+        pitch: '1'
+        duration: 4
+    - number: 5
+      capacity_eighth_units: 8
+      events:
+      - id: n19
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n20
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n21
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n22
+        kind: note
+        pitch: '4'
+        duration: 1
+      - id: n23
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n24
+        kind: note
+        pitch: 1^
+        duration: 2
+    - number: 6
+      capacity_eighth_units: 8
+      events:
+      - id: n25
+        kind: note
+        pitch: '6'
+        duration: 2
+      - id: n26
+        kind: note
+        pitch: 1^
+        duration: 2
+      - id: n27
+        kind: note
+        pitch: '5'
+        duration: 4
+    - number: 7
+      capacity_eighth_units: 8
+      events:
+      - id: n28
+        kind: note
+        pitch: 1^
+        duration: 3
+      - id: n29
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n30
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n31
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n32
+        kind: note
+        pitch: '4'
+        duration: 2
+    - number: 8
+      capacity_eighth_units: 8
+      events:
+      - id: n33
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n34
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n35
+        kind: note
+        pitch: '1'
+        duration: 4
+    ties: []
+    lyric_tracks:
+    - id: en
+      locale: en
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: I'm
+      - event: n02
+        text: a
+      - event: n03
+        text: lit-
+      - event: n04
+        text: tle
+      - event: n05
+        text: tea-
+      - event: n06
+        text: pot
+      - event: n07
+        text: short
+      - event: n08
+        text: and
+      - event: n09
+        text: stout,
+      - event: n10
+        text: here
+      - event: n11
+        text: is
+      - event: n12
+        text: my
+      - event: n13
+        text: han-
+      - event: n14
+        text: dle,
+      - event: n15
+        text: here
+      - event: n16
+        text: is
+      - event: n17
+        text: my
+      - event: n18
+        text: spout.
+      - event: n19
+        text: When
+      - event: n20
+        text: I
+      - event: n21
+        text: get
+      - event: n22
+        text: all
+      - event: n23
+        text: steamed
+      - event: n24
+        text: up
+      - event: n25
+        text: hear
+      - event: n26
+        text: me
+      - event: n27
+        text: shout,
+      - event: n28
+        text: tip
+      - event: n29
+        text: me
+      - event: n30
+        text: o-
+      - event: n31
+        text: ver
+      - event: n32
+        text: and
+      - event: n33
+        text: pour
+      - event: n34
+        text: me
+      - event: n35
+        text: out!
+  - id: do-your-ears-hang-low
+    title: Do Your Ears Hang Low?
+    status: verified
+    difficulty: 3
+    key: C major
+    meter: 2/2
+    pickup_eighth_units: 2
+    source:
+      title: Do Your Ears Hang Low? — Beginner
+      source_type: score_image
+      provided_by: assistant_web_research
+      publisher_or_origin: RiffSpot
+      publisher: RiffSpot
+      accessed_at: '2026-08-08'
+      selected_variant: Fixed full-score static preview in C major, 2/2; first printed verse only. The source first ending continues
+        with the E-D pickup for verse 2; that next-verse pickup is omitted and the remaining final quarter-note span is encoded
+        as an explicit rest.
+      original_key: C major
+      original_meter: 2/2
+      pickup: 2
+      rights_status: traditional_song_static_preview_rights_retained_by_riffspot_personal_use_source
+      url: https://riffspot.com/files/music/images/beginner/do-your-ears-hang-low-beginner.png
+      content_sha256: e82d98afd2c1b987b6257e2b419e8ea612fee0cfd03d5909d5f2fe97559f509a
+      supporting_sources:
+      - title: Do Your Ears Hang Low? — Beginner
+        publisher_or_origin: RiffSpot
+        url: https://riffspot.com/music/do-your-ears-hang-low-beginner/960/
+        purpose: Identifies the static score as Traditional, C major, beginner, treble clef, and links the exact preview image.
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 0
+      capacity_eighth_units: 2
+      events:
+      - id: n01
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n02
+        kind: note
+        pitch: '2'
+        duration: 1
+      pickup: true
+    - number: 1
+      capacity_eighth_units: 8
+      events:
+      - id: n03
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n04
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n05
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n06
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n07
+        kind: note
+        pitch: '4'
+        duration: 1
+    - number: 2
+      capacity_eighth_units: 8
+      events:
+      - id: n08
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n09
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n10
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n11
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n12
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n13
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n14
+        kind: note
+        pitch: '2'
+        duration: 1
+    - number: 3
+      capacity_eighth_units: 8
+      events:
+      - id: n15
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n16
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n17
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n18
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n19
+        kind: note
+        pitch: '3'
+        duration: 2
+      - id: n20
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n21
+        kind: note
+        pitch: '2'
+        duration: 1
+    - number: 4
+      capacity_eighth_units: 8
+      events:
+      - id: n22
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n23
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n24
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n25
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n26
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n27
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n28
+        kind: note
+        pitch: '2'
+        duration: 1
+    - number: 5
+      capacity_eighth_units: 8
+      events:
+      - id: n29
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n30
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n31
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n32
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n33
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n34
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n35
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n36
+        kind: note
+        pitch: '4'
+        duration: 1
+    - number: 6
+      capacity_eighth_units: 8
+      events:
+      - id: n37
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n38
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n39
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n40
+        kind: note
+        pitch: '3'
+        duration: 1
+      - id: n41
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n42
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n43
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n44
+        kind: note
+        pitch: '2'
+        duration: 1
+    - number: 7
+      capacity_eighth_units: 8
+      events:
+      - id: n45
+        kind: note
+        pitch: '3'
+        duration: 4
+      - id: n46
+        kind: note
+        pitch: '2'
+        duration: 4
+    - number: 8
+      capacity_eighth_units: 8
+      events:
+      - id: n47
+        kind: note
+        pitch: '1'
+        duration: 6
+      - id: r01
+        kind: rest
+        duration: 2
+    ties: []
+    lyric_tracks:
+    - id: en
+      locale: en
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: Do
+      - event: n02
+        text: your
+      - event: n03
+        text: ears
+      - event: n04
+        text: hang
+      - event: n05
+        text: low?
+      - event: n06
+        text: Do
+      - event: n07
+        text: they
+      - event: n08
+        text: wob-
+      - event: n09
+        text: ble
+      - event: n10
+        text: to
+      - event: n11
+        text: and
+      - event: n12
+        text: fro?
+      - event: n13
+        text: Can
+      - event: n14
+        text: you
+      - event: n15
+        text: tie
+      - event: n16
+        text: them
+      - event: n17
+        text: in
+      - event: n18
+        text: a
+      - event: n19
+        text: knot?
+      - event: n20
+        text: Can
+      - event: n21
+        text: you
+      - event: n22
+        text: tie
+      - event: n23
+        text: them
+      - event: n24
+        text: in
+      - event: n25
+        text: a
+      - event: n26
+        text: bow?
+      - event: n27
+        text: Can
+      - event: n28
+        text: you
+      - event: n29
+        text: throw
+      - event: n30
+        text: them
+      - event: n31
+        text: o'er
+      - event: n32
+        text: your
+      - event: n33
+        text: shoul-
+      - event: n34
+        text: der
+      - event: n35
+        text: Like
+      - event: n36
+        text: a
+      - event: n37
+        text: con-
+      - event: n38
+        text: ti-
+      - event: n39
+        text: nen-
+      - event: n40
+        text: tal
+      - event: n41
+        text: sol-
+      - event: n42
+        text: dier?
+      - event: n43
+        text: Do
+      - event: n44
+        text: your
+      - event: n45
+        text: ears
+      - event: n46
+        text: hang
+      - event: n47
+        text: low?
   quarantine: []
 workflow:
 - read_scorebook
