@@ -158,4 +158,14 @@ package_path = Path('package.json')
 package = package_path.read_text(encoding='utf-8').replace('"version": "0.6.24"', '"version": "0.6.25"', 1)
 package_path.write_text(package, encoding='utf-8')
 
-print(f'patched {len(song_ids)} verified songs with difficulty ratings and difficulty-sorted rendering')
+lib_path = Path('scripts/lib.mjs')
+lib = lib_path.read_text(encoding='utf-8')
+if "fail('song-difficulty'" not in lib:
+    anchor = "    if (score?.status !== 'verified') fail('public-status', '公開曲目 status 必須是 verified', 'status');\n"
+    replacement = anchor + "    if (!Number.isInteger(score?.difficulty) || score.difficulty < 1 || score.difficulty > 5) {\n      fail('song-difficulty', '公開曲目 difficulty 必須是 1 到 5 的整數', 'difficulty');\n    }\n"
+    if anchor not in lib:
+        raise SystemExit('public status anchor not found in scripts/lib.mjs')
+    lib = lib.replace(anchor, replacement, 1)
+lib_path.write_text(lib, encoding='utf-8')
+
+print(f'patched {len(song_ids)} verified songs with difficulty ratings, sorted rendering, and validator contract')
