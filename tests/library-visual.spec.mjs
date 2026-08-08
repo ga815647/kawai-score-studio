@@ -45,7 +45,7 @@ test('library-only site renders directory, all verified songs, explicit A4 contr
   await page.goto('/', { waitUntil: 'networkidle' });
 
   await expect(page.locator('.status--pass')).toBeVisible();
-  await expect(page.locator('.status--pass')).toContainText('規格 0.6.24');
+  await expect(page.locator('.status--pass')).toContainText('規格 0.6.25');
   await expect(page.locator('.status--pass')).not.toContainText('隔離');
   await expect(page.locator('#song-directory')).toBeVisible();
   await expect(page.locator('#library-view')).toBeVisible();
@@ -57,13 +57,33 @@ test('library-only site renders directory, all verified songs, explicit A4 contr
   await expect(page.locator('.library-song')).toHaveCount(31);
   await expect(page.locator('#song-directory-list > li')).toHaveCount(31);
 
+  const difficultyUi = await page.evaluate(() => {
+    const directory = [...document.querySelectorAll('#song-directory-list a')];
+    const cards = [...document.querySelectorAll('.library-song')];
+    const starCount = (text) => (text.match(/★/g) ?? []).length;
+    const directoryDifficulties = directory.map((link) => starCount(link.textContent));
+    const cardDifficulties = cards.map((card) => starCount(card.querySelector('.score-header p:last-child').textContent));
+    return {
+      directoryLabels: directory.map((link) => link.textContent),
+      directoryIds: directory.map((link) => link.dataset.scoreId),
+      cardIds: cards.map((card) => card.dataset.scoreId),
+      directoryDifficulties,
+      cardDifficulties,
+    };
+  });
+  expect(difficultyUi.directoryLabels.every((label) => /[★☆]{5}$/.test(label))).toBe(true);
+  expect(difficultyUi.directoryDifficulties.every((value) => value >= 1 && value <= 5)).toBe(true);
+  expect(difficultyUi.directoryDifficulties).toEqual([...difficultyUi.directoryDifficulties].sort((a, b) => a - b));
+  expect(difficultyUi.cardDifficulties).toEqual(difficultyUi.directoryDifficulties);
+  expect(difficultyUi.cardIds).toEqual(difficultyUi.directoryIds);
+
   const assetUrls = await page.evaluate(() => ({
     scripts: [...document.scripts].map((script) => script.getAttribute('src')).filter(Boolean),
     styles: [...document.querySelectorAll('link[rel="stylesheet"]')]
       .map((link) => link.getAttribute('href')),
   }));
-  expect(assetUrls.scripts.every((url) => url.includes('?v=0.6.24-'))).toBe(true);
-  expect(assetUrls.styles.every((url) => url.includes('?v=0.6.24-'))).toBe(true);
+  expect(assetUrls.scripts.every((url) => url.includes('?v=0.6.25-'))).toBe(true);
+  expect(assetUrls.styles.every((url) => url.includes('?v=0.6.25-'))).toBe(true);
 
   const reports = [];
   for (const song of songs) {
