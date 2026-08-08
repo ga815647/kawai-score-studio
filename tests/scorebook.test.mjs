@@ -18,11 +18,11 @@ async function loadProject() {
   return { book, fixtures };
 }
 
-test('0.6.24 has thirty-one verified songs, no quarantine, and passes structural gates', async () => {
+test('0.6.25 has thirty-one verified songs, no quarantine, and passes structural gates', async () => {
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.24');
+  assert.equal(book.project.version, '0.6.25');
   assert.equal(book.schema.duration_quantum_eighth_units, 0.5);
   assert.equal(book.schema.smallest_supported_duration, 'sixteenth_note');
   assert.deepEqual(result.counts, {
@@ -83,6 +83,8 @@ test('public website has a song directory and no public Studio or quarantine pan
     position: 'before_library_heading',
     entries: 'verified_songs',
     label_format: 'title_with_alias',
+    difficulty_display: 'five_star_rating',
+    sort_order: 'difficulty_ascending_then_title',
     link_behavior: 'same_page_anchor',
   });
 
@@ -97,6 +99,8 @@ test('public website has a song directory and no public Studio or quarantine pan
     source: 'verified_songs',
     anchor_prefix: 'song-',
     label_format: 'title_with_alias',
+    difficulty_display: 'five_star_rating',
+    sort_order: 'difficulty_ascending_then_title',
     sticky_header_offset_px: 88,
   });
 });
