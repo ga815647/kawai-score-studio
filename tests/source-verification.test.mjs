@@ -136,6 +136,7 @@ test('package and workflows run source verification before browser gates', async
   assert.match(pages, /python-version: '3\.13'/);
   assert.match(pages, /pip install -r requirements-source\.txt/);
   assert.match(pages, /npm run check:visual/);
+  assert.match(pages, /concurrency:\s*\n\s*group: pages-v6\s*\n\s*cancel-in-progress: true/);
   assert.match(requirements, /^music21==10\.5\.0$/m);
   assert.match(requirements, /^verovio==6\.2\.1$/m);
   assert.match(requirements, /^xmlschema==4\.3\.2$/m);
