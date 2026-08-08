@@ -235,6 +235,8 @@ main { width: min(calc(100% - 1rem), 980px); margin: 1rem auto 3rem; }
 }
 
 @page { size: A4 portrait; margin: 12mm; }
+@page { margin-top: 22mm; }
+@page :first { margin-top: 12mm; }
 @media print {
   :root, body { background: #fff; }
   .toolbar, .status, .song-directory, .view-heading, .song-controls, #studio-view {

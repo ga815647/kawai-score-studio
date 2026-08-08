@@ -17,7 +17,8 @@
     "yaml": "2.8.1"
   },
   "devDependencies": {
-    "@playwright/test": "1.55.0"
+    "@playwright/test": "1.55.0",
+    "pdfjs-dist": "5.4.296"
   },
   "engines": {
     "node": ">=20"

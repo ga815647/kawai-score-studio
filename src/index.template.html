@@ -11,6 +11,18 @@
   <title>Kawai Score Studio</title>
   <link rel="stylesheet" href="./design.css?v={{ASSET_VERSION}}">
   <link rel="stylesheet" href="./styles.css?v={{ASSET_VERSION}}">
+  <style>
+    @page { margin-top: 12mm; }
+    @media print {
+      .print-selected .score-render { display: block; }
+      .print-selected .score-system {
+        padding-top: var(--maximum-event-vertical-shift);
+        margin-top: calc(-1 * var(--maximum-event-vertical-shift));
+        margin-bottom: 24px;
+      }
+      .print-selected .score-system:last-child { margin-bottom: 0; }
+    }
+  </style>
 </head>
 <body>
   <header class="toolbar">
