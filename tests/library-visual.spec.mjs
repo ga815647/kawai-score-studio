@@ -32,6 +32,11 @@ const songs = [
   { id: 'i-am-a-painter-zh', title: '我是個粉刷匠', notes: 48, lyrics: 48 },
   { id: 'counting-ducks-zh', title: '數鴨子', notes: 51, lyrics: 47 },
   { id: 'little-rabbit-be-good-zh', title: '小兔子乖乖', notes: 39, lyrics: 35 },
+  { id: 'bingo', title: 'BINGO', notes: 37, lyrics: 37 },
+  { id: 'this-old-man', title: 'This Old Man', notes: 32, lyrics: 32 },
+  { id: 'clay-doll-zh', title: '泥娃娃', notes: 26, lyrics: 26 },
+  { id: 'drop-the-handkerchief-zh', title: '丟手絹', notes: 41, lyrics: 37 },
+  { id: 'telephone-call-zh', title: '打電話', notes: 29, lyrics: 28 },
 ];
 
 test('library-only site renders directory, all verified songs, explicit A4 controls, and no public Studio or quarantine panel', async ({ page }) => {
@@ -40,7 +45,7 @@ test('library-only site renders directory, all verified songs, explicit A4 contr
   await page.goto('/', { waitUntil: 'networkidle' });
 
   await expect(page.locator('.status--pass')).toBeVisible();
-  await expect(page.locator('.status--pass')).toContainText('規格 0.6.23');
+  await expect(page.locator('.status--pass')).toContainText('規格 0.6.24');
   await expect(page.locator('.status--pass')).not.toContainText('隔離');
   await expect(page.locator('#song-directory')).toBeVisible();
   await expect(page.locator('#library-view')).toBeVisible();
@@ -49,16 +54,16 @@ test('library-only site renders directory, all verified songs, explicit A4 contr
   await expect(page.locator('#studio-tab, #draft-editor')).toHaveCount(0);
   await expect(page.locator('#quarantine-panel, #quarantine-list')).toHaveCount(0);
   await expect(page.locator('main > .error-card')).toHaveCount(0);
-  await expect(page.locator('.library-song')).toHaveCount(26);
-  await expect(page.locator('#song-directory-list > li')).toHaveCount(26);
+  await expect(page.locator('.library-song')).toHaveCount(31);
+  await expect(page.locator('#song-directory-list > li')).toHaveCount(31);
 
   const assetUrls = await page.evaluate(() => ({
     scripts: [...document.scripts].map((script) => script.getAttribute('src')).filter(Boolean),
     styles: [...document.querySelectorAll('link[rel="stylesheet"]')]
       .map((link) => link.getAttribute('href')),
   }));
-  expect(assetUrls.scripts.every((url) => url.includes('?v=0.6.23-'))).toBe(true);
-  expect(assetUrls.styles.every((url) => url.includes('?v=0.6.23-'))).toBe(true);
+  expect(assetUrls.scripts.every((url) => url.includes('?v=0.6.24-'))).toBe(true);
+  expect(assetUrls.styles.every((url) => url.includes('?v=0.6.24-'))).toBe(true);
 
   const reports = [];
   for (const song of songs) {
