@@ -18,15 +18,15 @@ async function loadProject() {
   return { book, fixtures };
 }
 
-test('0.6.28 has forty-five verified songs, no quarantine, and passes structural gates', async () => {
+test('0.6.29 has fifty verified songs, no quarantine, and passes structural gates', async () => {
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.28');
+  assert.equal(book.project.version, '0.6.29');
   assert.equal(book.schema.duration_quantum_eighth_units, 0.5);
   assert.equal(book.schema.smallest_supported_duration, 'sixteenth_note');
   assert.deepEqual(result.counts, {
-    verifiedSongs: 45,
+    verifiedSongs: 50,
     quarantinedEntries: 0,
     fixtures: 1,
   });
@@ -76,6 +76,11 @@ test('0.6.28 has forty-five verified songs, no quarantine, and passes structural
     'three-blind-mice',
     'hot-cross-buns',
     'the-mulberry-bush',
+    'rain-rain-go-away',
+    'jack-and-jill',
+    'the-bear-went-over-the-mountain',
+    'im-a-little-teapot',
+    'do-your-ears-hang-low',
   ]);
 });
 
@@ -787,4 +792,99 @@ test('four-song Ode/Mice/Buns/Mulberry batch exactly matches fixed static source
   const mulberry = book.library.songs.find((candidate) => candidate.id === 'the-mulberry-bush');
   assert.equal(flattenEvents(mulberry).filter((event) => event.kind === 'rest').length, 2);
   assert.deepEqual(mulberry.lyric_tracks[0].continuations, [{ from: 'n32', through: 'n33' }]);
+});
+
+test('five 0.6.29 nursery songs exactly model their selected fixed static scores', async () => {
+  const { book } = await loadProject();
+  const specs = {
+    "rain-rain-go-away": {
+      title: "Rain, Rain, Go Away",
+      meter: "2/4",
+      pickup: 0,
+      measures: 8,
+      notes: 24,
+      lyrics: 24,
+      difficulty: 1,
+      ties: 0,
+      url: "https://www.musicyoucanread.com/images/SONGS/240/00-RAINR-PN.jpg",
+      digest: "d3caa62fac33080be95baaa8453a0bdca52aefef4eebd4f128877d74c5757351",
+    },
+    "jack-and-jill": {
+      title: "Jack and Jill",
+      meter: "3/4",
+      pickup: 0,
+      measures: 16,
+      notes: 28,
+      lyrics: 28,
+      difficulty: 2,
+      ties: 0,
+      url: "https://www.sheetmusicplus.com/on/demandware.static/-/Sites-smp-main/default/dw9666c81d/images/6211/22666211_cover-large_file.png",
+      digest: "5a48521360ea67d1773ccc5c2875cb9c67af74d0108c43fbc49e206be357ae29",
+    },
+    "the-bear-went-over-the-mountain": {
+      title: "The Bear Went Over the Mountain",
+      meter: "6/8",
+      pickup: 1,
+      measures: 9,
+      notes: 32,
+      lyrics: 30,
+      difficulty: 3,
+      ties: 1,
+      url: "https://www.singing-bell.com/wp-content/uploads/2016/03/The-bear-went-over-the-mountain_C_Singing-Bell.jpg",
+      digest: "8e78fae271db0458979e107b4819028baf30687ebdacc36981710c39a8585546",
+    },
+    "im-a-little-teapot": {
+      title: "I'm a Little Teapot",
+      meter: "4/4",
+      pickup: 0,
+      measures: 8,
+      notes: 35,
+      lyrics: 35,
+      difficulty: 2,
+      ties: 0,
+      url: "https://www.davidsides.com/cdn/shop/files/im_a_little_teapot_600x600_crop_center.png?v=1710544201",
+      digest: "63ded5b2132f55b72683f057c0282595694e69cf659f8c04c371060987d99b8a",
+    },
+    "do-your-ears-hang-low": {
+      title: "Do Your Ears Hang Low?",
+      meter: "2/2",
+      pickup: 2,
+      measures: 9,
+      notes: 47,
+      lyrics: 47,
+      difficulty: 3,
+      ties: 0,
+      url: "https://riffspot.com/files/music/images/beginner/do-your-ears-hang-low-beginner.png",
+      digest: "14bb7c060a80021d702399d01615bd62e196db5de50d3893215fa364722042fc",
+    },
+  };
+
+  for (const [id, spec] of Object.entries(specs)) {
+    const song = book.library.songs.find((candidate) => candidate.id === id);
+    assert.ok(song, `${id} must exist`);
+    assert.equal(song.title, spec.title);
+    assert.equal(song.status, 'verified');
+    assert.equal(song.difficulty, spec.difficulty);
+    assert.equal(song.meter, spec.meter);
+    assert.equal(song.pickup_eighth_units, spec.pickup);
+    assert.equal(song.measures.length, spec.measures);
+    assert.equal(song.source.source_type, 'score_image');
+    assert.equal(song.source.provided_by, 'assistant_web_research');
+    assert.equal(song.source.url, spec.url);
+
+    const events = flattenEvents(song);
+    assert.equal(events.filter((event) => event.kind === 'note').length, spec.notes);
+    assert.equal(song.ties.length, spec.ties);
+    const track = song.lyric_tracks.find((candidate) => candidate.default);
+    assert.ok(track);
+    assert.equal(track.locale, 'en');
+    assert.equal(track.role, 'original');
+    assert.equal(track.syllables.length, spec.lyrics);
+
+    const compactMeasures = song.measures.map((measure) =>
+      measure.events.map((event) => [event.pitch ?? null, event.duration]));
+    const digest = createHash('sha256').update(JSON.stringify(compactMeasures)).digest('hex');
+    assert.equal(digest, spec.digest, `${id} event digest mismatch`);
+    assert.ok(Object.values(song.verification).every((value) => value === true));
+  }
 });

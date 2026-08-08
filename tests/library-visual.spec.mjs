@@ -51,6 +51,11 @@ const songs = [
   { id: 'three-blind-mice', title: 'Three Blind Mice', notes: 48, lyrics: 48 },
   { id: 'hot-cross-buns', title: 'Hot Cross Buns', notes: 17, lyrics: 17 },
   { id: 'the-mulberry-bush', title: 'The Mulberry Bush', notes: 36, lyrics: 35 },
+  { id: 'rain-rain-go-away', title: 'Rain, Rain, Go Away', notes: 24, lyrics: 24 },
+  { id: 'jack-and-jill', title: 'Jack and Jill', notes: 28, lyrics: 28 },
+  { id: 'the-bear-went-over-the-mountain', title: 'The Bear Went Over the Mountain', notes: 32, lyrics: 30 },
+  { id: 'im-a-little-teapot', title: "I'm a Little Teapot", notes: 35, lyrics: 35 },
+  { id: 'do-your-ears-hang-low', title: 'Do Your Ears Hang Low?', notes: 47, lyrics: 47 },
 ];
 
 test('library-only site renders directory, all verified songs, explicit A4 controls, and no public Studio or quarantine panel', async ({ page }) => {
@@ -59,7 +64,7 @@ test('library-only site renders directory, all verified songs, explicit A4 contr
   await page.goto('/', { waitUntil: 'networkidle' });
 
   await expect(page.locator('.status--pass')).toBeVisible();
-  await expect(page.locator('.status--pass')).toContainText('規格 0.6.28');
+  await expect(page.locator('.status--pass')).toContainText('規格 0.6.29');
   await expect(page.locator('.status--pass')).not.toContainText('隔離');
   await expect(page.locator('#song-directory')).toBeVisible();
   await expect(page.locator('#library-view')).toBeVisible();
@@ -68,8 +73,8 @@ test('library-only site renders directory, all verified songs, explicit A4 contr
   await expect(page.locator('#studio-tab, #draft-editor')).toHaveCount(0);
   await expect(page.locator('#quarantine-panel, #quarantine-list')).toHaveCount(0);
   await expect(page.locator('main > .error-card')).toHaveCount(0);
-  await expect(page.locator('.library-song')).toHaveCount(45);
-  await expect(page.locator('#song-directory-list > li')).toHaveCount(45);
+  await expect(page.locator('.library-song')).toHaveCount(50);
+  await expect(page.locator('#song-directory-list > li')).toHaveCount(50);
 
   const difficultyUi = await page.evaluate(() => {
     const directory = [...document.querySelectorAll('#song-directory-list a')];
@@ -96,8 +101,8 @@ test('library-only site renders directory, all verified songs, explicit A4 contr
     styles: [...document.querySelectorAll('link[rel="stylesheet"]')]
       .map((link) => link.getAttribute('href')),
   }));
-  expect(assetUrls.scripts.every((url) => url.includes('?v=0.6.28-'))).toBe(true);
-  expect(assetUrls.styles.every((url) => url.includes('?v=0.6.28-'))).toBe(true);
+  expect(assetUrls.scripts.every((url) => url.includes('?v=0.6.29-'))).toBe(true);
+  expect(assetUrls.styles.every((url) => url.includes('?v=0.6.29-'))).toBe(true);
 
   const reports = [];
   for (const song of songs) {
