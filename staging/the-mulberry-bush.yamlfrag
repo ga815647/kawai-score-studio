@@ -1,0 +1,289 @@
+  - id: the-mulberry-bush
+    title: The Mulberry Bush
+    status: verified
+    difficulty: 3
+    key: C major
+    meter: 6/8
+    pickup_eighth_units: 0
+    source:
+      title: The Mulberry Bush
+      source_type: score_website
+      provided_by: assistant_web_research
+      publisher_or_origin: ABCnotation / John Chambers / The Everyday Song Book (1927)
+      publisher: ABCnotation
+      accessed_at: '2026-08-08'
+      selected_variant: Static machine-readable A-major 6/8 ABC from The Everyday Song Book (1927), first singing-game verse;
+        transposed by scale degree to C major for the KAWAI 16-note instrument, preserving sixteenth-note subdivisions, rests,
+        slur notes, and the printed lyric melisma.
+      original_key: A major
+      original_meter: 6/8
+      pickup: 0
+      rights_status: traditional_english_singing_game_static_abc_from_1927_songbook
+      url: https://abcnotation.com/tunePage?a=trillian.mit.edu%2F~jc%2Fmusic%2Fbook%2FEverydaySongBook%2FEverydaySongBook2%2F0076
+      transposition_semitones: 3
+    verification:
+      source_to_scorebook_checked: true
+      melody_checked: true
+      rhythm_checked: true
+      rests_checked: true
+      pickup_checked: true
+      measures_checked: true
+      ties_checked: true
+      lyrics_checked: true
+      user_approved: true
+    measures:
+    - number: 1
+      capacity_eighth_units: 6
+      events:
+      - id: n01
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n02
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n03
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n04
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n05
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 2
+      capacity_eighth_units: 6
+      events:
+      - id: n06
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n07
+        kind: note
+        pitch: '3'
+        duration: 0.5
+      - id: n08
+        kind: note
+        pitch: '3'
+        duration: 0.5
+      - id: n09
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n10
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 3
+      capacity_eighth_units: 6
+      events:
+      - id: n11
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n12
+        kind: note
+        pitch: '2'
+        duration: 0.5
+      - id: n13
+        kind: note
+        pitch: '2'
+        duration: 0.5
+      - id: n14
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n15
+        kind: note
+        pitch: '1'
+        duration: 1
+    - number: 4
+      capacity_eighth_units: 6
+      events:
+      - id: n16
+        kind: note
+        pitch: '7'
+        duration: 2
+      - id: n17
+        kind: note
+        pitch: '6'
+        duration: 0.5
+      - id: n18
+        kind: note
+        pitch: '6'
+        duration: 0.5
+      - id: n19
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: r01
+        kind: rest
+        duration: 1
+    - number: 5
+      capacity_eighth_units: 6
+      events:
+      - id: n20
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n21
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n22
+        kind: note
+        pitch: '1'
+        duration: 1
+      - id: n23
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n24
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 6
+      capacity_eighth_units: 6
+      events:
+      - id: n25
+        kind: note
+        pitch: '5'
+        duration: 2
+      - id: n26
+        kind: note
+        pitch: '3'
+        duration: 0.5
+      - id: n27
+        kind: note
+        pitch: '3'
+        duration: 0.5
+      - id: n28
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: n29
+        kind: note
+        pitch: '3'
+        duration: 1
+    - number: 7
+      capacity_eighth_units: 6
+      events:
+      - id: n30
+        kind: note
+        pitch: '2'
+        duration: 2
+      - id: n31
+        kind: note
+        pitch: '2'
+        duration: 1
+      - id: n32
+        kind: note
+        pitch: '5'
+        duration: 1
+      - id: n33
+        kind: note
+        pitch: '6'
+        duration: 1
+      - id: n34
+        kind: note
+        pitch: '7'
+        duration: 1
+    - number: 8
+      capacity_eighth_units: 6
+      events:
+      - id: n35
+        kind: note
+        pitch: '1'
+        duration: 3
+      - id: n36
+        kind: note
+        pitch: '1'
+        duration: 2
+      - id: r02
+        kind: rest
+        duration: 1
+    ties: []
+    lyric_tracks:
+    - id: en
+      locale: en
+      role: original
+      status: verified
+      default: true
+      syllables:
+      - event: n01
+        text: Here
+      - event: n02
+        text: we
+      - event: n03
+        text: go
+      - event: n04
+        text: round
+      - event: n05
+        text: the
+      - event: n06
+        text: mul-
+      - event: n07
+        text: ber-
+      - event: n08
+        text: ry
+      - event: n09
+        text: bush,
+      - event: n10
+        text: the
+      - event: n11
+        text: mul-
+      - event: n12
+        text: ber-
+      - event: n13
+        text: ry
+      - event: n14
+        text: bush,
+      - event: n15
+        text: the
+      - event: n16
+        text: mul-
+      - event: n17
+        text: ber-
+      - event: n18
+        text: ry
+      - event: n19
+        text: bush;
+      - event: n20
+        text: Here
+      - event: n21
+        text: we
+      - event: n22
+        text: go
+      - event: n23
+        text: round
+      - event: n24
+        text: the
+      - event: n25
+        text: mul-
+      - event: n26
+        text: ber-
+      - event: n27
+        text: ry
+      - event: n28
+        text: bush,
+      - event: n29
+        text: So
+      - event: n30
+        text: ear-
+      - event: n31
+        text: ly
+      - event: n32
+        text: in
+      - event: n34
+        text: the
+      - event: n35
+        text: morn-
+      - event: n36
+        text: ing.
+      continuations:
+      - from: n32
+        through: n33
