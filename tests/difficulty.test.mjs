@@ -17,6 +17,7 @@ test('all verified songs have an integer difficulty from 1 to 5', () => {
   assert.equal(book.modes.library.song_directory.sort_order, 'difficulty_ascending_then_title');
   assert.equal(book.layout.navigation.song_directory.sort_order, 'difficulty_ascending_then_title');
 
+  // Includes the verified 0.6.28 four-song static-source batch.
   assert.equal(book.library.songs.length, 45);
   for (const song of book.library.songs) {
     assert.equal(song.status, 'verified');
