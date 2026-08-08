@@ -29,6 +29,6 @@ jobs:
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add scorebook.yaml src/app.js package.json
-          git commit -m 'feat: render and sort song difficulty'
+          git add scorebook.yaml src/app.js package.json scripts/lib.mjs
+          git commit -m 'feat: enforce song difficulty contract'
           git push origin HEAD:feat/song-difficulty-sort
