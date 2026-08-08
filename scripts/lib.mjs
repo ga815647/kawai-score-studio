@@ -88,6 +88,9 @@ function validateScoreData(score, options) {
 
   if (requireVerifiedSource) {
     if (score?.status !== 'verified') fail('public-status', '公開曲目 status 必須是 verified', 'status');
+    if (!Number.isInteger(score?.difficulty) || score.difficulty < 1 || score.difficulty > 5) {
+      fail('song-difficulty', '公開曲目 difficulty 必須是 1 到 5 的整數', 'difficulty');
+    }
     const source = score?.source;
     const requiredSourceFields = [
       'title',

@@ -1,6 +1,6 @@
 project:
   name: Kawai Score Studio
-  version: 0.6.24
+  version: 0.6.25
   language: zh-TW
   canonical_file: scorebook.yaml
   output: HTML
@@ -17,6 +17,17 @@ schema:
   ties_are_explicit: true
   duration_quantum_eighth_units: 0.5
   smallest_supported_duration: sixteenth_note
+  song_difficulty:
+    field: difficulty
+    scale_min: 1
+    scale_max: 5
+    display: five_star_rating
+    sort_order: ascending_then_title
+    factors:
+    - rhythmic_density_and_shortest_duration
+    - rhythmic_variation_pickup_rests_and_ties
+    - pitch_range_register_changes_and_leaps
+    - song_length_and_repetition
 interaction_entry:
   project_mode: single_chat_project
   project_name: Kawai Score Studio
@@ -115,6 +126,8 @@ modes:
       position: before_library_heading
       entries: verified_songs
       label_format: title_with_alias
+      difficulty_display: five_star_rating
+      sort_order: difficulty_ascending_then_title
       link_behavior: same_page_anchor
   synthetic_fixture:
     purpose: 只供 CI 與視覺 Gate 使用，不出現在正式網站導覽或正式曲庫。
@@ -353,6 +366,8 @@ layout:
       source: verified_songs
       anchor_prefix: song-
       label_format: title_with_alias
+      difficulty_display: five_star_rating
+      sort_order: difficulty_ascending_then_title
       sticky_header_offset_px: 88
 fixtures:
   file: fixtures/engine-fixtures.yaml
@@ -368,6 +383,7 @@ library:
     title: Hickory Dickory Dock
     alias: 老鼠時鐘
     status: verified
+    difficulty: 3
     key: C major
     meter: 6/8
     pickup_eighth_units: 0
@@ -625,6 +641,7 @@ library:
     title: The Itsy Bitsy Spider
     alias: 小小蜘蛛
     status: verified
+    difficulty: 3
     key: F major
     meter: 6/8
     pickup_eighth_units: 1
@@ -1003,6 +1020,7 @@ library:
     title: 小星星
     alias: Twinkle, Twinkle, Little Star
     status: verified
+    difficulty: 1
     key: C major
     meter: 4/4
     pickup_eighth_units: 0
@@ -1330,6 +1348,7 @@ library:
     title: 兩隻老虎
     alias: Frère Jacques
     status: verified
+    difficulty: 2
     key: C major
     meter: 4/4
     pickup_eighth_units: 0
@@ -1585,6 +1604,7 @@ library:
     title: 王老先生有塊地
     alias: Old MacDonald Had a Farm
     status: verified
+    difficulty: 2
     key: C major
     meter: 4/4
     pickup_eighth_units: 0
@@ -2028,6 +2048,7 @@ library:
     title: 瑪麗有隻小綿羊
     alias: Mary Had a Little Lamb
     status: verified
+    difficulty: 1
     key: C major
     meter: 4/4
     pickup_eighth_units: 0
@@ -2241,6 +2262,7 @@ library:
     title: 生日快樂
     alias: Happy Birthday to You
     status: verified
+    difficulty: 3
     key: C major
     meter: 3/4
     pickup_eighth_units: 0
@@ -2464,6 +2486,7 @@ library:
   - id: row-row-row-your-boat
     title: Row, Row, Row Your Boat
     status: verified
+    difficulty: 2
     key: C major
     meter: 3/4
     pickup_eighth_units: 0
@@ -2732,6 +2755,7 @@ library:
     title: The Wheels on the Bus
     alias: Wheels on the Bus
     status: verified
+    difficulty: 4
     key: C major
     meter: 2/4
     pickup_eighth_units: 2
@@ -2988,6 +3012,7 @@ library:
     title: Canon in D
     alias: 卡農主題
     status: verified
+    difficulty: 5
     key: C major
     meter: 4/4
     pickup_eighth_units: 0
@@ -4304,6 +4329,7 @@ library:
     title: 依比呀呀
     alias: 一比一比鴨鴨鴨
     status: verified
+    difficulty: 3
     key: C major
     meter: 2/4
     pickup_eighth_units: 2
@@ -4657,6 +4683,7 @@ library:
   - id: little-bee-zh
     title: 小蜜蜂
     status: verified
+    difficulty: 1
     key: C major
     meter: 4/4
     pickup_eighth_units: 0
@@ -5037,6 +5064,7 @@ library:
   - id: fast-train-zh
     title: 火車快飛
     status: verified
+    difficulty: 3
     key: C major
     meter: 2/4
     pickup_eighth_units: 0
@@ -5333,6 +5361,7 @@ library:
   - id: pull-the-radish-zh
     title: 拔蘿蔔
     status: verified
+    difficulty: 3
     key: C major
     meter: 2/4
     pickup_eighth_units: 0
@@ -5605,6 +5634,7 @@ library:
   - id: build-an-airplane-zh
     title: 造飛機
     status: verified
+    difficulty: 3
     key: C major
     meter: 2/4
     pickup_eighth_units: 0
@@ -6033,6 +6063,7 @@ library:
   - id: tantan-houhou
     title: 淡々泡々
     status: verified
+    difficulty: 4
     key: C major
     meter: 4/4
     pickup_eighth_units: 0
@@ -6729,6 +6760,7 @@ library:
   - id: humpty-dumpty
     title: Humpty Dumpty
     status: verified
+    difficulty: 4
     key: C major
     meter: 6/8
     pickup_eighth_units: 0
@@ -7012,6 +7044,7 @@ library:
   - id: little-donkey-zh
     title: 小毛驢
     status: verified
+    difficulty: 4
     key: C major
     meter: 2/4
     pickup_eighth_units: 0
@@ -7434,6 +7467,7 @@ library:
   - id: find-a-friend-zh
     title: 找朋友
     status: verified
+    difficulty: 3
     key: C major
     meter: 2/4
     pickup_eighth_units: 0
@@ -7675,6 +7709,7 @@ library:
     title: 倫敦鐵橋垮下來
     alias: London Bridge Is Falling Down
     status: verified
+    difficulty: 1
     key: C major
     meter: 4/4
     pickup_eighth_units: 0
@@ -7888,6 +7923,7 @@ library:
     title: 如果感到幸福你就拍拍手
     alias: 幸福拍手歌
     status: verified
+    difficulty: 3
     key: C major
     meter: 4/4
     pickup_eighth_units: 2
@@ -8259,6 +8295,7 @@ library:
   - id: head-shoulders-knees-and-toes
     title: Head, Shoulders, Knees and Toes
     status: verified
+    difficulty: 3
     key: C major
     meter: 4/4
     pickup_eighth_units: 0
@@ -8569,6 +8606,7 @@ library:
   - id: five-little-ducks
     title: Five Little Ducks
     status: verified
+    difficulty: 2
     key: C major
     meter: 4/4
     pickup_eighth_units: 0
@@ -8838,6 +8876,7 @@ library:
     title: 我是個粉刷匠
     alias: 我是一個粉刷匠
     status: verified
+    difficulty: 3
     key: C major
     meter: 2/4
     pickup_eighth_units: 0
@@ -9219,6 +9258,7 @@ library:
     title: 數鴨子
     alias: Counting Ducks
     status: verified
+    difficulty: 3
     key: C major
     meter: 4/4
     pickup_eighth_units: 0
@@ -9615,6 +9655,7 @@ library:
   - id: little-rabbit-be-good-zh
     title: 小兔子乖乖
     status: verified
+    difficulty: 2
     key: C major
     meter: 4/4
     pickup_eighth_units: 0
@@ -9913,6 +9954,7 @@ library:
   - id: bingo
     title: BINGO
     status: verified
+    difficulty: 3
     key: C major
     meter: 2/4
     pickup_eighth_units: 1
@@ -10219,6 +10261,7 @@ library:
   - id: this-old-man
     title: This Old Man
     status: verified
+    difficulty: 2
     key: C major
     meter: 4/4
     pickup_eighth_units: 0
@@ -10479,6 +10522,7 @@ library:
   - id: clay-doll-zh
     title: 泥娃娃
     status: verified
+    difficulty: 2
     key: C major
     meter: 4/4
     pickup_eighth_units: 0
@@ -10707,6 +10751,7 @@ library:
   - id: drop-the-handkerchief-zh
     title: 丟手絹
     status: verified
+    difficulty: 3
     key: C major
     meter: 2/4
     pickup_eighth_units: 0
@@ -11051,6 +11096,7 @@ library:
   - id: telephone-call-zh
     title: 打電話
     status: verified
+    difficulty: 3
     key: C major
     meter: 2/4
     pickup_eighth_units: 0
@@ -11359,6 +11405,9 @@ gates:
     - public_website_is_library_only
     - synthetic_fixture_has_no_public_navigation
     - public_song_directory_precedes_verified_library
+    - verified_song_difficulty_is_integer_1_to_5
+    - public_song_directory_shows_five_star_difficulty
+    - public_library_is_sorted_by_difficulty_then_title
     - public_quarantine_panel_is_absent
     - public_studio_controls_are_absent
   fixture:
@@ -11414,6 +11463,8 @@ gates:
     - every_verified_song_has_play_stop_and_print_controls
     - print_target_is_selected_verified_song
     - song_directory_links_target_every_verified_song
+    - song_directory_and_song_cards_show_five_star_difficulty
+    - song_directory_and_library_share_difficulty_sort_order
     - public_html_has_no_quarantine_panel
     - studio_markup_is_hidden_internal_fixture_only
     - every_verified_song_has_explicit_a4_print_control

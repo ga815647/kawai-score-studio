@@ -12,6 +12,7 @@ function verifiedCandidate(fixtures, source) {
   const candidate = structuredClone(fixtures.fixtures[0]);
   candidate.synthetic = false;
   candidate.status = 'verified';
+  candidate.difficulty = 1;
   candidate.source = {
     title: 'Synthetic exact source',
     source_type: 'score_website',

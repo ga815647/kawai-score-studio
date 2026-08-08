@@ -29,6 +29,17 @@ function scoreLabel(score) {
   return score.alias ? `${score.title}（${score.alias}）` : score.title;
 }
 
+function difficultyStars(score) {
+  const difficulty = Number(score.difficulty);
+  return `${'★'.repeat(difficulty)}${'☆'.repeat(5 - difficulty)}`;
+}
+
+function compareSongDifficulty(left, right) {
+  return left.difficulty - right.difficulty
+    || scoreLabel(left).localeCompare(scoreLabel(right), 'zh-Hant')
+    || left.id.localeCompare(right.id);
+}
+
 function scoreAnchor(score) {
   return `song-${score.id}`;
 }
@@ -73,7 +84,7 @@ function createDirectoryEntry(song) {
   const item = document.createElement('li');
   const link = document.createElement('a');
   link.href = `#${scoreAnchor(song)}`;
-  link.textContent = scoreLabel(song);
+  link.textContent = `${scoreLabel(song)} · ${difficultyStars(song)}`;
   link.dataset.scoreId = song.id;
   item.append(link);
   songDirectoryList.append(item);
@@ -111,7 +122,7 @@ function createLibraryCard(song) {
   card.setAttribute('aria-labelledby', heading.id);
   const meta = document.createElement('p');
   const locale = song.lyric_tracks.find((track) => track.default)?.locale ?? '';
-  meta.textContent = `${song.meter} · ${song.key} · ${locale}`;
+  meta.textContent = `難度 ${difficultyStars(song)} · ${song.meter} · ${song.key} · ${locale}`;
   header.append(badge, heading, meta);
 
   const score = document.createElement('div');
@@ -128,7 +139,8 @@ function renderLibrary() {
   songDirectoryList.replaceChildren();
   libraryContent.replaceChildren();
 
-  for (const song of book.library.songs) {
+  const sortedSongs = [...book.library.songs].sort(compareSongDifficulty);
+  for (const song of sortedSongs) {
     createDirectoryEntry(song);
     createLibraryCard(song);
   }
