@@ -17,7 +17,16 @@ jobs:
         with:
           python-version: '3.13'
       - name: Apply canonical scorebook and test changes
-        run: python scripts/apply_children_batch.py
+        run: |
+          set +e
+          output=$(python scripts/apply_children_batch.py 2>&1)
+          status=$?
+          printf '%s\n' "$output"
+          if [ "$status" -ne 0 ]; then
+            last_line=$(printf '%s\n' "$output" | tail -n 1)
+            echo "::error title=Batch applicator failed::$last_line"
+            exit "$status"
+          fi
       - name: Commit final batch files
         run: |
           git config user.name "github-actions[bot]"
