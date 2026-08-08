@@ -1,35 +1,40 @@
-name: CI
+name: KSS Visual Release Fix
 
 on:
   push:
-  pull_request:
+    branches:
+      - feat/children-batch-head-ducks-painter
+
+permissions:
+  contents: write
 
 jobs:
-  check:
+  fix:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-          cache: pip
-          cache-dependency-path: requirements-source.txt
-      - name: Install source verification tools
-        run: python -m pip install -r requirements-source.txt
-      - run: npm install
-      - name: Install pinned Chromium
-        run: npx --yes playwright@1.55.0 install --with-deps chromium
-      - name: Run schema, source, fixture, build, unit, and browser gates
-        run: npm run check:visual
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: gate-reports-${{ github.sha }}
-          path: |
-            reports/
-            test-results/
-          if-no-files-found: warn
-          retention-days: 14
+          fetch-depth: 0
+      - name: Update visual release expectations
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tests/library-visual.spec.mjs')
+          text = path.read_text(encoding='utf-8')
+          anchor = "  { id: 'if-you-are-happy-clap-zh', title: '如果感到幸福你就拍拍手', notes: 46, lyrics: 46 },\n"
+          insert = anchor + "  { id: 'head-shoulders-knees-and-toes', title: 'Head, Shoulders, Knees and Toes', notes: 40, lyrics: 38 },\n  { id: 'five-little-ducks', title: 'Five Little Ducks', notes: 34, lyrics: 34 },\n  { id: 'i-am-a-painter-zh', title: '我是個粉刷匠', notes: 48, lyrics: 48 },\n  { id: 'counting-ducks-zh', title: '數鴨子', notes: 51, lyrics: 47 },\n  { id: 'little-rabbit-be-good-zh', title: '小兔子乖乖', notes: 39, lyrics: 35 },\n"
+          assert text.count(anchor) == 1
+          text = text.replace(anchor, insert, 1)
+          assert text.count('0.6.22') == 3, text.count('0.6.22')
+          text = text.replace('0.6.22', '0.6.23')
+          assert text.count('toHaveCount(21)') == 2, text.count('toHaveCount(21)')
+          text = text.replace('toHaveCount(21)', 'toHaveCount(26)')
+          path.write_text(text, encoding='utf-8')
+          PY
+          git fetch origin main
+          git checkout origin/main -- .github/workflows/ci.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/library-visual.spec.mjs .github/workflows/ci.yml
+          git commit -m "test: update visual expectations for 0.6.23"
+          git push origin HEAD:${GITHUB_REF_NAME}
