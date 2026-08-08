@@ -59,7 +59,8 @@ const songs = [
 ];
 
 test('library-only site renders directory, all verified songs, explicit A4 controls, and no public Studio or quarantine panel', async ({ page }) => {
-  test.setTimeout(120_000);
+  // Full-library geometry validation scales with the verified-song count.
+  test.setTimeout(240_000);
   await mkdir(reportDirectory, { recursive: true });
   await page.goto('/', { waitUntil: 'networkidle' });
 
