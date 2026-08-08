@@ -1,7 +1,7 @@
 from pathlib import Path
 
-path = Path('scorebook.yaml')
-text = path.read_text(encoding='utf-8')
+scorebook_path = Path('scorebook.yaml')
+text = scorebook_path.read_text(encoding='utf-8')
 
 if 'song_difficulty:' not in text:
     text = text.replace(
@@ -134,5 +134,28 @@ for check in [
         text = text.replace(html_anchor, html_anchor + check, 1)
         html_anchor = html_anchor + check
 
-path.write_text(text, encoding='utf-8')
-print(f'patched {len(song_ids)} verified songs with difficulty ratings')
+scorebook_path.write_text(text, encoding='utf-8')
+
+app_path = Path('src/app.js')
+app = app_path.read_text(encoding='utf-8')
+if 'function difficultyStars(score)' not in app:
+    anchor = "function scoreLabel(score) {\n  return score.alias ? `${score.title}（${score.alias}）` : score.title;\n}\n"
+    replacement = anchor + "\nfunction difficultyStars(score) {\n  const difficulty = Number(score.difficulty);\n  return `${'★'.repeat(difficulty)}${'☆'.repeat(5 - difficulty)}`;\n}\n\nfunction compareSongDifficulty(left, right) {\n  return left.difficulty - right.difficulty\n    || scoreLabel(left).localeCompare(scoreLabel(right), 'zh-Hant')\n    || left.id.localeCompare(right.id);\n}\n"
+    if anchor not in app:
+        raise SystemExit('scoreLabel anchor not found in src/app.js')
+    app = app.replace(anchor, replacement, 1)
+
+app = app.replace('  link.textContent = scoreLabel(song);\n', '  link.textContent = `${scoreLabel(song)} · ${difficultyStars(song)}`;\n', 1)
+app = app.replace('  meta.textContent = `${song.meter} · ${song.key} · ${locale}`;\n', '  meta.textContent = `難度 ${difficultyStars(song)} · ${song.meter} · ${song.key} · ${locale}`;\n', 1)
+app = app.replace(
+    '  for (const song of book.library.songs) {\n',
+    '  const sortedSongs = [...book.library.songs].sort(compareSongDifficulty);\n  for (const song of sortedSongs) {\n',
+    1,
+)
+app_path.write_text(app, encoding='utf-8')
+
+package_path = Path('package.json')
+package = package_path.read_text(encoding='utf-8').replace('"version": "0.6.24"', '"version": "0.6.25"', 1)
+package_path.write_text(package, encoding='utf-8')
+
+print(f'patched {len(song_ids)} verified songs with difficulty ratings and difficulty-sorted rendering')
