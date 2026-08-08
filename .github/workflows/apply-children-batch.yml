@@ -1,0 +1,27 @@
+name: Apply children batch
+
+on:
+  push:
+    branches:
+      - codex/children-batch-muffin-mouse-20260808
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Apply canonical scorebook and test changes
+        run: python scripts/apply_children_batch.py
+      - name: Commit final batch files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "feat: add five children songs"
+          git push origin HEAD:codex/children-batch-muffin-mouse-20260808
