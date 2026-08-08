@@ -1,5 +1,0 @@
-  { id: 'the-muffin-man', title: 'The Muffin Man', notes: 28, lyrics: 28 },
-  { id: 'the-farmer-in-the-dell', title: 'The Farmer in the Dell', notes: 25, lyrics: 24 },
-  { id: 'ring-around-the-rosie', title: 'Ring Around the Rosie', notes: 21, lyrics: 21 },
-  { id: 'little-sister-carries-doll-zh', title: '妹妹背著洋娃娃', notes: 28, lyrics: 28 },
-  { id: 'little-mouse-on-the-lampstand-zh', title: '小老鼠上燈台', notes: 26, lyrics: 25 },
