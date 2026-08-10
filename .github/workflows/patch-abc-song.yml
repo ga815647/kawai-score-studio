@@ -1,0 +1,26 @@
+name: Apply ABC Song patch
+
+on:
+  push:
+    branches:
+      - feat/abc-song-en
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.head_commit.message == 'chore: trigger ABC Song patch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply deterministic scorebook patch
+        run: python scripts/patch_abc_song.py
+      - name: Commit requested files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scorebook.yaml package.json tests/scorebook.test.mjs tests/difficulty.test.mjs tests/library-visual.spec.mjs
+          git diff --cached --check
+          git commit -m "feat: add English ABC Song"
+          git push origin HEAD:feat/abc-song-en
