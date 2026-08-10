@@ -56,6 +56,7 @@ const songs = [
   { id: 'the-bear-went-over-the-mountain', title: 'The Bear Went Over the Mountain', notes: 32, lyrics: 30 },
   { id: 'im-a-little-teapot', title: "I'm a Little Teapot", notes: 35, lyrics: 35 },
   { id: 'do-your-ears-hang-low', title: 'Do Your Ears Hang Low?', notes: 47, lyrics: 47 },
+  { id: 'abc-song', title: 'ABC Song', notes: 43, lyrics: 43 },
 ];
 
 test('library-only site renders directory, all verified songs, explicit A4 controls, and no public Studio or quarantine panel', async ({ page }) => {
@@ -65,7 +66,7 @@ test('library-only site renders directory, all verified songs, explicit A4 contr
   await page.goto('/', { waitUntil: 'networkidle' });
 
   await expect(page.locator('.status--pass')).toBeVisible();
-  await expect(page.locator('.status--pass')).toContainText('規格 0.6.29');
+  await expect(page.locator('.status--pass')).toContainText('規格 0.6.30');
   await expect(page.locator('.status--pass')).not.toContainText('隔離');
   await expect(page.locator('#song-directory')).toBeVisible();
   await expect(page.locator('#library-view')).toBeVisible();
@@ -74,8 +75,8 @@ test('library-only site renders directory, all verified songs, explicit A4 contr
   await expect(page.locator('#studio-tab, #draft-editor')).toHaveCount(0);
   await expect(page.locator('#quarantine-panel, #quarantine-list')).toHaveCount(0);
   await expect(page.locator('main > .error-card')).toHaveCount(0);
-  await expect(page.locator('.library-song')).toHaveCount(50);
-  await expect(page.locator('#song-directory-list > li')).toHaveCount(50);
+  await expect(page.locator('.library-song')).toHaveCount(51);
+  await expect(page.locator('#song-directory-list > li')).toHaveCount(51);
 
   const difficultyUi = await page.evaluate(() => {
     const directory = [...document.querySelectorAll('#song-directory-list a')];
@@ -102,8 +103,8 @@ test('library-only site renders directory, all verified songs, explicit A4 contr
     styles: [...document.querySelectorAll('link[rel="stylesheet"]')]
       .map((link) => link.getAttribute('href')),
   }));
-  expect(assetUrls.scripts.every((url) => url.includes('?v=0.6.29-'))).toBe(true);
-  expect(assetUrls.styles.every((url) => url.includes('?v=0.6.29-'))).toBe(true);
+  expect(assetUrls.scripts.every((url) => url.includes('?v=0.6.30-'))).toBe(true);
+  expect(assetUrls.styles.every((url) => url.includes('?v=0.6.30-'))).toBe(true);
 
   const reports = [];
   for (const song of songs) {

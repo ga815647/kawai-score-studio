@@ -18,15 +18,15 @@ async function loadProject() {
   return { book, fixtures };
 }
 
-test('0.6.29 has fifty verified songs, no quarantine, and passes structural gates', async () => {
+test('0.6.30 has fifty-one verified songs, no quarantine, and passes structural gates', async () => {
   const { book, fixtures } = await loadProject();
   const result = validateProject(book, fixtures);
   assert.equal(result.pass, true, JSON.stringify(result.errors, null, 2));
-  assert.equal(book.project.version, '0.6.29');
+  assert.equal(book.project.version, '0.6.30');
   assert.equal(book.schema.duration_quantum_eighth_units, 0.5);
   assert.equal(book.schema.smallest_supported_duration, 'sixteenth_note');
   assert.deepEqual(result.counts, {
-    verifiedSongs: 50,
+    verifiedSongs: 51,
     quarantinedEntries: 0,
     fixtures: 1,
   });
@@ -81,6 +81,7 @@ test('0.6.29 has fifty verified songs, no quarantine, and passes structural gate
     'the-bear-went-over-the-mountain',
     'im-a-little-teapot',
     'do-your-ears-hang-low',
+    'abc-song',
   ]);
 });
 
@@ -888,3 +889,55 @@ test('five 0.6.29 nursery songs exactly model their selected fixed static scores
     assert.ok(Object.values(song.verification).every((value) => value === true));
   }
 });
+
+test('0.6.30 ABC Song exactly models the selected fixed static PDF score', async () => {
+  const { book } = await loadProject();
+  const song = book.library.songs.find((candidate) => candidate.id === 'abc-song');
+  assert.ok(song, 'abc-song must exist');
+  assert.equal(song.title, 'ABC Song');
+  assert.equal(song.alias, 'Alphabet Song');
+  assert.equal(song.status, 'verified');
+  assert.equal(song.difficulty, 2);
+  assert.equal(song.key, 'C major');
+  assert.equal(song.meter, '4/4');
+  assert.equal(song.pickup_eighth_units, 0);
+  assert.equal(song.measures.length, 12);
+  assert.equal(song.source.source_type, 'score_pdf');
+  assert.equal(song.source.provided_by, 'assistant_web_research');
+  assert.equal(
+    song.source.url,
+    'https://www.pianosongdownload.com/Alphabet%20Song%20Lead%20Sheet.pdf',
+  );
+
+  const events = flattenEvents(song);
+  assert.equal(events.filter((event) => event.kind === 'note').length, 43);
+  assert.equal(events.filter((event) => event.kind === 'rest').length, 0);
+  assert.deepEqual(song.ties, []);
+  const track = song.lyric_tracks.find((candidate) => candidate.default);
+  assert.ok(track);
+  assert.equal(track.locale, 'en');
+  assert.equal(track.role, 'original');
+  assert.equal(track.syllables.length, 43);
+  assert.equal(track.syllables[22].text, 'Dou-');
+  assert.equal(track.syllables[23].text, 'ble');
+  assert.equal(track.syllables[24].text, 'u');
+
+  assert.deepEqual(
+    song.measures[3].events.map((event) => [event.pitch, event.duration]),
+    [['2', 1], ['2', 1], ['2', 1], ['2', 1], ['1', 4]],
+  );
+  assert.deepEqual(
+    song.measures[6].events.map((event) => [event.pitch, event.duration]),
+    [['5', 1], ['5', 1], ['5', 2], ['4', 4]],
+  );
+
+  const compactMeasures = song.measures.map((measure) =>
+    measure.events.map((event) => [event.pitch ?? null, event.duration]));
+  const digest = createHash('sha256').update(JSON.stringify(compactMeasures)).digest('hex');
+  assert.equal(
+    digest,
+    '550002b7d5210f1a490306dcd1834da055127c744e344cb50626b6c935ec2fc0',
+  );
+  assert.ok(Object.values(song.verification).every((value) => value === true));
+});
+
