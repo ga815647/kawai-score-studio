@@ -1,0 +1,110 @@
+name: EXP Artifact Cleanup Kawai
+
+on:
+  push:
+    branches:
+      - exp/artifact-cleanup-kawai-01
+    paths:
+      - .github/workflows/artifact-cleanup-kawai.yml
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repo-wide artifact inventory
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_API_URL: ${{ github.api_url }}
+          GH_REPOSITORY: ${{ github.repository }}
+          AUTHORITATIVE_MAIN_SHA: d3be667912b650e694b7faf89197b0d9fca50133
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request, urllib.error
+
+          api = os.environ['GH_API_URL'].rstrip('/')
+          repo = os.environ['GH_REPOSITORY']
+          token = os.environ['GH_TOKEN']
+          main_sha = os.environ['AUTHORITATIVE_MAIN_SHA']
+          headers = {
+              'Authorization': f'Bearer {token}',
+              'Accept': 'application/vnd.github+json',
+              'X-GitHub-Api-Version': '2022-11-28',
+          }
+
+          def get(path):
+              req = urllib.request.Request(api + path, headers=headers)
+              with urllib.request.urlopen(req) as r:
+                  return json.load(r)
+
+          artifacts = []
+          page = 1
+          while True:
+              payload = get(f'/repos/{repo}/actions/artifacts?per_page=100&page={page}')
+              batch = payload.get('artifacts', [])
+              artifacts.extend(batch)
+              if len(batch) < 100:
+                  break
+              page += 1
+
+          run_cache = {}
+          rows = []
+          for a in artifacts:
+              wr = a.get('workflow_run') or {}
+              run_id = wr.get('id')
+              run = None
+              run_error = None
+              if run_id:
+                  if run_id not in run_cache:
+                      try:
+                          run_cache[run_id] = get(f'/repos/{repo}/actions/runs/{run_id}')
+                      except Exception as exc:
+                          run_cache[run_id] = {'_error': repr(exc)}
+                  cached = run_cache[run_id]
+                  if '_error' in cached:
+                      run_error = cached['_error']
+                  else:
+                      run = {
+                          'id': cached.get('id'),
+                          'name': cached.get('name'),
+                          'event': cached.get('event'),
+                          'status': cached.get('status'),
+                          'conclusion': cached.get('conclusion'),
+                          'workflow_id': cached.get('workflow_id'),
+                          'run_number': cached.get('run_number'),
+                          'run_attempt': cached.get('run_attempt'),
+                          'head_branch': cached.get('head_branch'),
+                          'head_sha': cached.get('head_sha'),
+                          'created_at': cached.get('created_at'),
+                          'updated_at': cached.get('updated_at'),
+                          'html_url': cached.get('html_url'),
+                      }
+              rows.append({
+                  'id': a.get('id'),
+                  'name': a.get('name'),
+                  'size_bytes': a.get('size_in_bytes'),
+                  'created_at': a.get('created_at'),
+                  'expires_at': a.get('expires_at'),
+                  'expired': a.get('expired'),
+                  'archive_download_url': a.get('archive_download_url'),
+                  'workflow_run_ref': wr,
+                  'run': run,
+                  'run_error': run_error,
+              })
+
+          result = {
+              'repo': repo,
+              'authoritative_main_sha': main_sha,
+              'count': len(rows),
+              'bytes': sum(int(r.get('size_bytes') or 0) for r in rows),
+              'artifacts': rows,
+          }
+          print('INVENTORY_COUNT=' + str(result['count']))
+          print('INVENTORY_BYTES=' + str(result['bytes']))
+          for row in rows:
+              print('ARTIFACT_JSON=' + json.dumps(row, sort_keys=True, separators=(',', ':')))
+          print('INVENTORY_JSON=' + json.dumps(result, sort_keys=True, separators=(',', ':')))
+          PY
