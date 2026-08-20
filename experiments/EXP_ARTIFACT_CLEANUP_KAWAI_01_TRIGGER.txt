@@ -1,2 +1,2 @@
 bounded cleanup execution trigger; no product semantics
-execute=summary-v1
+execute=profile-v1
