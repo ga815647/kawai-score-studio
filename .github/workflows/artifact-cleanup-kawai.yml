@@ -1,4 +1,4 @@
-# trigger: inventory-2-durable
+# trigger: cleanup-1
 name: EXP Artifact Cleanup Kawai
 
 on:
@@ -13,26 +13,28 @@ permissions:
   actions: write
 
 jobs:
-  inventory:
+  cleanup:
     runs-on: ubuntu-latest
     steps:
-      - name: Repo-wide artifact inventory
+      - name: Classify, preflight, delete, and re-enumerate
         env:
           GH_TOKEN: ${{ github.token }}
           GH_API_URL: ${{ github.api_url }}
           GH_REPOSITORY: ${{ github.repository }}
           GH_BRANCH: exp/artifact-cleanup-kawai-01
           AUTHORITATIVE_MAIN_SHA: d3be667912b650e694b7faf89197b0d9fca50133
-          EVIDENCE_PATH: infra/EXP_ARTIFACT_CLEANUP_KAWAI_01_before.json
+          BEFORE_PATH: infra/EXP_ARTIFACT_CLEANUP_KAWAI_01_before_delete.json
+          EVIDENCE_PATH: infra/EXP_ARTIFACT_CLEANUP_KAWAI_01_cleanup.json
         run: |
           python - <<'PY'
-          import base64, json, os, urllib.request, urllib.error
+          import base64, datetime as dt, json, os, urllib.error, urllib.parse, urllib.request
 
           api = os.environ['GH_API_URL'].rstrip('/')
           repo = os.environ['GH_REPOSITORY']
           token = os.environ['GH_TOKEN']
           branch = os.environ['GH_BRANCH']
           main_sha = os.environ['AUTHORITATIVE_MAIN_SHA']
+          before_path = os.environ['BEFORE_PATH']
           evidence_path = os.environ['EVIDENCE_PATH']
           headers = {
               'Authorization': f'Bearer {token}',
@@ -47,87 +49,291 @@ jobs:
                   raw = r.read()
                   return json.loads(raw) if raw else None
 
-          artifacts = []
-          page = 1
-          while True:
-              payload = request(f'/repos/{repo}/actions/artifacts?per_page=100&page={page}')
-              batch = payload.get('artifacts', [])
-              artifacts.extend(batch)
-              if len(batch) < 100:
-                  break
-              page += 1
+          def persist(path, obj, message):
+              text = json.dumps(obj, indent=2, sort_keys=True) + '\n'
+              payload = {
+                  'message': message,
+                  'content': base64.b64encode(text.encode()).decode(),
+                  'branch': branch,
+              }
+              encoded_path = '/'.join(urllib.parse.quote(part, safe='') for part in path.split('/'))
+              endpoint = f'/repos/{repo}/contents/{encoded_path}'
+              try:
+                  existing = request(endpoint + '?ref=' + urllib.parse.quote(branch, safe=''))
+                  payload['sha'] = existing['sha']
+              except urllib.error.HTTPError as exc:
+                  if exc.code != 404:
+                      raise
+              request(endpoint, method='PUT', body=payload)
 
-          run_cache = {}
-          rows = []
-          for a in artifacts:
-              wr = a.get('workflow_run') or {}
-              run_id = wr.get('id')
-              run = None
-              run_error = None
-              if run_id:
-                  if run_id not in run_cache:
-                      try:
-                          run_cache[run_id] = request(f'/repos/{repo}/actions/runs/{run_id}')
-                      except Exception as exc:
-                          run_cache[run_id] = {'_error': repr(exc)}
-                  cached = run_cache[run_id]
-                  if '_error' in cached:
-                      run_error = cached['_error']
+          def parse_ts(value):
+              if not value:
+                  return None
+              return dt.datetime.fromisoformat(value.replace('Z', '+00:00'))
+
+          def enumerate_rows():
+              artifacts = []
+              page = 1
+              while True:
+                  payload = request(f'/repos/{repo}/actions/artifacts?per_page=100&page={page}')
+                  batch = payload.get('artifacts', [])
+                  artifacts.extend(batch)
+                  if len(batch) < 100:
+                      break
+                  page += 1
+              run_cache = {}
+              rows = []
+              for a in artifacts:
+                  wr = a.get('workflow_run') or {}
+                  run_id = wr.get('id')
+                  run = None
+                  run_error = None
+                  if run_id:
+                      if run_id not in run_cache:
+                          try:
+                              run_cache[run_id] = request(f'/repos/{repo}/actions/runs/{run_id}')
+                          except Exception as exc:
+                              run_cache[run_id] = {'_error': repr(exc)}
+                      cached = run_cache[run_id]
+                      if '_error' in cached:
+                          run_error = cached['_error']
+                      else:
+                          run = {
+                              'id': cached.get('id'),
+                              'name': cached.get('name'),
+                              'event': cached.get('event'),
+                              'status': cached.get('status'),
+                              'conclusion': cached.get('conclusion'),
+                              'workflow_id': cached.get('workflow_id'),
+                              'run_number': cached.get('run_number'),
+                              'run_attempt': cached.get('run_attempt'),
+                              'head_branch': cached.get('head_branch'),
+                              'head_sha': cached.get('head_sha'),
+                              'created_at': cached.get('created_at'),
+                              'updated_at': cached.get('updated_at'),
+                              'html_url': cached.get('html_url'),
+                          }
+                  rows.append({
+                      'id': a.get('id'),
+                      'name': a.get('name'),
+                      'size_bytes': int(a.get('size_in_bytes') or 0),
+                      'created_at': a.get('created_at'),
+                      'expires_at': a.get('expires_at'),
+                      'expired': a.get('expired'),
+                      'workflow_run_ref': wr,
+                      'run': run,
+                      'run_error': run_error,
+                  })
+              return rows
+
+          before = enumerate_rows()
+          before_count = len(before)
+          before_bytes = sum(r['size_bytes'] for r in before)
+
+          current_ci = [r for r in before if r.get('run') and r['run'].get('name') == 'CI' and r['run'].get('event') == 'push' and r['run'].get('head_branch') == 'main' and r['run'].get('head_sha') == main_sha and r['run'].get('conclusion') == 'success']
+          current_pages = [r for r in before if r.get('run') and r['run'].get('name') == 'Deploy Pages' and r['run'].get('head_branch') == 'main' and r['run'].get('head_sha') == main_sha and r['run'].get('conclusion') == 'success']
+          ci_anchor_time = max((parse_ts(r['run'].get('created_at')) for r in current_ci), default=None)
+          pages_anchor_time = max((parse_ts(r['run'].get('created_at')) for r in current_pages), default=None)
+
+          successful_push_heads = set()
+          for r in before:
+              run = r.get('run')
+              if r['name'].startswith('gate-reports-') and run and run.get('name') == 'CI' and run.get('event') == 'push' and run.get('conclusion') == 'success' and run.get('head_sha'):
+                  successful_push_heads.add(run['head_sha'])
+
+          decisions = []
+          for r in before:
+              name = r['name'] or ''
+              run = r.get('run')
+              classification = 'UNKNOWN'
+              action = 'KEEP'
+              reason = 'unrecognized artifact type or unresolved run identity'
+
+              known_gate = name.startswith('gate-reports-')
+              known_pages_report = name.startswith('pages-gate-reports-')
+              known_pages_deploy = name == 'github-pages'
+
+              if run and known_gate and run.get('name') == 'CI' and run.get('event') == 'push' and run.get('head_branch') == 'main' and run.get('head_sha') == main_sha and run.get('conclusion') == 'success':
+                  classification = 'UNIQUE_CURRENT_ACCEPTANCE_EVIDENCE'
+                  reason = 'successful current-main exact-SHA CI gate evidence'
+              elif run and known_pages_report and run.get('name') == 'Deploy Pages' and run.get('head_branch') == 'main' and run.get('head_sha') == main_sha and run.get('conclusion') == 'success':
+                  classification = 'UNIQUE_CURRENT_ACCEPTANCE_EVIDENCE'
+                  reason = 'successful current-main Pages re-Gate evidence'
+              elif run and known_pages_deploy and run.get('name') == 'Deploy Pages' and run.get('head_branch') == 'main' and run.get('head_sha') == main_sha and run.get('conclusion') == 'success':
+                  classification = 'ACTIVE_DEPLOYMENT_DEPENDENCY'
+                  reason = 'current-main successful Pages deployment artifact'
+              elif not run or r.get('run_error'):
+                  classification = 'UNKNOWN'
+                  reason = 'run identity unresolved; fail closed'
+              elif known_gate:
+                  run_time = parse_ts(run.get('created_at'))
+                  if ci_anchor_time and run_time and run_time < ci_anchor_time:
+                      if run.get('event') == 'pull_request' and run.get('head_sha') in successful_push_heads:
+                          classification = 'DUPLICATE_TRANSPORT'
+                          reason = 'same branch head has successful push CI artifact; later current-main exact-SHA CI is authoritative'
+                      elif run.get('conclusion') in {'failure','cancelled','timed_out','action_required','startup_failure','stale'}:
+                          classification = 'DISPOSABLE_DEBUG_TEST'
+                          reason = 'failed/intermediate CI evidence superseded by later authoritative current-main exact-SHA success'
+                      else:
+                          classification = 'SUPERSEDED_INTERMEDIATE'
+                          reason = 'non-current CI evidence predates later authoritative current-main exact-SHA success'
+                      action = 'DELETE'
                   else:
-                      run = {
-                          'id': cached.get('id'),
-                          'name': cached.get('name'),
-                          'event': cached.get('event'),
-                          'status': cached.get('status'),
-                          'conclusion': cached.get('conclusion'),
-                          'workflow_id': cached.get('workflow_id'),
-                          'run_number': cached.get('run_number'),
-                          'run_attempt': cached.get('run_attempt'),
-                          'head_branch': cached.get('head_branch'),
-                          'head_sha': cached.get('head_sha'),
-                          'created_at': cached.get('created_at'),
-                          'updated_at': cached.get('updated_at'),
-                          'html_url': cached.get('html_url'),
-                      }
-              rows.append({
-                  'id': a.get('id'),
-                  'name': a.get('name'),
-                  'size_bytes': a.get('size_in_bytes'),
-                  'created_at': a.get('created_at'),
-                  'expires_at': a.get('expires_at'),
-                  'expired': a.get('expired'),
-                  'workflow_run_ref': wr,
+                      classification = 'UNKNOWN'
+                      reason = 'not proven older than current-main acceptance anchor'
+              elif known_pages_report or known_pages_deploy:
+                  run_time = parse_ts(run.get('created_at'))
+                  if pages_anchor_time and run_time and run_time < pages_anchor_time:
+                      if run.get('conclusion') in {'failure','cancelled','timed_out','action_required','startup_failure','stale'}:
+                          classification = 'DISPOSABLE_DEBUG_TEST'
+                          reason = 'failed Pages intermediate superseded by later successful current-main deployment'
+                      else:
+                          classification = 'SUPERSEDED_INTERMEDIATE'
+                          reason = 'older Pages/re-Gate artifact superseded by later successful current-main deployment'
+                      action = 'DELETE'
+                  else:
+                      classification = 'UNKNOWN'
+                      reason = 'not proven older than current-main Pages anchor'
+
+              decisions.append({
+                  'id': r['id'],
+                  'name': r['name'],
+                  'size_bytes': r['size_bytes'],
+                  'classification': classification,
+                  'action': action,
+                  'reason': reason,
+                  'created_at': r['created_at'],
+                  'expires_at': r['expires_at'],
+                  'expired': r['expired'],
                   'run': run,
-                  'run_error': run_error,
+              })
+
+          official_before = {
+              'package': 'EXP-ARTIFACT-CLEANUP-KAWAI-01',
+              'phase': 'official_before_delete',
+              'repo': repo,
+              'authoritative_main_sha': main_sha,
+              'count': before_count,
+              'bytes': before_bytes,
+              'artifacts': before,
+              'decisions': decisions,
+          }
+          persist(before_path, official_before, 'infra(exp): persist official pre-delete artifact inventory')
+
+          delete_candidates = [d for d in decisions if d['action'] == 'DELETE']
+          blockers = []
+          if not current_ci:
+              blockers.append('No successful current-main exact-SHA CI artifact anchor found.')
+          if any(d['name'] == 'github-pages' or d['name'].startswith('pages-gate-reports-') for d in delete_candidates) and not current_pages:
+              blockers.append('No successful current-main Pages artifact anchor found.')
+
+          preflight = []
+          if not blockers:
+              for d in delete_candidates:
+                  try:
+                      live = request(f"/repos/{repo}/actions/artifacts/{d['id']}")
+                      actual = (live.get('id'), live.get('name'), int(live.get('size_in_bytes') or 0))
+                      expected = (d['id'], d['name'], d['size_bytes'])
+                      ok = actual == expected
+                      preflight.append({'id': d['id'], 'expected': expected, 'actual': actual, 'match': ok})
+                      if not ok:
+                          blockers.append(f"Preflight mismatch for artifact {d['id']}: expected={expected} actual={actual}")
+                  except Exception as exc:
+                      blockers.append(f"Preflight read failed for artifact {d['id']}: {exc!r}")
+
+          deleted = []
+          delete_errors = []
+          if not blockers:
+              for d in delete_candidates:
+                  try:
+                      request(f"/repos/{repo}/actions/artifacts/{d['id']}", method='DELETE')
+                      deleted.append(d)
+                  except Exception as exc:
+                      delete_errors.append({'id': d['id'], 'name': d['name'], 'size_bytes': d['size_bytes'], 'error': repr(exc)})
+                      break
+
+          after = enumerate_rows()
+          after_count = len(after)
+          after_bytes = sum(r['size_bytes'] for r in after)
+          deleted_bytes = sum(d['size_bytes'] for d in deleted)
+          after_ids = {r['id'] for r in after}
+          all_deleted_absent = all(d['id'] not in after_ids for d in deleted)
+          count_delta_ok = before_count - after_count == len(deleted)
+          byte_delta_ok = before_bytes - after_bytes == deleted_bytes
+
+          kept_acceptance_bytes = sum(d['size_bytes'] for d in decisions if d['classification'] == 'UNIQUE_CURRENT_ACCEPTANCE_EVIDENCE')
+          kept_active_deployment_bytes = sum(d['size_bytes'] for d in decisions if d['classification'] == 'ACTIVE_DEPLOYMENT_DEPENDENCY')
+          unknown_bytes = sum(d['size_bytes'] for d in decisions if d['classification'] == 'UNKNOWN')
+          duplicate_pairs = sum(1 for d in decisions if d['classification'] == 'DUPLICATE_TRANSPORT')
+          pages_superseded = sum(1 for d in decisions if d['action'] == 'DELETE' and (d['name'] == 'github-pages' or d['name'].startswith('pages-gate-reports-')))
+
+          if blockers:
+              state = 'BLOCKED'
+          elif delete_errors or not (all_deleted_absent and count_delta_ok and byte_delta_ok):
+              state = 'INCONCLUSIVE'
+          else:
+              state = 'PASS'
+
+          remaining_decisions = []
+          decision_by_id = {d['id']: d for d in decisions}
+          for r in after:
+              d = decision_by_id.get(r['id'])
+              remaining_decisions.append({
+                  'id': r['id'], 'name': r['name'], 'size_bytes': r['size_bytes'],
+                  'classification': d['classification'] if d else 'UNKNOWN',
+                  'run': r.get('run'),
               })
 
           result = {
+              'state': state,
               'package': 'EXP-ARTIFACT-CLEANUP-KAWAI-01',
-              'phase': 'before',
               'repo': repo,
               'authoritative_main_sha': main_sha,
-              'count': len(rows),
-              'bytes': sum(int(r.get('size_bytes') or 0) for r in rows),
-              'artifacts': rows,
+              'before_count': before_count,
+              'before_bytes': before_bytes,
+              'before_mib': before_bytes / 1048576,
+              'deleted_count': len(deleted),
+              'deleted_bytes': deleted_bytes,
+              'deleted_mib': deleted_bytes / 1048576,
+              'kept_acceptance_bytes': kept_acceptance_bytes,
+              'kept_active_deployment_bytes': kept_active_deployment_bytes,
+              'unknown_bytes': unknown_bytes,
+              'after_count': after_count,
+              'after_bytes': after_bytes,
+              'after_mib': after_bytes / 1048576,
+              'top_deleted': sorted(deleted, key=lambda x: (-x['size_bytes'], x['id']))[:10],
+              'top_remaining': sorted(remaining_decisions, key=lambda x: (-x['size_bytes'], x['id']))[:10],
+              'duplication_finding': {
+                  'push_pr_duplicate_artifacts_deleted': duplicate_pairs,
+                  'older_pages_or_pages_regate_artifacts_deleted': pages_superseded,
+                  'architecture': 'CI uploads on push and pull_request; Pages reruns required gates after successful main CI and uploads Pages re-Gate plus github-pages deployment artifact.',
+              },
+              'preflight_count': len(preflight),
+              'preflight_all_exact': bool(preflight) and all(p['match'] for p in preflight) if delete_candidates else True,
+              'delete_errors': delete_errors,
+              'blockers': blockers,
+              'delta_checks': {
+                  'all_deleted_absent': all_deleted_absent,
+                  'count_delta_ok': count_delta_ok,
+                  'byte_delta_ok': byte_delta_ok,
+              },
+              'classification_bytes': {},
+              'classification_counts': {},
+              'deleted': deleted,
+              'remaining': remaining_decisions,
           }
-          text = json.dumps(result, indent=2, sort_keys=True) + '\n'
-          payload = {
-              'message': 'infra(exp): persist artifact cleanup before inventory',
-              'content': base64.b64encode(text.encode()).decode(),
-              'branch': branch,
-          }
-          path = '/repos/' + repo + '/contents/' + evidence_path
-          try:
-              existing = request(path + '?ref=' + branch)
-              payload['sha'] = existing['sha']
-          except urllib.error.HTTPError as exc:
-              if exc.code != 404:
-                  raise
-          request(path, method='PUT', body=payload)
+          for d in decisions:
+              c = d['classification']
+              result['classification_counts'][c] = result['classification_counts'].get(c, 0) + 1
+              result['classification_bytes'][c] = result['classification_bytes'].get(c, 0) + d['size_bytes']
 
-          print('INVENTORY_COUNT=' + str(result['count']))
-          print('INVENTORY_BYTES=' + str(result['bytes']))
-          for row in rows:
-              print('ARTIFACT_JSON=' + json.dumps(row, sort_keys=True, separators=(',', ':')))
+          persist(evidence_path, result, 'infra(exp): persist verified artifact cleanup result')
+
+          for key in ['state','before_count','before_bytes','deleted_count','deleted_bytes','kept_acceptance_bytes','kept_active_deployment_bytes','unknown_bytes','after_count','after_bytes']:
+              print(key.upper() + '=' + str(result[key]))
+          print('DELTA_CHECKS=' + json.dumps(result['delta_checks'], sort_keys=True))
+          print('CLASSIFICATION_COUNTS=' + json.dumps(result['classification_counts'], sort_keys=True))
           print('EVIDENCE_PATH=' + evidence_path)
+          if state != 'PASS':
+              raise SystemExit(1)
           PY
