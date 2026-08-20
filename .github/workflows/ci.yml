@@ -4,12 +4,22 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: write
+  actions: write
+
 jobs:
-  cleanup-guard:
+  cleanup:
     if: ${{ (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/exp/artifact-cleanup-kawai')) || (github.event_name == 'pull_request' && startsWith(github.head_ref, 'exp/artifact-cleanup-kawai')) }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo 'cleanup branch: canonical Gate/upload intentionally skipped'
+      - uses: actions/checkout@v4
+      - name: Run bounded artifact cleanup
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_API_URL: ${{ github.api_url }}
+          GH_REPOSITORY: ${{ github.repository }}
+        run: python infra/artifact_cleanup_kawai.py
 
   check:
     if: ${{ !((github.event_name == 'push' && startsWith(github.ref, 'refs/heads/exp/artifact-cleanup-kawai')) || (github.event_name == 'pull_request' && startsWith(github.head_ref, 'exp/artifact-cleanup-kawai'))) }}
