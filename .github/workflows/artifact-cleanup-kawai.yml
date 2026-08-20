@@ -1,4 +1,4 @@
-# trigger: inventory-1
+# trigger: inventory-2-durable
 name: EXP Artifact Cleanup Kawai
 
 on:
@@ -9,7 +9,7 @@ on:
       - .github/workflows/artifact-cleanup-kawai.yml
 
 permissions:
-  contents: read
+  contents: write
   actions: write
 
 jobs:
@@ -21,30 +21,36 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_API_URL: ${{ github.api_url }}
           GH_REPOSITORY: ${{ github.repository }}
+          GH_BRANCH: exp/artifact-cleanup-kawai-01
           AUTHORITATIVE_MAIN_SHA: d3be667912b650e694b7faf89197b0d9fca50133
+          EVIDENCE_PATH: infra/EXP_ARTIFACT_CLEANUP_KAWAI_01_before.json
         run: |
           python - <<'PY'
-          import json, os, urllib.request, urllib.error
+          import base64, json, os, urllib.request, urllib.error
 
           api = os.environ['GH_API_URL'].rstrip('/')
           repo = os.environ['GH_REPOSITORY']
           token = os.environ['GH_TOKEN']
+          branch = os.environ['GH_BRANCH']
           main_sha = os.environ['AUTHORITATIVE_MAIN_SHA']
+          evidence_path = os.environ['EVIDENCE_PATH']
           headers = {
               'Authorization': f'Bearer {token}',
               'Accept': 'application/vnd.github+json',
               'X-GitHub-Api-Version': '2022-11-28',
           }
 
-          def get(path):
-              req = urllib.request.Request(api + path, headers=headers)
+          def request(path, method='GET', body=None):
+              data = None if body is None else json.dumps(body).encode()
+              req = urllib.request.Request(api + path, headers=headers, data=data, method=method)
               with urllib.request.urlopen(req) as r:
-                  return json.load(r)
+                  raw = r.read()
+                  return json.loads(raw) if raw else None
 
           artifacts = []
           page = 1
           while True:
-              payload = get(f'/repos/{repo}/actions/artifacts?per_page=100&page={page}')
+              payload = request(f'/repos/{repo}/actions/artifacts?per_page=100&page={page}')
               batch = payload.get('artifacts', [])
               artifacts.extend(batch)
               if len(batch) < 100:
@@ -61,7 +67,7 @@ jobs:
               if run_id:
                   if run_id not in run_cache:
                       try:
-                          run_cache[run_id] = get(f'/repos/{repo}/actions/runs/{run_id}')
+                          run_cache[run_id] = request(f'/repos/{repo}/actions/runs/{run_id}')
                       except Exception as exc:
                           run_cache[run_id] = {'_error': repr(exc)}
                   cached = run_cache[run_id]
@@ -90,22 +96,38 @@ jobs:
                   'created_at': a.get('created_at'),
                   'expires_at': a.get('expires_at'),
                   'expired': a.get('expired'),
-                  'archive_download_url': a.get('archive_download_url'),
                   'workflow_run_ref': wr,
                   'run': run,
                   'run_error': run_error,
               })
 
           result = {
+              'package': 'EXP-ARTIFACT-CLEANUP-KAWAI-01',
+              'phase': 'before',
               'repo': repo,
               'authoritative_main_sha': main_sha,
               'count': len(rows),
               'bytes': sum(int(r.get('size_bytes') or 0) for r in rows),
               'artifacts': rows,
           }
+          text = json.dumps(result, indent=2, sort_keys=True) + '\n'
+          payload = {
+              'message': 'infra(exp): persist artifact cleanup before inventory',
+              'content': base64.b64encode(text.encode()).decode(),
+              'branch': branch,
+          }
+          path = '/repos/' + repo + '/contents/' + evidence_path
+          try:
+              existing = request(path + '?ref=' + branch)
+              payload['sha'] = existing['sha']
+          except urllib.error.HTTPError as exc:
+              if exc.code != 404:
+                  raise
+          request(path, method='PUT', body=payload)
+
           print('INVENTORY_COUNT=' + str(result['count']))
           print('INVENTORY_BYTES=' + str(result['bytes']))
           for row in rows:
               print('ARTIFACT_JSON=' + json.dumps(row, sort_keys=True, separators=(',', ':')))
-          print('INVENTORY_JSON=' + json.dumps(result, sort_keys=True, separators=(',', ':')))
+          print('EVIDENCE_PATH=' + evidence_path)
           PY
