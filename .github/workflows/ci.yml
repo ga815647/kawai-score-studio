@@ -2,6 +2,8 @@ name: CI
 
 on:
   push:
+    branches-ignore:
+      - exp/artifact-cleanup-kawai-01-20260820
   pull_request:
 
 jobs:

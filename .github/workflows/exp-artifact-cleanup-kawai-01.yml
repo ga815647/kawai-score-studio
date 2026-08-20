@@ -1,0 +1,514 @@
+name: EXP Artifact Cleanup Kawai 01
+
+on:
+  push:
+    branches:
+      - exp/artifact-cleanup-kawai-01-20260820
+
+permissions:
+  actions: write
+  contents: write
+
+jobs:
+  cleanup:
+    if: contains(github.event.head_commit.message, '[artifact-cleanup-run]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      EXPECTED_MAIN_SHA: d3be667912b650e694b7faf89197b0d9fca50133
+      EVIDENCE_PATH: experiments/EXP_ARTIFACT_CLEANUP_KAWAI_01_20260820.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Inventory, classify, delete safe redundancy, and re-inventory
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import sys
+          import time
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+          from collections import defaultdict
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          REPO = os.environ["GITHUB_REPOSITORY"]
+          TOKEN = os.environ["GH_TOKEN"]
+          EXPECTED_MAIN_SHA = os.environ["EXPECTED_MAIN_SHA"]
+          EVIDENCE_PATH = Path(os.environ["EVIDENCE_PATH"])
+          API = "https://api.github.com"
+          HEADERS = {
+              "Accept": "application/vnd.github+json",
+              "Authorization": f"Bearer {TOKEN}",
+              "X-GitHub-Api-Version": "2022-11-28",
+              "User-Agent": "EXP-ARTIFACT-CLEANUP-KAWAI-01",
+          }
+
+          def api(path, method="GET"):
+              req = urllib.request.Request(API + path, headers=HEADERS, method=method)
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as resp:
+                      raw = resp.read()
+                      if not raw:
+                          return None
+                      return json.loads(raw.decode("utf-8"))
+              except urllib.error.HTTPError as exc:
+                  body = exc.read().decode("utf-8", "replace")
+                  raise RuntimeError(f"{method} {path} -> HTTP {exc.code}: {body[:500]}") from exc
+
+          def stable_list_artifacts():
+              last_error = None
+              for attempt in range(1, 4):
+                  artifacts = []
+                  page = 1
+                  expected_total = None
+                  while True:
+                      data = api(f"/repos/{REPO}/actions/artifacts?per_page=100&page={page}")
+                      if expected_total is None:
+                          expected_total = int(data.get("total_count", 0))
+                      batch = data.get("artifacts", [])
+                      artifacts.extend(batch)
+                      if len(batch) < 100:
+                          break
+                      page += 1
+                  ids = [int(a["id"]) for a in artifacts]
+                  if len(ids) == len(set(ids)) and len(artifacts) == expected_total:
+                      return artifacts
+                  last_error = (
+                      f"unstable inventory attempt={attempt} "
+                      f"expected_total={expected_total} got={len(artifacts)} unique={len(set(ids))}"
+                  )
+                  time.sleep(2)
+              raise RuntimeError(last_error or "artifact inventory did not stabilize")
+
+          def list_workflow_runs(workflow_file):
+              runs = []
+              page = 1
+              while True:
+                  encoded = urllib.parse.quote(workflow_file, safe="")
+                  data = api(
+                      f"/repos/{REPO}/actions/workflows/{encoded}/runs"
+                      f"?per_page=100&page={page}"
+                  )
+                  batch = data.get("workflow_runs", [])
+                  runs.extend(batch)
+                  if len(batch) < 100:
+                      break
+                  page += 1
+              return runs
+
+          def run_identity(run):
+              if not run:
+                  return None
+              prs = []
+              for pr in run.get("pull_requests") or []:
+                  prs.append({
+                      "number": pr.get("number"),
+                      "url": pr.get("html_url") or pr.get("url"),
+                  })
+              return {
+                  "id": run.get("id"),
+                  "name": run.get("name"),
+                  "path": run.get("path"),
+                  "event": run.get("event"),
+                  "status": run.get("status"),
+                  "conclusion": run.get("conclusion"),
+                  "workflow_id": run.get("workflow_id"),
+                  "run_number": run.get("run_number"),
+                  "run_attempt": run.get("run_attempt"),
+                  "head_branch": run.get("head_branch"),
+                  "head_sha": run.get("head_sha"),
+                  "created_at": run.get("created_at"),
+                  "updated_at": run.get("updated_at"),
+                  "html_url": run.get("html_url"),
+                  "pull_requests": prs,
+              }
+
+          def is_ci(run):
+              if not run:
+                  return False
+              return run.get("name") == "CI" or str(run.get("path") or "").endswith("/ci.yml")
+
+          def is_pages(run):
+              if not run:
+                  return False
+              return run.get("name") == "Deploy Pages" or str(run.get("path") or "").endswith("/pages.yml")
+
+          def iso_key(value):
+              return value or ""
+
+          main = api(f"/repos/{REPO}/branches/main")
+          main_sha = main["commit"]["sha"]
+
+          blockers = []
+          if main_sha != EXPECTED_MAIN_SHA:
+              blockers.append(
+                  f"MAIN_MOVED expected={EXPECTED_MAIN_SHA} actual={main_sha}; no deletion permitted"
+              )
+
+          raw_before = stable_list_artifacts()
+          before_count = len(raw_before)
+          before_bytes = sum(int(a.get("size_in_bytes") or 0) for a in raw_before)
+
+          run_cache = {}
+          for a in raw_before:
+              wr = a.get("workflow_run") or {}
+              run_id = wr.get("id")
+              if run_id and run_id not in run_cache:
+                  try:
+                      run_cache[run_id] = api(f"/repos/{REPO}/actions/runs/{run_id}")
+                  except Exception as exc:
+                      run_cache[run_id] = None
+                      blockers.append(f"RUN_RESOLUTION_FAILED run_id={run_id}: {exc}")
+
+          records = []
+          for a in raw_before:
+              wr = a.get("workflow_run") or {}
+              run = run_cache.get(wr.get("id"))
+              records.append({
+                  "id": int(a["id"]),
+                  "name": a.get("name"),
+                  "size_bytes": int(a.get("size_in_bytes") or 0),
+                  "created_at": a.get("created_at"),
+                  "updated_at": a.get("updated_at"),
+                  "expires_at": a.get("expires_at"),
+                  "expired": bool(a.get("expired")),
+                  "workflow_run": run_identity(run) or {
+                      "id": wr.get("id"),
+                      "head_branch": wr.get("head_branch"),
+                      "head_sha": wr.get("head_sha"),
+                      "repository_id": wr.get("repository_id"),
+                      "head_repository_id": wr.get("head_repository_id"),
+                      "unresolved": True,
+                  },
+                  "classification": "UNKNOWN",
+                  "classification_basis": "No deletion-safe equivalence proven.",
+              })
+
+          groups_by_name = defaultdict(list)
+          groups_by_run = defaultdict(list)
+          for r in records:
+              groups_by_name[r["name"]].append(r)
+              run_id = (r.get("workflow_run") or {}).get("id")
+              if run_id:
+                  groups_by_run[run_id].append(r)
+
+          def rec_run(r):
+              rid = (r.get("workflow_run") or {}).get("id")
+              return run_cache.get(rid)
+
+          ci_success_keep = {}
+          for name, items in groups_by_name.items():
+              if not str(name).startswith("gate-reports-"):
+                  continue
+              successes = [
+                  r for r in items
+                  if is_ci(rec_run(r)) and (rec_run(r) or {}).get("conclusion") == "success"
+              ]
+              if successes:
+                  successes.sort(key=lambda r: (iso_key(r["created_at"]), r["id"]))
+                  ci_success_keep[name] = successes[-1]
+
+          current_ci_name = f"gate-reports-{main_sha}"
+          current_ci_candidates = [
+              r for r in groups_by_name.get(current_ci_name, [])
+              if is_ci(rec_run(r))
+              and (rec_run(r) or {}).get("conclusion") == "success"
+              and (rec_run(r) or {}).get("event") == "push"
+              and (rec_run(r) or {}).get("head_branch") == "main"
+              and (rec_run(r) or {}).get("head_sha") == main_sha
+          ]
+          current_ci_candidates.sort(key=lambda r: (iso_key(r["created_at"]), r["id"]))
+          current_ci = current_ci_candidates[-1] if current_ci_candidates else None
+          if current_ci:
+              ci_success_keep[current_ci_name] = current_ci
+              current_ci["classification"] = "UNIQUE_CURRENT_ACCEPTANCE_EVIDENCE"
+              current_ci["classification_basis"] = (
+                  "Newest retained successful main-push CI gate-report for exact current main SHA."
+              )
+          else:
+              blockers.append(
+                  f"CURRENT_ACCEPTANCE_ARTIFACT_MISSING name={current_ci_name}; no deletion permitted"
+              )
+
+          for name, keep in ci_success_keep.items():
+              for r in groups_by_name[name]:
+                  if r["id"] == keep["id"]:
+                      continue
+                  run = rec_run(r)
+                  if not is_ci(run):
+                      continue
+                  if run and run.get("conclusion") == "success":
+                      r["classification"] = "DUPLICATE_TRANSPORT"
+                      r["classification_basis"] = (
+                          f"Same CI artifact name/exact SHA as retained successful artifact {keep['id']}."
+                      )
+                  elif iso_key(r["created_at"]) <= iso_key(keep["created_at"]):
+                      r["classification"] = "DISPOSABLE_DEBUG_TEST"
+                      r["classification_basis"] = (
+                          f"Non-success CI artifact superseded by successful exact-SHA artifact {keep['id']}."
+                      )
+
+          for r in records:
+              name = str(r["name"] or "")
+              if not name.startswith("pages-gate-reports-"):
+                  continue
+              target_sha = name[len("pages-gate-reports-"):]
+              ci_name = f"gate-reports-{target_sha}"
+              keep = ci_success_keep.get(ci_name)
+              run = rec_run(r)
+              if keep and is_pages(run):
+                  r["classification"] = "DUPLICATE_TRANSPORT"
+                  r["classification_basis"] = (
+                      f"Pages re-Gate exact SHA {target_sha}; equivalent retained successful "
+                      f"CI gate-report artifact {keep['id']} exists."
+                  )
+
+          try:
+              pages_runs = list_workflow_runs("pages.yml")
+          except Exception as exc:
+              pages_runs = []
+              blockers.append(f"PAGES_RUN_LIST_FAILED: {exc}")
+
+          current_pages_runs = [
+              run for run in pages_runs
+              if run.get("conclusion") == "success"
+              and run.get("head_sha") == main_sha
+              and run.get("head_branch") == "main"
+          ]
+          current_pages_runs.sort(key=lambda run: (iso_key(run.get("created_at")), int(run.get("id") or 0)))
+          current_pages_run = current_pages_runs[-1] if current_pages_runs else None
+
+          if not current_pages_run:
+              candidates = []
+              for rid, items in groups_by_run.items():
+                  run = run_cache.get(rid)
+                  if not is_pages(run) or (run or {}).get("conclusion") != "success":
+                      continue
+                  if any(x["name"] == f"pages-gate-reports-{main_sha}" for x in items):
+                      candidates.append(run)
+              candidates.sort(key=lambda run: (iso_key(run.get("created_at")), int(run.get("id") or 0)))
+              current_pages_run = candidates[-1] if candidates else None
+
+          if current_pages_run:
+              current_pages_run_id = int(current_pages_run["id"])
+              current_deploy_artifacts = [
+                  r for r in groups_by_run.get(current_pages_run_id, [])
+                  if r["name"] == "github-pages"
+              ]
+              current_deploy_artifacts.sort(key=lambda r: (iso_key(r["created_at"]), r["id"]))
+              if current_deploy_artifacts:
+                  active = current_deploy_artifacts[-1]
+                  active["classification"] = "ACTIVE_DEPLOYMENT_DEPENDENCY"
+                  active["classification_basis"] = (
+                      "Newest retained github-pages transport for authoritative successful current-main Pages run."
+                  )
+              authoritative_pages_time = iso_key(current_pages_run.get("created_at"))
+              for r in records:
+                  if r["name"] != "github-pages":
+                      continue
+                  if r["classification"] == "ACTIVE_DEPLOYMENT_DEPENDENCY":
+                      continue
+                  run = rec_run(r)
+                  if not is_pages(run):
+                      continue
+                  if (
+                      run
+                      and run.get("conclusion") == "success"
+                      and iso_key(run.get("created_at")) < authoritative_pages_time
+                  ):
+                      r["classification"] = "SUPERSEDED_INTERMEDIATE"
+                      r["classification_basis"] = (
+                          f"Older successful Pages deployment transport superseded by "
+                          f"current-main successful Pages run {current_pages_run_id}."
+                      )
+          else:
+              blockers.append(
+                  "AUTHORITATIVE_CURRENT_PAGES_RUN_NOT_RESOLVED; github-pages deletion disabled"
+              )
+
+          deletable_classes = {
+              "DUPLICATE_TRANSPORT",
+              "SUPERSEDED_INTERMEDIATE",
+              "DISPOSABLE_DEBUG_TEST",
+          }
+          deletion_candidates = [
+              r for r in records if r["classification"] in deletable_classes
+          ]
+
+          destructive_allowed = not blockers
+
+          deleted = []
+          if destructive_allowed:
+              deletion_candidates.sort(key=lambda r: (-r["size_bytes"], r["id"]))
+              for r in deletion_candidates:
+                  try:
+                      check = api(f"/repos/{REPO}/actions/artifacts/{r['id']}")
+                      actual = (
+                          int(check.get("id")),
+                          check.get("name"),
+                          int(check.get("size_in_bytes") or 0),
+                      )
+                      expected = (r["id"], r["name"], r["size_bytes"])
+                      if actual != expected:
+                          blockers.append(
+                              f"PREDELETE_MISMATCH expected={expected!r} actual={actual!r}"
+                          )
+                          break
+                      api(f"/repos/{REPO}/actions/artifacts/{r['id']}", method="DELETE")
+                      deleted.append({
+                          "id": r["id"],
+                          "name": r["name"],
+                          "size_bytes": r["size_bytes"],
+                          "classification": r["classification"],
+                          "classification_basis": r["classification_basis"],
+                          "workflow_run": r["workflow_run"],
+                          "predelete_recheck": {
+                              "id": actual[0],
+                              "name": actual[1],
+                              "size_bytes": actual[2],
+                              "matched": True,
+                          },
+                      })
+                  except Exception as exc:
+                      blockers.append(f"DELETE_FAILED artifact_id={r['id']}: {exc}")
+                      break
+
+          raw_after = stable_list_artifacts()
+          after_count = len(raw_after)
+          after_bytes = sum(int(a.get("size_in_bytes") or 0) for a in raw_after)
+          deleted_count = len(deleted)
+          deleted_bytes = sum(d["size_bytes"] for d in deleted)
+
+          expected_after_count = before_count - deleted_count
+          expected_after_bytes = before_bytes - deleted_bytes
+          if after_count != expected_after_count or after_bytes != expected_after_bytes:
+              blockers.append(
+                  "CONCURRENT_ARTIFACT_POPULATION_CHANGE "
+                  f"expected_after_count={expected_after_count} actual_after_count={after_count} "
+                  f"expected_after_bytes={expected_after_bytes} actual_after_bytes={after_bytes}"
+              )
+
+          main_after = api(f"/repos/{REPO}/branches/main")["commit"]["sha"]
+          if main_after != main_sha:
+              blockers.append(f"MAIN_MOVED_DURING_CLEANUP before={main_sha} after={main_after}")
+
+          after_ids = {int(a["id"]) for a in raw_after}
+          before_class = {r["id"]: r for r in records}
+          after_records = []
+          for a in raw_after:
+              aid = int(a["id"])
+              prior = before_class.get(aid)
+              wr = a.get("workflow_run") or {}
+              run = run_cache.get(wr.get("id"))
+              after_records.append({
+                  "id": aid,
+                  "name": a.get("name"),
+                  "size_bytes": int(a.get("size_in_bytes") or 0),
+                  "created_at": a.get("created_at"),
+                  "expires_at": a.get("expires_at"),
+                  "expired": bool(a.get("expired")),
+                  "classification": prior["classification"] if prior else "UNKNOWN",
+                  "workflow_run": prior["workflow_run"] if prior else run_identity(run),
+              })
+
+          kept_acceptance_bytes = sum(
+              r["size_bytes"] for r in records
+              if r["id"] in after_ids and r["classification"] == "UNIQUE_CURRENT_ACCEPTANCE_EVIDENCE"
+          )
+          kept_active_deployment_bytes = sum(
+              r["size_bytes"] for r in records
+              if r["id"] in after_ids and r["classification"] == "ACTIVE_DEPLOYMENT_DEPENDENCY"
+          )
+          unknown_bytes = sum(
+              r["size_bytes"] for r in records
+              if r["id"] in after_ids and r["classification"] == "UNKNOWN"
+          )
+
+          if blockers:
+              state = "INCONCLUSIVE" if deleted else "BLOCKED"
+          else:
+              state = "PASS"
+
+          evidence = {
+              "package": "EXP-ARTIFACT-CLEANUP-KAWAI-01",
+              "repo": REPO,
+              "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+              "state": state,
+              "main_sha": main_sha,
+              "guard": {
+                  "expected_main_sha": EXPECTED_MAIN_SHA,
+                  "no_artifact_upload_steps": True,
+                  "destructive_allowed": destructive_allowed,
+                  "delete_classes": sorted(deletable_classes),
+                  "predelete_exact_id_name_size_recheck": True,
+              },
+              "before": {
+                  "count": before_count,
+                  "bytes": before_bytes,
+                  "artifacts": sorted(records, key=lambda r: (-r["size_bytes"], r["id"])),
+              },
+              "deleted": {
+                  "count": deleted_count,
+                  "bytes": deleted_bytes,
+                  "artifacts": deleted,
+              },
+              "kept": {
+                  "acceptance_bytes": kept_acceptance_bytes,
+                  "active_deployment_bytes": kept_active_deployment_bytes,
+                  "unknown_bytes": unknown_bytes,
+              },
+              "after": {
+                  "count": after_count,
+                  "bytes": after_bytes,
+                  "artifacts": sorted(after_records, key=lambda r: (-r["size_bytes"], r["id"])),
+              },
+              "duplication_finding": (
+                  "CI uploads gate-reports on push and pull_request. Pages independently "
+                  "re-runs the same required Gate suite and uploads pages-gate-reports plus "
+                  "GitHub Pages deployment transport. Deletion is limited to exact-SHA "
+                  "duplicate gate transport, exact-name CI rerun/debug duplicates with a "
+                  "retained successful copy, and Pages transport superseded by an "
+                  "authoritative successful current-main deployment."
+              ),
+              "blockers": blockers,
+          }
+
+          EVIDENCE_PATH.parent.mkdir(parents=True, exist_ok=True)
+          EVIDENCE_PATH.write_text(
+              json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print("CLEANUP_SUMMARY=" + json.dumps({
+              "state": state,
+              "main_sha": main_sha,
+              "before_count": before_count,
+              "before_bytes": before_bytes,
+              "deleted_count": deleted_count,
+              "deleted_bytes": deleted_bytes,
+              "after_count": after_count,
+              "after_bytes": after_bytes,
+              "kept_acceptance_bytes": kept_acceptance_bytes,
+              "kept_active_deployment_bytes": kept_active_deployment_bytes,
+              "unknown_bytes": unknown_bytes,
+              "blockers": blockers,
+          }, separators=(",", ":")))
+          PY
+
+      - name: Persist durable cleanup evidence on experiment branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$EVIDENCE_PATH"
+          if git diff --cached --quiet; then
+            echo "No evidence change to commit."
+          else
+            git commit -m "chore: persist artifact cleanup evidence"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
