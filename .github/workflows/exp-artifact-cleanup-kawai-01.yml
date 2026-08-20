@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - exp/artifact-cleanup-kawai-01-20260820
+    paths:
+      - experiments/EXP_ARTIFACT_CLEANUP_KAWAI_01_TRIGGER.txt
 
 permissions:
   actions: write
@@ -11,7 +13,6 @@ permissions:
 
 jobs:
   cleanup:
-    if: contains(github.event.head_commit.message, '[artifact-cleanup-run]')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -440,6 +441,7 @@ jobs:
               "package": "EXP-ARTIFACT-CLEANUP-KAWAI-01",
               "repo": REPO,
               "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+              "execution_run_id": os.environ.get("GITHUB_RUN_ID"),
               "state": state,
               "main_sha": main_sha,
               "guard": {
@@ -502,7 +504,13 @@ jobs:
           PY
 
       - name: Persist durable cleanup evidence on experiment branch
+        if: always()
         run: |
+          if [ ! -f "$EVIDENCE_PATH" ]; then
+            mkdir -p "$(dirname "$EVIDENCE_PATH")"
+            printf '{"package":"EXP-ARTIFACT-CLEANUP-KAWAI-01","repo":"%s","state":"BLOCKED","execution_run_id":"%s","blockers":["cleanup step failed before durable evidence was produced"]}\n' \
+              "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" > "$EVIDENCE_PATH"
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "$EVIDENCE_PATH"
