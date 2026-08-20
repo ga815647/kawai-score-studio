@@ -1,1 +1,1 @@
-inventory-trigger-1
+cleanup-trigger-2
