@@ -1,4 +1,4 @@
-name: EXP Artifact Cleanup Kawai 01 Summary
+name: EXP Artifact Cleanup Kawai 01 Profile
 
 on:
   push:
@@ -11,93 +11,143 @@ permissions:
   contents: write
 
 jobs:
-  summarize:
+  profile:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
       EVIDENCE_PATH: experiments/EXP_ARTIFACT_CLEANUP_KAWAI_01_20260820.json
-      SUMMARY_PATH: experiments/EXP_ARTIFACT_CLEANUP_KAWAI_01_SUMMARY.json
+      PROFILE_PATH: experiments/EXP_ARTIFACT_CLEANUP_KAWAI_01_PROFILE.json
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - name: Build compact durable summary from cleanup evidence
+      - name: Build artifact relationship profile
         run: |
           python - <<'PY'
           import json
           import os
+          from collections import Counter, defaultdict
           from pathlib import Path
 
-          evidence_path = Path(os.environ['EVIDENCE_PATH'])
-          summary_path = Path(os.environ['SUMMARY_PATH'])
-          e = json.loads(evidence_path.read_text(encoding='utf-8'))
+          e = json.loads(Path(os.environ['EVIDENCE_PATH']).read_text(encoding='utf-8'))
+          arts = (e.get('after') or {}).get('artifacts') or []
 
-          def compact_artifact(a):
-              wr = a.get('workflow_run') or {}
-              return {
-                  'id': a.get('id'),
-                  'name': a.get('name'),
-                  'size_bytes': a.get('size_bytes'),
-                  'classification': a.get('classification'),
-                  'created_at': a.get('created_at'),
-                  'expires_at': a.get('expires_at'),
-                  'run_id': wr.get('id'),
-                  'run_name': wr.get('name'),
-                  'event': wr.get('event'),
-                  'conclusion': wr.get('conclusion'),
-                  'head_branch': wr.get('head_branch'),
-                  'head_sha': wr.get('head_sha'),
-              }
+          def wr(a): return a.get('workflow_run') or {}
+          def prefix(name):
+              name = str(name or '')
+              if name.startswith('pages-gate-reports-'): return 'pages-gate-reports'
+              if name.startswith('gate-reports-'): return 'gate-reports'
+              if name == 'github-pages': return 'github-pages'
+              return name.split('-', 1)[0] if name else '<none>'
 
-          before = e.get('before') or {}
-          deleted = e.get('deleted') or {}
-          kept = e.get('kept') or {}
-          after = e.get('after') or {}
-          deleted_artifacts = sorted(deleted.get('artifacts') or [], key=lambda x: (-(x.get('size_bytes') or 0), x.get('id') or 0))
-          remaining_artifacts = sorted(after.get('artifacts') or [], key=lambda x: (-(x.get('size_bytes') or 0), x.get('id') or 0))
+          prefix_count = Counter()
+          prefix_bytes = Counter()
+          run_name_count = Counter()
+          run_name_bytes = Counter()
+          event_count = Counter()
+          conclusion_count = Counter()
+          branch = defaultdict(lambda: {'count':0,'bytes':0,'success':0,'failure':0,'cancelled':0,'events':Counter(),'head_shas':set(),'pr_numbers':set()})
+          name_groups = defaultdict(list)
+          gate_names = set()
+          pages_gate_rows = []
+          github_pages_rows = []
 
-          class_bytes = {}
-          class_count = {}
-          for a in remaining_artifacts:
-              c = a.get('classification') or 'UNKNOWN'
-              class_bytes[c] = class_bytes.get(c, 0) + int(a.get('size_bytes') or 0)
-              class_count[c] = class_count.get(c, 0) + 1
+          for a in arts:
+              p = prefix(a.get('name'))
+              sz = int(a.get('size_bytes') or 0)
+              r = wr(a)
+              prefix_count[p] += 1
+              prefix_bytes[p] += sz
+              rn = str(r.get('name') or '<none>')
+              run_name_count[rn] += 1
+              run_name_bytes[rn] += sz
+              event_count[str(r.get('event') or '<none>')] += 1
+              conclusion_count[str(r.get('conclusion') or '<none>')] += 1
+              b = str(r.get('head_branch') or '<none>')
+              bb = branch[b]
+              bb['count'] += 1; bb['bytes'] += sz
+              c = str(r.get('conclusion') or '<none>')
+              if c in bb: bb[c] += 1
+              bb['events'][str(r.get('event') or '<none>')] += 1
+              if r.get('head_sha'): bb['head_shas'].add(r.get('head_sha'))
+              for pr in r.get('pull_requests') or []:
+                  if pr.get('number') is not None: bb['pr_numbers'].add(int(pr['number']))
+              name_groups[str(a.get('name'))].append(a)
+              if str(a.get('name') or '').startswith('gate-reports-'):
+                  gate_names.add(str(a.get('name')))
+              if str(a.get('name') or '').startswith('pages-gate-reports-'):
+                  sha = str(a.get('name'))[len('pages-gate-reports-'):]
+                  pages_gate_rows.append({
+                      'id':a.get('id'),'name':a.get('name'),'size_bytes':sz,'created_at':a.get('created_at'),
+                      'run_id':r.get('id'),'run_name':r.get('name'),'path':r.get('path'),'event':r.get('event'),
+                      'conclusion':r.get('conclusion'),'head_branch':r.get('head_branch'),'head_sha':r.get('head_sha'),
+                      'matching_ci_name_exists': f'gate-reports-{sha}' in gate_names,
+                  })
+              if a.get('name') == 'github-pages':
+                  github_pages_rows.append({
+                      'id':a.get('id'),'name':a.get('name'),'size_bytes':sz,'created_at':a.get('created_at'),
+                      'run_id':r.get('id'),'run_name':r.get('name'),'path':r.get('path'),'event':r.get('event'),
+                      'conclusion':r.get('conclusion'),'head_branch':r.get('head_branch'),'head_sha':r.get('head_sha'),
+                  })
 
-          summary = {
-              'package': e.get('package'),
-              'repo': e.get('repo'),
-              'state': e.get('state'),
-              'main_sha': e.get('main_sha'),
-              'generated_at_utc': e.get('generated_at_utc'),
-              'execution_run_id': e.get('execution_run_id'),
-              'before_count': before.get('count'),
-              'before_bytes': before.get('bytes'),
-              'deleted_count': deleted.get('count'),
-              'deleted_bytes': deleted.get('bytes'),
-              'kept_acceptance_bytes': kept.get('acceptance_bytes'),
-              'kept_active_deployment_bytes': kept.get('active_deployment_bytes'),
-              'unknown_bytes': kept.get('unknown_bytes'),
-              'after_count': after.get('count'),
-              'after_bytes': after.get('bytes'),
-              'remaining_class_count': class_count,
-              'remaining_class_bytes': class_bytes,
-              'top_deleted': [compact_artifact(a) for a in deleted_artifacts[:10]],
-              'top_remaining': [compact_artifact(a) for a in remaining_artifacts[:10]],
-              'all_deleted': [compact_artifact(a) for a in deleted_artifacts],
-              'duplication_finding': e.get('duplication_finding'),
-              'blockers': e.get('blockers') or [],
+          # Second pass because gate_names must be complete before matching pages-gate.
+          for row in pages_gate_rows:
+              sha = str(row['name'])[len('pages-gate-reports-'):]
+              row['matching_ci_name_exists'] = f'gate-reports-{sha}' in gate_names
+
+          duplicate_name_groups = []
+          for name, rows in name_groups.items():
+              if len(rows) > 1:
+                  duplicate_name_groups.append({
+                      'name': name,
+                      'count': len(rows),
+                      'bytes': sum(int(x.get('size_bytes') or 0) for x in rows),
+                      'rows': [{
+                          'id':x.get('id'),'size_bytes':x.get('size_bytes'),'created_at':x.get('created_at'),
+                          'run_id':wr(x).get('id'),'event':wr(x).get('event'),'conclusion':wr(x).get('conclusion'),
+                          'head_branch':wr(x).get('head_branch'),'head_sha':wr(x).get('head_sha')
+                      } for x in sorted(rows,key=lambda x:(x.get('created_at') or '',x.get('id') or 0))]
+                  })
+          duplicate_name_groups.sort(key=lambda g:(-g['bytes'],g['name']))
+
+          branch_rows=[]
+          for b,v in branch.items():
+              branch_rows.append({
+                  'head_branch':b,'count':v['count'],'bytes':v['bytes'],'success':v['success'],
+                  'failure':v['failure'],'cancelled':v['cancelled'],'events':dict(v['events']),
+                  'distinct_head_shas':len(v['head_shas']),'pr_numbers':sorted(v['pr_numbers'])
+              })
+          branch_rows.sort(key=lambda x:(-x['bytes'],x['head_branch']))
+
+          profile={
+              'artifact_count':len(arts),
+              'artifact_bytes':sum(int(a.get('size_bytes') or 0) for a in arts),
+              'prefix_count':dict(prefix_count),'prefix_bytes':dict(prefix_bytes),
+              'run_name_count':dict(run_name_count),'run_name_bytes':dict(run_name_bytes),
+              'event_count':dict(event_count),'conclusion_count':dict(conclusion_count),
+              'duplicate_exact_name_group_count':len(duplicate_name_groups),
+              'duplicate_exact_name_groups_top':duplicate_name_groups[:25],
+              'pages_gate_count':len(pages_gate_rows),
+              'pages_gate_bytes':sum(x['size_bytes'] for x in pages_gate_rows),
+              'pages_gate_with_matching_ci_count':sum(1 for x in pages_gate_rows if x['matching_ci_name_exists']),
+              'pages_gate_with_matching_ci_bytes':sum(x['size_bytes'] for x in pages_gate_rows if x['matching_ci_name_exists']),
+              'pages_gate_rows':sorted(pages_gate_rows,key=lambda x:(x['created_at'] or '',x['id'] or 0),reverse=True)[:30],
+              'github_pages_count':len(github_pages_rows),
+              'github_pages_bytes':sum(x['size_bytes'] for x in github_pages_rows),
+              'github_pages_rows':sorted(github_pages_rows,key=lambda x:(x['created_at'] or '',x['id'] or 0),reverse=True)[:30],
+              'branches_top':branch_rows[:40],
           }
-          summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + '\n', encoding='utf-8')
-          print(json.dumps(summary, separators=(',', ':'), ensure_ascii=False))
+          Path(os.environ['PROFILE_PATH']).write_text(json.dumps(profile,ensure_ascii=False,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          print(json.dumps(profile,separators=(',',':'),ensure_ascii=False))
           PY
-      - name: Persist compact summary
+      - name: Persist profile
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$SUMMARY_PATH"
+          git add "$PROFILE_PATH"
           if git diff --cached --quiet; then
-            echo "No summary change."
+            echo "No profile change."
           else
-            git commit -m "chore: persist artifact cleanup compact summary"
+            git commit -m "chore: persist artifact cleanup relationship profile"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
