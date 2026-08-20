@@ -1,1 +1,1 @@
-cleanup-trigger-2
+cleanup-trigger-3-canonical-ci
