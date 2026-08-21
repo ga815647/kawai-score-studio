@@ -16,12 +16,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Diagnose cleanup API quota
+      - name: Run bounded artifact cleanup
         env:
           GH_TOKEN: ${{ github.token }}
           GH_API_URL: ${{ github.api_url }}
           GH_REPOSITORY: ${{ github.repository }}
-        run: python infra/artifact_rate_probe.py
+        run: python infra/artifact_cleanup_kawai.py
 
   check:
     if: ${{ !((github.event_name == 'push' && startsWith(github.ref, 'refs/heads/exp/artifact-cleanup-kawai')) || (github.event_name == 'pull_request' && startsWith(github.head_ref, 'exp/artifact-cleanup-kawai'))) }}
