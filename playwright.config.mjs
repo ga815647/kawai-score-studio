@@ -2,7 +2,12 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
-  testMatch: ['visual.spec.mjs', 'library-visual.spec.mjs', 'print-pagination.spec.mjs'],
+  testMatch: [
+    'visual.spec.mjs',
+    'library-visual.spec.mjs',
+    'print-pagination.spec.mjs',
+    'print-lyric-geometry.spec.mjs',
+  ],
   timeout: 60_000,
   fullyParallel: false,
   workers: 1,

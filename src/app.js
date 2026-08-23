@@ -57,7 +57,43 @@ function setReady(message) {
   status.className = 'status status--pass';
 }
 
+function restorePrintLyricGeometry(card = activePrintCard) {
+  if (!card) return;
+  for (const lyricRow of card.querySelectorAll('.lyric-row[data-screen-top-px]')) {
+    lyricRow.style.top = `${lyricRow.dataset.screenTopPx}px`;
+    delete lyricRow.dataset.screenTopPx;
+  }
+}
+
+function alignPrintLyricsToRenderedStaff(card = activePrintCard) {
+  if (!card || !book) return;
+  const lyricGap = Number(book.layout.system_geometry.lyric_row?.staff_bottom_line_to_top_px ?? 18);
+
+  for (const system of card.querySelectorAll('.score-system')) {
+    const lyricRow = system.querySelector('.lyric-row');
+    const svg = system.querySelector('.staff-panel > svg');
+    const staffBottomLineY = Number(system.dataset.staffBottomLineY);
+    if (!(lyricRow instanceof HTMLElement) || !(svg instanceof SVGSVGElement)) continue;
+    if (!Number.isFinite(staffBottomLineY) || !Number.isFinite(lyricGap)) continue;
+
+    const screenTop = Number.parseFloat(lyricRow.dataset.screenTopPx ?? lyricRow.style.top);
+    if (!Number.isFinite(screenTop)) continue;
+    if (!lyricRow.dataset.screenTopPx) lyricRow.dataset.screenTopPx = String(screenTop);
+
+    const matrix = svg.getScreenCTM();
+    if (!matrix) continue;
+    const point = svg.createSVGPoint();
+    point.x = 0;
+    point.y = staffBottomLineY;
+    const renderedStaffBottom = point.matrixTransform(matrix).y;
+    const systemTop = system.getBoundingClientRect().top;
+    const requiredLyricTop = renderedStaffBottom - systemTop + lyricGap;
+    lyricRow.style.top = `${Math.max(screenTop, requiredLyricTop)}px`;
+  }
+}
+
 function cleanupPrintTarget() {
+  restorePrintLyricGeometry(activePrintCard);
   activePrintCard?.classList.remove('print-selected');
   activePrintCard = undefined;
   document.body.classList.remove('printing-selected-song');
@@ -200,6 +236,16 @@ libraryContent.addEventListener('click', async (event) => {
   }
 });
 
+const printMedia = matchMedia('print');
+printMedia.addEventListener('change', (event) => {
+  if (event.matches) {
+    alignPrintLyricsToRenderedStaff();
+    requestAnimationFrame(() => alignPrintLyricsToRenderedStaff());
+  } else {
+    restorePrintLyricGeometry();
+  }
+});
+window.addEventListener('beforeprint', () => alignPrintLyricsToRenderedStaff());
 window.addEventListener('afterprint', cleanupPrintTarget);
 window.addEventListener('beforeunload', () => player.stop());
 
