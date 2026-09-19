@@ -49,13 +49,10 @@ echo "[setup] $($PY313 --version) ready."
 echo "[setup] installing Python deps for source:verify ..."
 "$PY313" -m pip install --break-system-packages -q -r "$REPO_ROOT/requirements-source.txt"
 
-# 4. 專案 Node 依賴
-if [ ! -d "$REPO_ROOT/node_modules" ]; then
-  echo "[setup] npm install ..."
-  (cd "$REPO_ROOT" && npm install)
-else
-  echo "[setup] node_modules already present."
-fi
+# 4. 專案 Node 依賴（無條件重跑：npm install 本來就冪等，
+#    若某次中斷留下殘缺目錄，下次重跑會自動修復，不會卡死）
+echo "[setup] npm install ..."
+(cd "$REPO_ROOT" && npm install)
 
 # 5. Chromium（Playwright 釘選版本，取自 package.json）
 PW_VERSION="$(node -e "console.log(require('$REPO_ROOT/package.json').devDependencies['@playwright/test'])" 2>/dev/null || echo "1.55.0")"
