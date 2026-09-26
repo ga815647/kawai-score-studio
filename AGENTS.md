@@ -34,7 +34,6 @@
 - 合併後必須核對 `main` 的 exact SHA、`main` CI 與 GitHub Pages deployment；三者成功後才算完成交付。
 - PR 截圖、CI artifact、預覽 PNG 或列印 PDF 只能作驗證證據，不能取代已部署的正式網站。
 - Pages build 成功但 deploy 失敗時，不得宣稱網站已更新；必須保留 workflow run、job、錯誤訊息與重試結果。
-- 完整成果、規格、測試與交接留在 GitHub；Notion 只保存入口、穩定規則與流程，不保存動態 branch、PR、SHA、run 或 artifact 狀態。
 
 ## 琴譜來源
 
